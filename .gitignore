@@ -13,6 +13,11 @@ runtime/
 # 模型权重（GB 级，不入库）
 models/
 
+# Kronos 相关（外部项目，不入库）
+Kronos/
+Kronos_code/
+Kronos_pretrained/
+
 # 依赖与构建产物
 node_modules/
 frontend/dist/
