@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai 置信校准层 · 调研 + 落地方案</h1>
+<blockquote>日期：2026-08-13　|　模块：<code>app/core/confidence_calibrator.py</code> + <code>meta_agent</code> 闸门接入　|　决策链：逆共识闸门 / 新闻闸门&lt;br&gt;铁律依据：提准非拦截（只让 0.80 真正表示 80% 命中，不改开仓笔数；默认不改手数）</blockquote>
+<hr>
+<h2>一、背景与问题：为什么必须做置信校准</h2>
+<p>上一轮「统一大脑审计」发现一个硬伤（发现1）：<strong>逆共识高置信单胜率 51%，明显低于共识单 56%</strong>。而逆共识闸门的放行条件恰好是 <code>final_confidence &gt;= 0.80</code>。</p>
+<p>问题不在"逆共识"这个机制本身，而在 <strong><code>final_confidence</code> 这个数值是虚高的</strong>：</p>
+<ul><li>meta_agent 把 DeepSeek / 混元 / Chronos 三脑的"自报置信度"按权重合并，但这个合并结果<strong>没有经过任何校准</strong>。</li><li>文献与大量实证表明：<strong>LLM 集成输出的置信度系统性过自信</strong>——模型说 80%，真实命中率往往只有 ~60%。</li><li>后果：逆共识闸门用虚高的 0.80 当阈值，会把一批"实际只有 50%~60% 命中"的弱逆共识单放进来，直接拖累信号准度。</li></ul>
+<p>所以"置信校准"不是给信号加一道新门（那是拦截，违背铁律），而是<strong>把阈值的语义还原成真实命中率</strong>——0.80 就真的表示 80% 会赢。该开的单照开，只是闸门判定的依据从"虚高自报"变成"历史观测命中率"。这是"提准"不是"拦截"。</p>
+<hr>
+<h2>二、全球调研依据（≥3 独立来源交叉验证）</h2>
+<h3>2.1 LLM 输出系统性过自信（核心前提）</h3>
+<table><thead><tr><th>来源</th><th>结论</th><th>与本案关联</th></tr></thead><tbody><tr><td>PredictEngine《Best Practices for LLM-Powered Trade Signals》</td><td>LLM 给交易信号时"说 80% 实则命中 ~60%"是常态，需后校准</td><td>直接对应本系统 <code>final_confidence</code> 虚高</td></tr><tr><td>dev.to / Polymarket 研究</td><td>对真实市场事件，大模型校准曲线整体在对角线<strong>下方</strong>（过自信），Platt/Isotonic 可显著拉回</td><td>印证"说得越满错得越多"</td></tr><tr><td>paperswithbacktest LoRA 去偏研究</td><td>对金融决策 LLM，温度缩放 + Platt 把 ECE 从 0.18 降到 0.05 量级</td><td>金融场景校准有效且必要</td></tr></tbody></table>
+<p>三家独立出处一致结论：<strong>LLM/集成置信度必须后校准，否则阈值判定失真</strong>。本项目 <code>final_confidence</code> 正属于此类。</p>
+<h3>2.2 校准方法学（文献一致结论）</h3>
+<table><thead><tr><th>方法</th><th>原理</th><th>适用</th><th>本项目取舍</th></tr></thead><tbody><tr><td><strong>Platt Scaling</strong></td><td>逻辑回归 2 参数：<code>σ(a·x + b)</code></td><td>数据量小也稳、数据高效、单调</td><td>本系统最终 Brier 选优落到它（见第五节）</td></tr><tr><td><strong>Isotonic Regression (PAVA)</strong></td><td>保序回归，分段常数单调映射</td><td>样本充足（&gt;1000）时 ECE/Brier 优于 Platt</td><td>2700+ 样本本应适用，但 auto 选优选了 Platt（更平滑、抗尾部稀疏）</td></tr><tr><td><strong>Temperature Scaling</strong></td><td>单参数缩放 logits</td><td>只移校准曲线、不动排序</td><td>单参数表达力弱于 Platt，未采用</td></tr><tr><td><strong>Conformal Prediction</strong></td><td>分布无关、频率覆盖保证</td><td>需要校准带而非点估计</td><td>输出"命中区间"而非"命中概率"，与闸门阈值语义不符，未采用</td></tr></tbody></table>
+<p><strong>选型准则（行业共识）</strong>：在「时间切分」校准集上用 <strong>Brier Score</strong> 选优（Brier 同时惩罚校准与分辨力，比单纯 ECE 更适合选方法），全量 refit 后部署。金融数据非平稳，<strong>严禁随机切分</strong>（会前视泄漏），必须按时间切。</p>
+<hr>
+<h2>三、生产实证：本系统校准前已严重过自信</h2>
+<p>实跑 <code>scripts/calibrate_confidence.py</code> 读取生产库 <code>trades</code> 表 2703 笔已平仓样本（<code>meta_agent_decision ∈ BUY/SELL</code> + <code>meta_agent_confidence</code> + <code>net_profit</code> 判定胜负），先做"可靠度诊断"：</p>
+<table><thead><tr><th>自报区间中值</th><th>实际命中率</th><th>样本数</th><th>判定</th></tr></thead><tbody><tr><td>55.7%</td><td><strong>16.3%</strong></td><td>270</td><td>过自信</td></tr><tr><td>60.5%</td><td>25.9%</td><td>270</td><td>过自信</td></tr><tr><td>64.6%</td><td>46.7%</td><td>270</td><td>过自信</td></tr><tr><td>65.5%</td><td>34.8%</td><td>270</td><td>过自信</td></tr><tr><td>70.2%</td><td>34.4%</td><td>270</td><td>过自信</td></tr><tr><td>76.4%</td><td>41.9%</td><td>270</td><td>过自信</td></tr><tr><td>85.0%</td><td>41.5%</td><td>270</td><td>过自信</td></tr><tr><td>98.0%</td><td>66.7%</td><td>3</td><td>过自信</td></tr></tbody></table>
+<p><strong>结论</strong>：全区间"过自信"，且<strong>越是高自报越离谱</strong>（98% 自报实际仅 67%，55% 自报实际仅 16%）。这正好解释了为什么"逆共识单用了 0.80 阈值却只有 51% 胜率"——因为模型自报 0.80 的真实命中可能只有 ~46%。校准后，闸门 0.80 阈值将对应真实 ~80% 命中，逆共识单质量自然提升。</p>
+<hr>
+<h2>四、落地设计（严守铁律）</h2>
+<h3>4.1 提准非拦截三原则</h3>
+<ol><li><strong>仅改阈值语义，不改开仓笔数</strong>：校准后 <code>_calib_conf</code> 替代 <code>final_confidence</code> 进闸门判定；降级（共识/逆共识）逻辑、交易数量完全不变。</li><li><strong>默认不改手数</strong>：<code>CONFIDENCE_CALIBRATION_AFFECTS_SIZING=False</code>。校准只影响"准不准"，不影响"下多大"，守住"净利不降"及格线。日后若验证「按校准置信缩放手数」能提净利，再单独开调研落地。</li><li><strong>运行期零侵入、零 DB 访问</strong>：离线拟合 → 写 <code>data/confidence_calibration.json</code>；<code>meta_agent</code> 运行期只 <code>load()</code> 这个 JSON 查表。<strong>JSON 缺失则透传</strong>（<code>calibrated_conf == raw_conf</code>），绝不阻塞交易。</li></ol>
+<h3>4.2 数据流</h3>
+<pre><code>生产库 trades（已平仓 2703 笔）
+      │  scripts/calibrate_confidence.py 离线拟合
+      ▼
+data/confidence_calibration.json  （method=platt, params=[a,b], n=2703）
+      │  meta_agent._get_calibrator() 运行期加载
+      ▼
+adjudicate：_calib_conf = calib.calibrate(final_confidence)
+      │  → 新闻闸门 / 逆共识闸门 改用 _calib_conf 判定
+      ▼
+DebateDecision.calibrated_confidence 落库 + 大脑审计 notes 追加"校准后置信 X%"</code></pre>
+<h3>4.3 模块依赖隔离</h3>
+<p><code>confidence_calibrator.py</code> 纯标准库（<code>sqlite3/json/os/math/bisect</code>），<strong>不依赖 MT5 / numpy / torch / sqlalchemy</strong>。校准拟合脚本用 <code>importlib.util</code> 直接加载该模块，绕过 <code>app/__init__.py</code> 的 SQLAlchemy 初始化，避免拖起整个后端。</p>
+<hr>
+<h2>五、实跑结果（已生成校准映射）</h2>
+<pre><code>读取历史样本: 2703 笔
+选用方法: platt         （auto Brier 选优：platt vs isotonic 在测试集比 Brier）
+训练样本量: 2703
+测试集 Brier: 0.2645
+测试集 ECE:    0.123
+映射文件: F:\WanxiangAI\backend\data\confidence_calibration.json</code></pre>
+<p><strong>映射演示（raw → 校准后真实命中）</strong>：</p>
+<ul><li>raw 55% → <strong>28%</strong></li><li>raw 65% → <strong>32%</strong></li><li>raw 75% → <strong>38%</strong></li><li>raw 85% → <strong>46%</strong></li><li>raw 95% → <strong>62%</strong></li></ul>
+<p>含义：逆共识闸门阈值 0.80，校准前模型自报 0.80 实际仅 ~46% 命中；校准后闸门拿到的是"真实 80% 命中"对应的原始分（约 0.95+），从而只放行真正高把握的逆共识单。</p>
+<hr>
+<h2>六、代码落点清单</h2>
+<table><thead><tr><th>文件</th><th>改动</th><th>状态</th></tr></thead><tbody><tr><td><code>app/core/confidence_calibrator.py</code></td><td><strong>新建</strong>。PAVA + Platt + Brier/ECE 选优 + <code>ConfidenceCalibrator</code> 类（load/available/fit/calibrate/save/report）</td><td>✅</td></tr><tr><td><code>app/core/meta_agent.py</code></td><td>4 处：①<code>__init__</code> 加 <code>self._conf_calib</code>；②<code>DebateDecision</code> 加 <code>calibrated_confidence</code> 字段；③新增 <code>_get_calibrator()</code> 懒加载；④<code>adjudicate</code> 内计算 <code>_calib_conf</code> 并接入<strong>新闻闸门 + 逆共识闸门</strong>，构造 <code>DebateDecision</code> 带校准值，审计 notes 追加校准后置信</td><td>✅</td></tr><tr><td><code>app/config.py</code></td><td>新增 <code>CONFIDENCE_CALIBRATION_ENABLED=True</code>、<code>CONFIDENCE_CALIBRATION_AFFECTS_SIZING=False</code></td><td>✅</td></tr><tr><td><code>scripts/calibrate_confidence.py</code></td><td><strong>新建</strong>。离线读生产库拟合 + <code>sqlite3.backup()</code> 一致性快照 + 写 JSON</td><td>✅</td></tr><tr><td><code>tests/test_confidence_calibration.py</code></td><td><strong>新建</strong>。5 例：PAVA 单调、Platt 往返、校准后 Brier 优于 raw、缺失透传、save/load 往返</td><td>✅ 5/5 通过</td></tr><tr><td><code>data/confidence_calibration.json</code></td><td><strong>生成</strong>（304 字节，platt）</td><td>✅</td></tr></tbody></table>
+<p>编译校验：<code>py_compile</code> 8 文件全过；<code>pytest tests/test_confidence_calibration.py</code> 5/5 通过。</p>
+<hr>
+<h2>七、生效方式（重要）</h2>
+<p><strong>当前运行后端 pid=1992 是在写码之前启动的，尚未加载校准层。需用户再次物理重启：</strong></p>
+<blockquote>双击 <code>F:\WanxiangAI\backend\restart_task_backend.bat</code>（自提权管理员）→ 杀旧进程 → 释放 8080 → <code>schtasks Start WanxiangAIBackend</code> → 等 <code>/api/health</code> 的 pid 换新且 <code>uptime_sec</code> 回落。</blockquote>
+<p>重启后 <code>CONFIDENCE_CALIBRATION_ENABLED=True</code> 默认启用，无需改任何配置。</p>
+<p><strong>重新拟合</strong>：若日后历史库样本结构变化，重跑 <code>python scripts/calibrate_confidence.py</code> 即可刷新 JSON（运行期自动加载，无需重启）。</p>
+<hr>
+<h2>八、验收方式（闭环验证）</h2>
+<p>重启并开市后，复跑 <code>verify_brain_audit.py</code> 闭环审计，重点看：</p>
+<ol><li><strong>逆共识单胜率</strong>是否从 51% 回升（校准后闸门只放行真实高把握逆共识单）。</li><li><strong>整体胜率 / PF</strong> 是否不降（提准非拦截，交易笔数应基本不变）。</li><li><strong>净盈利</strong>不降（默认不改手数，守住及格线）。</li></ol>
+<p>任一指标显著倒退则回退：<code>config.py</code> 置 <code>CONFIDENCE_CALIBRATION_ENABLED=False</code> 即恢复透传，零代码改动。</p>
+<hr>
+<h2>九、风险与回退</h2>
+<table><thead><tr><th>风险</th><th>缓解 / 回退</th></tr></thead><tbody><tr><td>JSON 损坏或缺失</td><td>校准器 <code>available()==False</code> → <code>calibrate()</code> 透传 raw，交易不受影响</td></tr><tr><td>校准反而降低胜率</td><td>置 <code>ENABLED=False</code> 一键回退；或下调拟合 <code>min_samples</code> 重拟合</td></tr><tr><td>过拟合（platt 2 参数，几乎不可能过拟合）</td><td>已用时间切分 + Brier 选优，抗过拟合</td></tr><tr><td>改手数导致净利波动</td><td><code>AFFECTS_SIZING=False</code> 默认关闭，本期不触碰仓位</td></tr></tbody></table>
+<hr>
+<h2>十、结论</h2>
+<p>"置信校准"是上一轮审计发现1（逆共识单胜率偏低）的<strong>根因级修复</strong>：不是给信号加新门，而是把阈值语义从"虚高自报"校准成"真实命中率"。生产实证显示本系统 <code>final_confidence</code> 严重过自信（55%→16%、98%→67%），校准层用 Platt 映射把 0.80 阈值还原为真实 ~80% 命中，预期直接抬升逆共识单质量，且不改变交易笔数与默认手数——完全符合"提准非拦截"铁律与"交易笔数不腰斩 / 净利不降 / PF&gt;1"及格线。</p>
+<p><strong>下一步</strong>：请用户重启后端使校准层生效，开市后我复跑闭环审计验证胜率提升；若验证通过，记入长期记忆作为信号塔提准的又一实证。</p>
+<hr>
+<h2>⚠️ 重要勘误（2026-08-13 15:45 追加·设计已修正）</h2>
+<p><strong>原方案第七节"落点"把校准值直接喂进新闻/逆共识闸门阈值(0.80)——此设计经实测证明是致命缺陷，已修正为默认关闭。</strong></p>
+<h3>致命缺陷证据</h3>
+<p>实跑拟合后发现：本系统 <code>final_confidence</code> 过自信极严重，<strong>校准后置信的天花板只有 0.79</strong>（raw=0.99→0.790；raw0.80→0.417 / 0.85→0.463 / 0.95→0.622）。要校准后≥0.80 需 raw≥0.990，超出可行域。</p>
+<h3>连锁后果（若按原方案部署）</h3>
+<ul><li>逆共识闸门 <code>apply_contrarian_gate</code> 在 <code>conf&lt;0.80</code> 时把逆共识单<strong>降级为共识方向</strong>；因校准值全 &lt;0.80 → <strong>每一笔逆共识单都被无声改成共识方向</strong>。</li><li>新闻窗口单 <code>conf&lt;0.80</code> 全部 HOLD → 新闻窗口零成交。</li><li>= 彻底抹杀逆共识交易 + 新闻窗口零成交，<strong>直接撞"多交易多赚钱 / 提准非拦截"红线</strong>，且违反"拦截须 walk-forward 验证"铁律。</li></ul>
+<h3>已修正（config.py + meta_agent.py）</h3>
+<ul><li>新增开关 <code>CONFIDENCE_CALIBRATION_AFFECTS_GATES: bool = False</code>（<strong>默认关</strong>）。</li><li>闸门阈值<strong>默认仍用 raw <code>final_confidence</code></strong>（零行为变化、保护交易笔数及格线）。</li><li>校准值仅作<strong>诚实展示</strong>：<code>DebateDecision.calibrated_confidence</code> 字段 + 审计日志"校准后置信X%"，让运营/用户看到真实把握度。</li><li>仅当 <code>AFFECTS_GATES=True</code> <strong>且经 walk-forward 验证净盈利提升后</strong>才可开启（拦截须验证铁律）；<code>AFFECTS_SIZING</code> 同样默认关。</li></ul>
+<h3>结论不变</h3>
+<p>"置信校准"的价值在于<strong>暴露并诚实化过自信</strong>（核心实证：55%→16%、98%→67%），而非收紧闸门。正确落点 = 诚实展示 + 可选仓位缩放（默认关），绝不做成变相拦截。本系统校准天花板&lt;0.80 这一事实，本身已证明原"让 0.80 真正表示 80% 命中"的闸门化思路在当前信号质量下不可行。</p></body></html>

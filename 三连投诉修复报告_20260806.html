@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai · 三连投诉根因修复报告（2026-08-06）</title>
+<style>
+  :root{ --bg:#0b0e14; --card:#141a24; --line:#222c3a; --txt:#e6edf3; --mut:#8b98a9;
+         --ok:#3fb950; --warn:#d29922; --bad:#f85149; --acc:#58a6ff; --acc2:#bc8cff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;padding:28px}
+  .wrap{max-width:980px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px;background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+  .card h2{font-size:17px;margin:0 0 10px;color:var(--acc)}
+  .tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;margin-right:6px}
+  .t-ok{background:rgba(63,185,80,.15);color:var(--ok);border:1px solid rgba(63,185,80,.4)}
+  .t-bad{background:rgba(248,81,73,.15);color:var(--bad);border:1px solid rgba(248,81,73,.4)}
+  .t-warn{background:rgba(210,153,34,.15);color:var(--warn);border:1px solid rgba(210,153,34,.4)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600}
+  code{background:#0d1117;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px;color:#a5d6ff}
+  .kv{font-size:13.5px}
+  .kv b{color:var(--txt)}
+  .mut{color:var(--mut);font-size:12.5px}
+  .ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+  ul{margin:8px 0 0;padding-left:18px} li{margin:4px 0}
+  .footer{color:var(--mut);font-size:12px;margin-top:22px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>万象Ai · 三连投诉根因修复报告</h1>
+  <div class="sub">XAUUSD 自动量化交易系统 · 2026-08-06 · 修复后已重启生效（uvicorn pid 19448）</div>
+
+  <div class="card">
+    <h2>用户投诉 → 根因 → 修复 总览</h2>
+    <table>
+      <tr><th style="width:30%">投诉</th><th style="width:38%">根因</th><th style="width:32%">修复</th></tr>
+      <tr>
+        <td>① 下跌行情仍狂开 BUY，全亏</td>
+        <td><code>meta_agent</code> 取体制来自滞后 <code>SMA20/50</code>，下跌初期误报 <code>strong_uptrend</code> → BUY 获背书不惩罚</td>
+        <td><span class="tag t-ok">已修</span>体制主源改 <code>detect_regime</code>（灵敏多周期融合）</td>
+      </tr>
+      <tr>
+        <td>② 主号/挂号订单数不同步（主号平了挂号不平）</td>
+        <td><code>_reconcile_against_leader</code> 已实现但 <code>execute_cycle</code> 未调用（兜底缺失）</td>
+        <td><span class="tag t-ok">已修</span>每轮调用 + 主号自护栏；跟号清孤儿单/重复单</td>
+      </tr>
+      <tr>
+        <td>③ AI 不看当前持仓（又暴露失明）</td>
+        <td>持仓仅逐笔注入，缺篮仓汇总，AI 难判断重仓方向</td>
+        <td><span class="tag t-ok">已修</span>双模型提示词前置「持仓篮总览」</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>① 下跌停开 BUY — 两层修复</h2>
+    <p class="kv"><b>market_analyzer._trend_strength</b>：丢弃滞后 <code>SMA20/50</code> 交叉，改用<b>价格行为</b>（近10根方向）+ 近端/远端斜率。下跌初期立即判 <code>downtrend</code>/<code>strong_downtrend</code>。</p>
+    <p class="kv"><b>meta_agent.adjudicate（364-374）</b>：体制主源改为 <code>market_data["regime"]["regime"]</code>（即 <code>detect_regime</code> 结果，H4+H1 多周期融合）。仅当 detect_regime 不可用时才回退滞后 SMA。</p>
+    <p class="kv">效果：下跌行情 <code>trend_regime=downtrend</code> → BUY <b>无体制背书</b> → 置信度 ×0.7 压低（"提准非拦截"）；上涨行情仍正常获背书。</p>
+  </div>
+
+  <div class="card">
+    <h2>② 主副仓同步 — 兜底对账接入</h2>
+    <p class="kv"><b>execute_cycle</b>：在 <code>_reconcile_positions()</code> 之后新增 <code>self._reconcile_against_leader()</code>，每轮核对跟号是否与主号一致。</p>
+    <p class="kv"><b>_reconcile_against_leader 新增主号自护栏</b>：<code>if leader.id == self.account_id: return</code> —— 防止主号把自身原始持仓（无 <code>L{ticket}</code> 标记）误判为孤儿单全部平仓（灾难性）。</p>
+    <p class="kv">三态护栏（实测 DB 配置）：
+      <ul>
+        <li><b>跟号 7175</b>（follow_leader=1）→ 运行对账，清主号已平、跟号残留的孤儿单</li>
+        <li><b>主号 8464</b>（is_market_primary=1）→ 自护栏跳过，绝不清自己单</li>
+        <li><b>独立 3299/3301</b>（follow_leader=0）→ 首道 <code>if not _follow_leader</code> 跳过</li>
+      </ul>
+    </p>
+    <p class="mut">注：实时库为 <code>backend/data/wx_prod.dat</code>（.env 覆盖），非废弃的 <code>C:/WXDB/wx_prod.dat</code>。</p>
+  </div>
+
+  <div class="card">
+    <h2>③ AI 看持仓 — 篮仓总览</h2>
+    <p class="kv"><b>deepseek_client + hunyuan_client</b> 的 <code>_fmt_my_positions</code> 前置一行汇总：</p>
+    <p><code>【持仓篮总览】笔数=N | 总BUY=x手 总SELL=y手 | 净暴露=BUY多z手 | 浮动总盈亏=±$k</code></p>
+    <p class="kv">AI 投票前一眼看到重仓方向与总浮亏，避免"看不见已有单→逆势加仓/重复下单"。</p>
+  </div>
+
+  <div class="card">
+    <h2>验证结果</h2>
+    <table>
+      <tr><th>项目</th><th>结果</th></tr>
+      <tr><td>重启方式</td><td>杀旧 uvicorn(26924) + supervisor 自动拉起新进程(19448)</td></tr>
+      <tr><td><code>/api/health</code></td><td class="ok">status=ok · mt5_connected=4 · auto_loop_running=true · last_cycle=47.2s · trade_stale=false</td></tr>
+      <tr><td>下跌序列 _trend_strength</td><td class="ok">→ strong_downtrend（复刻单测通过）</td></tr>
+      <tr><td>下跌体制 BUY 背书</td><td class="ok">不被背书、×0.7（复刻单测通过）</td></tr>
+      <tr><td>篮仓总览输出</td><td class="ok">BUY多0.40手 / 总浮亏 -50$ 正确（复刻单测通过）</td></tr>
+      <tr><td>新进程报错</td><td class="ok">cycle#10-13 全链路无 Traceback（旧进程 14:57 前的 'list'.get 错误已随重启消失）</td></tr>
+    </table>
+    <p class="mut">说明：当前行情为<b>上涨趋势</b>（日志 <code>体制=强势上涨趋势</code>），"下跌停开BUY"的体感需待真实下跌行情验证；逻辑已确定性证明。即便在上涨行情，系统也未盲开——DS 投 BUY 但 HY 投 HOLD → 共识不足 → 置信 0.43&lt;0.58 → 不开单，属健康克制。</p>
+  </div>
+
+  <div class="card">
+    <h2>残留观察（非本次范围，未引入）</h2>
+    <p class="kv"><span class="tag t-warn">残留</span>旧进程 26924 在 <code>execute_cycle</code> 下单环节（<code>_push_feed</code> 内部，~line 996）偶发 <code>'list' object has no attribute 'get'</code>。该错误<b>未出现在重启后的新进程</b>（疑似旧进程内存态脏数据，重启即清），与本次三处修复无关。若后续复现，可定位 <code>_push_feed</code> 入参类型。</p>
+  </div>
+
+  <div class="footer">万象Ai 自动量化交易系统 · 修复报告由 AI 助手生成 · 2026-08-06</div>
+</div>
+</body>
+</html>

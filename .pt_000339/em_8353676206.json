@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "global": {
+    "level": "HALT_NEW",
+    "reason": "非农数据前避险",
+    "at": "2026-08-09T00:03:44",
+    "by": "liumanchun"
+  },
+  "accounts": {},
+  "flatten_requests": []
+}

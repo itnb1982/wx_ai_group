@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "global": {
+    "level": "NORMAL",
+    "reason": "",
+    "at": "",
+    "by": ""
+  },
+  "accounts": {
+    "acct-X": {
+      "level": "HALT_NEW",
+      "reason": "",
+      "at": "2026-08-08T23:57:32",
+      "by": "ops"
+    }
+  },
+  "flatten_requests": []
+}

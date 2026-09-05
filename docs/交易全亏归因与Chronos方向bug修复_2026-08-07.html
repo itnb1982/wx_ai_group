@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai · 交易全亏归因与 Chronos 方向 Bug 修复报告</title>
+<style>
+  :root{ --bg:#0b1020; --card:#141b30; --line:#243049; --ok:#27c08a; --warn:#f0a93b; --bad:#ff5d6c; --txt:#e6ecf5; --sub:#9fb0cc; }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0b1020,#0e1426);color:var(--txt);font-family:-apple-system,"Segoe UI",Roboto,"Microsoft YaHei",sans-serif;line-height:1.6;padding:32px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:26px;margin:0 0 4px}
+  .meta{color:var(--sub);font-size:13px;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:18px}
+  h2{font-size:18px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .tag{font-size:12px;padding:2px 9px;border-radius:999px;font-weight:600}
+  .t-ok{background:rgba(39,192,138,.15);color:var(--ok);border:1px solid rgba(39,192,138,.4)}
+  .t-bad{background:rgba(255,93,108,.15);color:var(--bad);border:1px solid rgba(255,93,108,.4)}
+  .t-warn{background:rgba(240,169,59,.15);color:var(--warn);border:1px solid rgba(240,169,59,.4)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--sub);font-weight:600}
+  td.n{text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:var(--ok)} .neg{color:var(--bad)}
+  code{background:#0c1326;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12px;color:#bcd2ff}
+  ul{margin:8px 0;padding-left:20px} li{margin:5px 0}
+  .big{font-size:15px}
+  .quote{background:#0c1326;border-left:3px solid var(--warn);padding:10px 14px;border-radius:0 8px 8px 0;color:var(--sub);font-size:13px;margin:10px 0}
+  .pill{display:inline-block;background:#1b2540;border:1px solid var(--line);border-radius:8px;padding:4px 10px;margin:3px 4px 3px 0;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>交易全亏归因 + Chronos 方向 Bug 修复报告</h1>
+  <div class="meta">万象Ai XAUUSD 自动量化交易系统 · 2026-08-07 · 数据库 F:\WanxiangAI\backend\data\wx_prod.dat（2613 笔）</div>
+
+  <div class="card">
+    <h2>① 本地 Chronos 模型是否真在工作？ <span class="tag t-ok">在工作</span></h2>
+    <p class="big">是的，本地 Chronos-2 120M 多变量时序模型<strong>每一分钟都在真实预测</strong>。</p>
+    <ul>
+      <li>运行时日志实证：<code>[Chronos] 多变量协变量预测成功 → ['DXY','US10Y','VIX'] (multivariate=True)</code>（协变量已接 Frankfurter/CBOE/美国财政部三个免费源）。</li>
+      <li>Meta 质量陪审团持续输出 <code>Chronos方向=BUY/SELL(可用=True) 天花板=4288.0</code>。</li>
+    </ul>
+    <div class="quote">
+      <strong>那 UI 中间的"本地 Chronos 时序模型加载中 / 已降级（SMC·Regime 兜底）"是什么意思？</strong><br>
+      这是前端 <code>MetaQualityPanel.jsx</code> 里 <code>Sparkline</code> 组件的<strong>占位文案</strong>。它要后端返回 <code>p10/p50/p90</code> 的<strong>数组</strong>才画曲线，否则 <code>ready=False</code> 永远显示"降级"。<br>
+      旧版 <code>meta_quality.py</code> 只返回标量，前端收不到数组 → 永远显示降级——但模型其实在跑，是<strong>前端显示 bug，不是模型没工作</strong>。现已修复（透传数组），请 <strong>Ctrl+Shift+R 硬刷</strong> 浏览器即可看到真实 P10-P50-P90 曲线。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>② 为什么历史全是亏？ <span class="tag t-bad">已查账归因</span></h2>
+    <p>拉 2613 笔交易，按平仓原因（exit_reason）汇总：</p>
+    <table>
+      <tr><th>平仓原因</th><th class="n">笔数</th><th class="n">总盈亏($)</th><th>说明</th></tr>
+      <tr><td>reverse（AI 反向全平）</td><td class="n">41</td><td class="n neg">-31,213</td><td>AI 方向翻转平仓，最重</td></tr>
+      <tr><td>sl（止损）</td><td class="n">18</td><td class="n neg">-9,492</td><td>机械止损被扫</td></tr>
+      <tr><td>HIGH天花板·P90全平吃满</td><td class="n">52</td><td class="n">-1,570</td><td><strong>含卖单误平 bug（见③）</strong></td></tr>
+      <tr><td>l3_tp_lock（L3锁利）</td><td class="n">18</td><td class="n pos">+32,614</td><td>L3 护盾正常盈利</td></tr>
+      <tr><td>risk_cut（风控砍）</td><td class="n">15</td><td class="n neg">-231</td><td>小亏</td></tr>
+      <tr><td>follower_mirror（跟单镜像）</td><td class="n">57</td><td class="n neg">-190</td><td>跟号小亏</td></tr>
+      <tr><td>tp（止盈）</td><td class="n">1</td><td class="n pos">+338</td><td>正常</td></tr>
+    </table>
+    <p class="big" style="margin-top:14px">归因（修正了"新系统已停亏"的过早结论）：</p>
+    <ul>
+      <li><strong>升级前旧系统</strong>：无 Chronos 延伸度校验，在 4244~4281 高位<strong>追多 BUY</strong> → risk_cut/reverse/sl 亏损。</li>
+      <li><strong>新系统（08-07 当天仍在亏）</strong>，三大主因：
+        <ol>
+          <li><strong>SELL 止盈天花板错配 bug</strong>（本次已修，见③）：卖单在水下被误判"吃满利润"全平 → 实为负收益。</li>
+          <li><strong>AI 方向鞭锯（reverse）</strong>：DeepSeek/Hunyuan 置信仅 <code>0.5</code>（低置信）就翻转方向 → 反向全平亏损，占亏损大头（-$31k）。</li>
+          <li><strong>巨型 demo 账号放大</strong>：liumanchun1≈$989k、liumanchun3≈$1.006M，按风险比例开出 <strong>3.78~7.99 手</strong>，单笔 reverse 亏 $5700~5800；liumanchun2/4 仅 $2.4k/$2.7k（真实规模参考，上线真实本金手数会正常缩小）。</li>
+        </ol>
+      </li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>③ 本次修复：smart_exit 止盈天花板方向错配 <span class="tag t-ok">已修复·重启生效</span></h2>
+    <p class="big"><strong>根因</strong>：原"HIGH质量·让利润奔跑"逻辑对<strong>所有单</strong>用 P90（预测<strong>上界</strong>）作止盈目标。</p>
+    <ul>
+      <li>对 <strong>BUY</strong> 正确：价格涨到 P90（上界）= 盈利 ✓</li>
+      <li>对 <strong>SELL</strong> 错误：盈利需价格<strong>跌到 P10（下界）</strong>，而 P90 是卖单论破产的价位。水下时 <code>current_price ≤ P90</code> 恒成立 → 触发"全平吃满"却实亏。</li>
+    </ul>
+    <div class="quote">数据库实证：<code>sell 开=4243.08 平=4246.33 利=-1220.94 原因=HIGH质量·价格触及Chronos P90天花板(4288.00)→全平吃满</code><br>P90=4288 在卖单开仓价<strong>上方</strong>，价格触及它=卖单亏，却被标成"吃满利润"。</div>
+    <p><strong>修复</strong>（方向感知目标）：<span class="pill">BUY → P90（上界）</span><span class="pill">SELL → P10（下界）</span></p>
+    <ul>
+      <li><code>DebateDecision</code>(meta_agent.py) 新增 <code>chronos_p10</code> 字段，构造时注入 <code>_mq.get("p10")</code>。</li>
+      <li><code>smart_exit.evaluate_position</code> 与 <code>compute_initial_sl_tp</code> 的 HIGH 逻辑 + 追踪 TP：SELL 改用 P10 作盈利目标/地板，且<strong>仅在盈利方向</strong>（P10 &lt; 入场）才生效。</li>
+      <li><code>trade_executor</code> 开仓(979)与退出(1504)两处传 <code>chronos_p10</code>。</li>
+      <li>单元验证 5 项全过：SELL水下→hold（不误平）、SELL跌到P10→全平"P10地板"、BUY涨到P90→全平"P90天花板"、开仓 SL/TP 方向正确。</li>
+      <li>重启 uvicorn（supervisor 自动拉起新进程 worker 8696），health 恢复 <code>mt5_connected=4 auto_loop_running=True</code>，日志无导入报错。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>④ 待你确认 / 未决项</h2>
+    <ul>
+      <li><span class="tag t-warn">需你操作</span> 浏览器 <strong>Ctrl+Shift+R 硬刷</strong>，确认 AI 陪审团面板出现真实 P10-P50-P90 曲线（替代"加载中/已降级"）。</li>
+      <li><span class="tag t-warn">待定</span> <strong>reverse 低置信翻转亏损</strong>（-$31k 大头）：是否调高反向确认阈值或加约束？注意你的"多交易多赚钱"铁律——砍反转会减少交易笔数，须 walk-forward 验证能提升净盈利再动。</li>
+      <li><span class="tag t-ok">无害</span> supervisor 仍残留一个冗余父进程（11636），不影响交易，后续可再根治。</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

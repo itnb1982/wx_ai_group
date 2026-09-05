@@ -1,0 +1,1 @@
+﻿VENV=C:\Users\15588\WorkBuddy\WanxiangAI\frontend\node_modules\loose-envify

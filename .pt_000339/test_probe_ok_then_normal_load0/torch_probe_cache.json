@@ -1,0 +1,9 @@
+{
+  "a71755b6fb36d38a681ab2cb2e71e3586e60b91d": {
+    "ok": true,
+    "reason": "ok",
+    "torch_version": "2.6.0+cu124",
+    "cuda": true,
+    "returncode": 0
+  }
+}

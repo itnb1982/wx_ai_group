@@ -1,0 +1,8 @@
+﻿=== HKCU:\Software\MetaQuotes 存在: False
+  无 Terminal 子键
+==== C54ABD31694C1B0FC8715C4F2B20FBAF ====
+  Common 路径不存在
+==== D8E196A488CAFD45BB0BBB0BC09A258A ====
+  Common 路径不存在
+==== 5F9A67BD35361E686BC6A4D01A0B18D4 ====
+  Common 路径不存在

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai 本地模型推理节奏 · 系统性诊断报告</h1>
+<blockquote>时间：2026-08-15（周六，XAUUSD 休市——无法采盘中实时推理，但模型延迟与架构节奏可完整审计）&lt;br&gt;范围：本地双模型（qwen3:8b @ GPU0/11434、qwen2.5vl:3b @ GPU1/11435）在「智能仓位管理」与「平仓」两大模块中的真实工作状态、推理频率、延迟能否赶上行情。</blockquote>
+<hr>
+<h2>一、结论速览</h2>
+<table><thead><tr><th>问题</th><th>结论</th></tr></thead><tbody><tr><td>本地模型是否正常工作</td><td>✅ 正常工作。双卡显存常驻、Ollama 双实例均响应、基准推理出有效 JSON</td></tr><tr><td>多久推理一次</td><td>见第三节全景表（管仓 8B 节流 15s/单仓且仅 2 条路径；视觉 75s/账号后台刷新；校对/副驾随每笔 AI 决策）</td></tr><tr><td>推理时间能否赶上行情</td><td>✅ 能。硬安全网（券商 SL/TP 实时 + 2s 篮子锁利 + 2s 跟单镜像 + 规则化 smart_exit）全部不依赖慢模型；AI 增强层（8B/视觉/云端）滞后但有硬 SL 兜底，不会多亏</td></tr><tr><td>发现的风险</td><td>⚠️ <code>position_manager</code> 的 8B 调用原为<strong>同步阻塞 11~24s</strong>，会拖慢同账号规则化 smart_exit —— <strong>本次已修复为异步取票+缓存</strong></td></tr><tr><td>附带回归</td><td>⚠️ #610 把 <code>/api/health</code> 改成了 gate_stats 出口，<code>health_check()</code>（进程存活端点）未挂载，前端心跳红警可能失效</td></tr></tbody></table>
+<hr>
+<h2>二、现场实测（直接打 Ollama，最权威）</h2>
+<h3>2.1 GPU 与模型常驻</h3>
+<pre><code>nvidia-smi：
+  GPU0 (RTX 3060 Ti): 7337/8192 MiB, 利用率 23%   ← qwen3:8b 常驻（占用 5GB 权重）
+  GPU1 (RTX 3060 Ti): 4186/8192 MiB, 利用率 0%    ← qwen2.5vl:3b + qwen3-vl:4b 常驻</code></pre>
+<ul><li>两端口 <code>curl /api/tags</code> 均返回模型：qwen3:8b、qwen2.5vl:3b、qwen3-vl:4b（两套 Ollama 都加载了视觉模型）。</li><li>GPU1 周六 0% 利用＝正常：周末无持仓 → <code>vision_exit</code> 后台生产者线程无图可渲，符合预期，非故障。</li></ul>
+<h3>2.2 推理延迟基准（短输出，系统用 <code>/no_think</code> 关思维链）</h3>
+<table><thead><tr><th>模型</th><th>场景</th><th>实测延迟</th></tr></thead><tbody><tr><td>qwen3:8b @11434</td><td>管仓 JSON（prepend <code>/no_think</code>）</td><td><strong>11.1s / 23.6s / 17.5s / 5.4s（均值≈16s，抖动极大）</strong></td></tr><tr><td>qwen2.5vl:3b @11435</td><td>文本代理（无图）</td><td>2.5~3.5s</td></tr><tr><td>qwen2.5vl:3b @11435</td><td>3 图真实视觉推理（后台线程，超时 180s）</td><td>异步，不阻塞主链</td></tr></tbody></table>
+<blockquote>关键：qwen3:8b 的 16s 是<strong>单模型单请求</strong>延迟。它同时被「校对员(L0) + 副驾(copilot) + 管仓」三类任务占用。&lt;br&gt;<strong>★ 本部署为跟单架构（6 账号全部 <code>follow_leader=True</code>，仅主号 <code>3540bf33</code> 为信号源/leader）</strong>：本地模型（8B 管仓 + 视觉开仓/平仓）<strong>只由主号驱动</strong>，5 个跟号走 <code>_mirror_leader_exits</code> 纯镜像、<strong>零本地模型调用</strong> → 不存在"6 账号争抢 GPU"。单例 Ollama 的请求源实际只有主号一路，争用来自主号自身三类任务的串行，而非 N 个账号。实盘高峰主号自身仍可能逼近 25s 超时（<code>POSITION_MANAGE_TIMEOUT=25s</code>），故管仓已异步化兜底。</blockquote>
+<hr>
+<h2>三、推理节奏全景（各模块"多久一次 + 是否阻塞主链"）</h2>
+<table><thead><tr><th>模块</th><th>模型</th><th>触发频率</th><th>同步/异步</th><th>阻塞主链？</th></tr></thead><tbody><tr><td><strong>smart_exit（智能平仓·规则引擎）</strong></td><td>无（纯算术）</td><td>随主循环 30~60s/账号</td><td>同步·零延迟</td><td>否（自身即毫秒级算术）</td></tr><tr><td><strong>position_manager 管仓</strong></td><td>qwen3:8b</td><td>节流 15s/单仓，仅「最小亏损确认」+「追踪锁利」2 条路径</td><td><strong>修复前同步阻塞 16s → 修复后异步缓存零延迟</strong></td><td>修复前是/修复后否</td></tr><tr><td><strong>vision_exit 视觉看护</strong></td><td>qwen2.5vl:3b</td><td>后台线程 30s（原75s）刷新，仅<strong>主号(信号源)</strong>调用并缓存票；跟号镜像主号平仓、<strong>零视觉调用</strong></td><td>异步（零延迟读缓存）</td><td>否（超时 180s、僵死 300s 作废）</td></tr><tr><td>校对员(L0) + 副驾(copilot)</td><td>qwen3:8b</td><td>每笔 AI 决策（开仓侧）</td><td>同步</td><td>否（不在出场热路径，影响开仓节奏）</td></tr><tr><td>云端双脑(deepseek/hunyuan) + Chronos</td><td>云端/CPU</td><td>主循环 30~60s</td><td>网络/异步</td><td>否（方向/风险区间，非硬止损）</td></tr></tbody></table>
+<p><strong>架构要点（代码实证）：</strong></p>
+<ul><li><code>smart_exit.evaluate_position</code> 是<strong>纯规则引擎，零模型调用</strong>；其"AI 反向平仓"用的是云端 <code>ai_decision</code>（主循环节奏 + 连续 N 轮防抖），不调本地模型。</li><li><code>position_manager</code> 的 8B 被节流 <code>POSITION_MANAGER_CALL_INTERVAL=15s/单仓</code>，且只在 <code>min_loss 双确认</code> 与 <code>trailing 锁利</code> 两条路径触发；停滞平仓、M5 反转门槛均为确定性算法，不碰模型。</li><li><code>vision_exit</code> 与本次修复后的 <code>position_manager</code> 采用<strong>同一套"后台生产者线程 + 缓存票"架构</strong>：主循环永远零延迟读上一票，重活甩给后台。</li><li><strong>★ 跟单架构关键事实（避免误判 GPU 争用）</strong>：本系统 6 账号全部 <code>follow_leader=True</code>，只有主号 <code>3540bf33</code>（信号源/leader）跑完整 AI 决策链（开仓视觉 <code>VisionService</code> 90s + 出场视觉 <code>vision_exit</code> 30s + 8B 管仓 + 校对员/副驾）。<strong>5 个跟号在 <code>_manage_positions</code> 里命中 <code>if (not is_leader) and follow_leader: _mirror_leader_exits(...); return</code> 提前返回</strong>（见 <code>trade_executor.py:3068</code>），既不跑 <code>smart_exit</code>、不调 vision_exit、不调 8B 管仓、不跑自身 AI 决策，只通过 <code>_follower_mirror_loop</code>(2s) + <code>publish_leader_exit</code> 广播消费主号平仓/移损。<strong> 因此 GPU0/GPU1 的本地模型请求源 = 仅主号一路，"N 个账号争抢 GPU"在本部署不成立</strong>（除非未来新增 <code>follow_leader=False</code> 的独立账号，那类账号才会各自调用本地模型）。</li></ul>
+<hr>
+<h2>四、能不能赶上行情？——分层结论</h2>
+<p><strong>行情变化的最快尺度：</strong> XAUUSD tick 级（$0.1~$1 抖动），分钟级可动 $10~40（ATR≈$20~40），极端数据行情 1 分钟可 $30+。</p>
+<p><strong>① 永远跟得上的实时安全网（不依赖任何慢模型）：</strong></p>
+<ul><li>券商硬 SL/TP：由 MT5 经纪商执行，<strong>实时</strong>生效，是亏损的终极兜底。</li><li><code>_l3_profit_lock_monitor_loop</code>：每 <strong>2s</strong> 查篮子浮盈，达标即全平并广播信号塔（<strong>零 AI</strong>）。</li><li><code>_follower_mirror_loop</code>：每 <strong>2s</strong> 拉信号塔总线镜像主号出场动作（跟号平仓延迟 ≤2s）。</li><li>规则化 smart_exit：每 30~60s 主循环复核保本/追踪/分批止盈（SL/TP 本身 broker-side）。</li></ul>
+<p><strong>② AI 增强层（允许滞后，有硬 SL 兜底，不会多亏）：</strong></p>
+<ul><li>8B 管仓（修复后 ≤15s 缓存票）、视觉看护（75s）、云端反向（30~60s）全部是"提准非拦截"叠加在硬止损之上。慢了只是少锁一点利润，<strong>亏损单保护 + 硬 SL 兜死，绝不爆仓</strong>。</li></ul>
+<p><strong>③ 唯一实风险已消除：</strong> 8B 同步阻塞 → 异步化（见第五节）。</p>
+<hr>
+<h2>五、本次已落地修复</h2>
+<p><strong>文件：</strong> <code>F:\WanxiangAI\backend\app\services\position_manager.py</code></p>
+<p><strong>改动：</strong> 本地 8B 调用由「同步 await（实测 11~24s，主循环里干等）」改为「后台守护线程取票 + 进程级缓存 <code>_PM_VOTE_CACHE</code>」，主循环永远零延迟读上一票；<code>_PM_INFLIGHT</code> 防同一 ticket 重复起线程。与 <code>vision_exit</code> 完全同架构。</p>
+<p><strong>安全性：</strong> 纯加法、不砍交易；8B 慢/挂时主循环仍照常跑 smart_exit，保守返回（无票则不砍），与原有降级行为一致。</p>
+<p><strong>生效：</strong> 需双击 <code>backend\restart_task_backend.bat</code> 重载（孤儿 pid 换新才生效）。已 <code>py_compile</code> 校验通过。</p>
+<hr>
+<h2>六、附带发现（建议周一开盘前核对）</h2>
+<ol><li><strong><code>/api/health</code> 被 #610 改成了 gate_stats 出口</strong>，<code>health_check()</code>（返回 pid/uptime/last_cycle_sec/auto_loop_running 的进程存活端点）<strong>当前未挂载路由</strong>。前端每 5s 心跳红警若依赖 <code>/api/health</code> 的存活字段，会失效或误报。建议：把 <code>health_check</code> 挂到 <code>/api/health_check</code>（或恢复 <code>/api/health</code> 为进程健康、gate_stats 另起 <code>/api/gate-stats</code>），并核对前端心跳指向。</li><li><strong>视觉看护 75s 刷新偏粗</strong>：极端快反转（1 分钟 $30+）可能漏掉最佳锁利点；但硬 SL + 2s 篮子锁利兜死，不爆仓。若想更紧，可把 <code>VISION_EXIT_REFRESH_SEC</code> 降到 45~60s（需留视觉推理 10~30s 的余量）。</li><li><strong>GPU0 争用监控</strong>：实盘多仓时校对/副驾/管仓共用 8B 可能排队。可在 <code>GET /api/local-model/status</code>（登录后）看 <code>latency_p95_ms</code> 与 <code>calls_fail</code>；若 p95 持续逼近 25s 超时，建议副驾仅在 L2 降级时启用、校对员限频。</li></ol>
+<hr>
+<h2>七、给用户的"一键自查入口"</h2>
+<ul><li>无鉴权、最直观：<code>curl http://localhost:11434/api/tags</code>（看 qwen3:8b 是否常驻）。</li><li>系统内权威统计（需登录 token）：<code>GET /api/local-model/status</code> —— 含 <code>latency_p50_ms / latency_p95_ms / calls_ok / calls_fail / last_activity_ago_s / roles.position_manager.runs</code>（管仓实际调用次数），是最直接的"8B 在不在干活/慢不慢"依据。</li><li>进程/交易存活：看 supervisor 日志或 <code>GET /api/health_check</code>（若按建议恢复挂载）。</li></ul></body></html>

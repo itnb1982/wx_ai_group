@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai · 端到端全链路审计报告 2026-08-15</title>
+<style>
+  :root{
+    --bg:#0b0f17; --card:#121a29; --card2:#0e1522; --line:#1e2a41;
+    --txt:#e6edf7; --sub:#8fa3c8; --dim:#5d7097;
+    --gold:#d4a94e; --cyan:#3ddad7; --red:#ff5c5c; --orange:#ff9f43;
+    --yellow:#ffd93d; --blue:#6ea8fe; --green:#4ade80;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--txt); font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; line-height:1.65; padding:32px 20px 80px;}
+  .wrap{max-width:1100px; margin:0 auto;}
+  header{border-bottom:1px solid var(--line); padding-bottom:22px; margin-bottom:26px;}
+  .brand{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+  .brand h1{font-size:26px; letter-spacing:1px;}
+  .brand h1 b{color:var(--gold);}
+  .brand .ver{color:var(--cyan); font-size:13px; border:1px solid var(--cyan); padding:2px 10px; border-radius:20px;}
+  .meta{color:var(--dim); font-size:13px; margin-top:10px; display:flex; gap:22px; flex-wrap:wrap;}
+  .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:22px 0 30px;}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; text-align:center;}
+  .kpi .n{font-size:30px; font-weight:700;}
+  .kpi .t{color:var(--sub); font-size:12px; margin-top:4px;}
+  .kpi.p0 .n{color:var(--red);} .kpi.p1 .n{color:var(--orange);} .kpi.p2 .n{color:var(--yellow);} .kpi.p3 .n{color:var(--blue);} .kpi.ok .n{color:var(--green);} .kpi.total .n{color:var(--gold);}
+  .summary{background:linear-gradient(135deg,#131c2e,#10182a); border:1px solid var(--line); border-radius:14px; padding:22px 26px; margin-bottom:34px;}
+  .summary h2{color:var(--gold); font-size:17px; margin-bottom:12px;}
+  .summary p{color:var(--txt); font-size:14px;}
+  .summary .tag{display:inline-block; background:rgba(212,169,78,.12); border:1px solid rgba(212,169,78,.4); color:var(--gold); padding:1px 10px; border-radius:20px; font-size:12px; margin:2px 4px 2px 0;}
+  h2.sec{font-size:19px; margin:38px 0 16px; display:flex; align-items:center; gap:10px;}
+  h2.sec .bar{width:4px; height:20px; border-radius:2px; display:inline-block;}
+  h2.sec .cnt{color:var(--dim); font-size:14px; font-weight:400;}
+  .issue{background:var(--card); border:1px solid var(--line); border-left-width:4px; border-radius:12px; padding:18px 22px; margin-bottom:16px;}
+  .issue.P0{border-left-color:var(--red);} .issue.P1{border-left-color:var(--orange);} .issue.P2{border-left-color:var(--yellow);} .issue.P3{border-left-color:var(--blue);} .issue.FIXED{border-left-color:var(--green);}
+  .issue .head{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;}
+  .badge{font-size:11px; font-weight:700; padding:2px 10px; border-radius:20px; letter-spacing:.5px;}
+  .badge.P0{background:rgba(255,92,92,.15); color:var(--red); border:1px solid rgba(255,92,92,.4);}
+  .badge.P1{background:rgba(255,159,67,.13); color:var(--orange); border:1px solid rgba(255,159,67,.4);}
+  .badge.P2{background:rgba(255,217,61,.1); color:var(--yellow); border:1px solid rgba(255,217,61,.35);}
+  .badge.P3{background:rgba(110,168,254,.12); color:var(--blue); border:1px solid rgba(110,168,254,.35);}
+  .badge.FIXED{background:rgba(74,222,128,.12); color:var(--green); border:1px solid rgba(74,222,128,.4);}
+  .vstat{font-size:11px; color:var(--sub); background:var(--card2); padding:2px 9px; border-radius:6px; border:1px solid var(--line);}
+  .vstat.verified{color:var(--green); border-color:rgba(74,222,128,.35);}
+  .issue .loc{font-family:Consolas,monospace; font-size:12px; color:var(--cyan); background:rgba(61,218,215,.07); padding:1px 8px; border-radius:6px;}
+  .issue h3{font-size:15px; font-weight:600; flex:1; min-width:200px;}
+  .issue .desc{font-size:13.5px; color:var(--txt);}
+  .issue .desc b{color:var(--gold);}
+  .issue .impact{margin-top:8px; font-size:13px; color:var(--orange); background:rgba(255,159,67,.06); border-left:2px solid var(--orange); padding:6px 12px; border-radius:0 8px 8px 0;}
+  .issue .fix{margin-top:8px; font-size:13px; color:var(--cyan); background:rgba(61,218,215,.05); border-left:2px solid var(--cyan); padding:6px 12px; border-radius:0 8px 8px 0;}
+  .plan{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px 26px; margin-top:34px;}
+  .plan h2{color:var(--gold); font-size:17px; margin-bottom:14px;}
+  .plan ol{padding-left:22px; font-size:14px;}
+  .plan li{margin-bottom:10px;}
+  .plan .ph{display:inline-block; font-weight:700; color:var(--cyan); margin-right:8px;}
+  .foot{margin-top:40px; color:var(--dim); font-size:12px; text-align:center; border-top:1px solid var(--line); padding-top:18px;}
+  code{font-family:Consolas,monospace; color:var(--cyan); font-size:12.5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <h1>万象<b>Ai</b> · 端到端全链路审计报告</h1>
+    <span class="ver">v1.4.0 · 2026-08-15 20:5x</span>
+  </div>
+  <div class="meta">
+    <span>后端 pid 30868 · uptime 63.6s（第三批修复已加载）</span>
+    <span>方法：4 路并行深挖（数据入口 / 决策AI / 执行平仓 / MT5全局） + 关键点亲自读码复核</span>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi total"><div class="n">33</div><div class="t">总发现数</div></div>
+  <div class="kpi p0"><div class="n">1</div><div class="t">P0 安全/铁律</div></div>
+  <div class="kpi p1"><div class="n">12</div><div class="t">P1 资金/账本/时区</div></div>
+  <div class="kpi p2"><div class="n">14</div><div class="t">P2 一致性/可追溯</div></div>
+  <div class="kpi p3"><div class="n">6</div><div class="t">P3 工程细节</div></div>
+  <div class="kpi ok"><div class="n">8</div><div class="t">已亲自复核属实</div></div>
+</div>
+
+<div class="summary">
+  <h2>审计结论</h2>
+  <p>系统防御工程整体水准高：开仓闸门、镜像去重、SignalBus 原子占坑、按账号分锁、pending_verify 三阶回填、孤儿终端路径精确清理均扎实。数据层无假数据污染决策（失败均打标），「提准非拦截」贯彻到位（方向门均为软降权，硬 HOLD 仅剩 2 个窄口）。</p>
+  <p style="margin-top:10px;">但存在 <b style="color:var(--red)">1 个安全越权（P0）</b>、<b style="color:var(--orange)">12 个资金/账本/时区级问题（P1）</b>。最高危三类：</p>
+  <p style="margin-top:8px;">
+    <span class="tag">① 持仓接口越权可读他人账号（IDOR）</span>
+    <span class="tag">② #5 时区收口未闭环：交易时间回归偏移 8h</span>
+    <span class="tag">③ 混元空响应被当合法 HOLD 且上报健康 → 永不降级</span>
+  </p>
+</div>
+
+<div class="summary" style="border-color:rgba(74,222,128,.45); background:linear-gradient(135deg,#0e1c16,#10182a);">
+  <h2 style="color:var(--green)">✅ 累计已修 39 项（第二批复检 11 项 · 23:1x 落地 · 待重启生效）</h2>
+  <p><b>第二批复检修复（11 项 · 23:1x）：</b>
+  P0×1：meta_agent B门分支 UnboundLocalError（一方向一观望+逆势+Chronos 未背书 → 崩 adjudicate）；
+  P1×5：① 亏损冷却回归（上轮 UTC 写入后 `datetime.now()` 本地相减恒偏 8h → 冷却永不触发）② /ws WebSocket 无鉴权+推全平台状态（上轮 P0 漏改调用点，前端未用）③ partial 佣金/隔夜双计（history_deals_get(position) 全量累加 → 改 result.deal 精确锁定本次）④ 日亏熔断 fail-open（worker deals=None 伪装 ok=True+raw_count=-1 → 显式识别判失败）⑤ get_deal_by_position 缺 net_profit 合并（对账路径丢佣）；
+  P2×4：缓存命中返回共享引用（补 deepcopy）/ L3 快监失败仍置冷却 / copy_order 查主号补 user_id / 外部对账 _now 统一 UTC；
+  P3×1：重连后重发响应缺 isinstance 防御。</p>
+  <p style="margin-top:8px; color:var(--sub); font-size:12px;">复核判定不改（3 项）：关云置信口径（单 Chronos 不单独拍板·设计）、自愈守护清熔断（无人值守需自动恢复·权衡）、辩论轮 _api_failed 传播（降级判断在辩论前已完成·影响有限）</p>
+  <p style="margin-top:8px; color:var(--green);"><b>✅ 遗留项已清零（00:1x 落地）：_safe_send 下单幂等键</b>——mt5_service._safe_send 对 place_order/close_position 自动注入 req_id(UUID)；mt5_worker 持久化已执行 req_id 到 data/exec_req_ids.json（进程重启不丢，500 条 LRU），同 req_id 命令返回 duplicate（开仓回填 positions_get 真实价量、平仓由 _record_close 拦截不重复记录）。重连重发双倍敞口问题根治。待重启生效。</p>
+</div>
+
+<div class="summary" style="border-color:rgba(255,159,67,.5); background:linear-gradient(135deg,#201709,#10182a);">
+  <h2 style="color:var(--orange)">🔍 第三轮 · 历史 DB 数据层深挖（23:4x · 只读审计 · 5 类遗留账本问题）</h2>
+  <p><b>方法：</b>对生产库 wx_prod.dat（trades 2779 / trade_exits 2823）只读聚合审计——前两轮静态代码审计未覆盖的盲区。</p>
+  <p><b>① 主行累计盈亏 vs 明细不一致 22 单（历史假账）：</b>REAL 跟号（a1c25576/8f78f759）4-5 单明细含 ±4000 级假账（主行 +10.54 vs 明细 -4388，正是历史「REAL 券商 order_send price=0 → 平仓算假±4000」bug 残留）；ticket=241673936 reverse 单主行 -17.84 vs 明细 +8733.64 矛盾；2877213e 外部平仓 pending 单主行 0 但明细 ±425/±626。<b>处置：不修数据（保持审计链），统计/复盘时排除这些 ticket。</b></p>
+  <p><b>② partial 误写 close_time 45 条：</b>历史 bug 痕迹（代码已修），历史统计口径含这些单，知晓即可。</p>
+  <p><b>③ 明细手数累计 &gt; 主行开仓量 8 单：</b>外部 partial 对账未缩 volume 的历史痕迹（代码已修）。</p>
+  <p><b>④ 时区混存（展示回归）：</b>历史单 open_time/close_time/exit_time 为本机 naive（GMT+8），修复后新单为 UTC；_to_utc_iso 把历史单当 UTC → 历史展示偏移 8h。实证：trade_exits 同列 exit_time(本机 12:15) vs created_at(UTC 04:15) 差 8h，但早期行两者相等 → <b>exit_time 混基无法全量迁移，本轮不迁移（风险&gt;收益）</b>；新单覆盖后基准自然一致。</p>
+  <p><b>⑤ 快照新字段无实盘样本：</b>有快照 695/2779（25%），fusion/price_to_ma_z 历史单为 0（修复前无此字段），重启后 0 决策 → <b>等待实盘验证</b>。</p>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--red)"></span>P0 · 安全 / 多租户铁律违反 <span class="cnt">（1 条 · 已复核）</span></h2>
+
+<div class="issue P0">
+  <div class="head"><span class="badge P0">P0</span><h3>持仓/连接状态接口未校验账号归属（跨租户越权）</h3><span class="loc">app/routers/accounts.py:351 / :356</span><span class="vstat verified">✅ 已亲自复核</span></div>
+  <div class="desc"><b>发现：</b><code>GET /api/accounts/{account_id}/positions</code> 直接 <code>mt5_service.get_positions(account_id)</code>，无 <code>MT5Account.user_id == user.id</code> 校验；同文件 <code>/status</code> 遍历全部 Worker 返回所有账号连接状态。任意登录用户可读他人持仓与连接状态（UUID/连接态泄漏）。</div>
+  <div class="impact">多租户 SaaS 铁律「MT5Account 默认带 user_id 过滤」被绕过——数据隔离防线在这两个接口上形同虚设。</div>
+  <div class="fix">建议：positions/status 按当前 user 过滤账号集（白名单式校验，查不到即 404 而非空列表）。</div>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--orange)"></span>P1 · 资金 / 账本 / 时区 <span class="cnt">（12 条）</span></h2>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>#5 时区收口未闭环：交易时间回归偏移 8h</h3><span class="loc">trade_executor.py:2402/2853/4692 ↔ time_utils.py:32</span><span class="vstat verified">✅ 已亲自复核</span></div>
+  <div class="desc"><b>发现：</b><code>Trade.open_time/close_time</code> 写入端用 <code>datetime.now()</code>（naive 本机 GMT+8），而 <code>_to_utc_iso</code> 把 naive 一律当 UTC 补 tz → dashboard.py:268 <code>_to_utc_iso(t.open_time)</code> 等展示点把本机时间当 UTC，前端转 +8 后显示偏晚 8h。<b>created_at 系列用 <code>datetime.utcnow</code>（值=UTC）不受影响</b>——问题只在 open_time/close_time 等 <code>datetime.now()</code> 写入端。</div>
+  <div class="impact">本轮 #5 本意修 8h 偏移，但对交易时间字段反而引入反向 8h 回归；历史单与新单混存两套语义。</div>
+  <div class="fix">建议：写入端统一改 <code>datetime.now(timezone.utc)</code>（trade_executor 3 处），读端契约即自洽；历史单做一次性 UTC 迁移或标注。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>按 mt5_ticket 查账不滤 mt5_account_id → 跨账号串行</h3><span class="loc">trade_executor.py:4621 / :2520</span><span class="vstat verified">✅ 已亲自复核</span></div>
+  <div class="desc"><b>发现：</b><code>_record_close</code> 用 <code>Trade.mt5_ticket == str(pos["ticket"])</code> 定位账本行、<code>copy_order</code> 查主号 SL 同理，均未附加 <code>Trade.mt5_account_id == self.account_id</code>。mt5_ticket 无唯一约束，不同券商可同号（各自从 1 递增）。</div>
+  <div class="impact">票号撞车时可能更新<b>别人账号</b>的 trade 行，本账号行永不落库 → 盈亏/对账/净利统计串扰。</div>
+  <div class="fix">建议：两处查询补 <code>Trade.mt5_account_id == self.account_id</code> 过滤，并给 (mt5_account_id, mt5_ticket) 建联合唯一索引。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>_PARTIAL_DONE 先置位：瞬断失败后浮盈锁 50% 永久失效</h3><span class="loc">trade_executor.py:3442 vs :3448</span><span class="vstat verified">✅ 已亲自复核</span></div>
+  <div class="desc"><b>发现：</b><code>_PARTIAL_DONE[_pk] = _now_ts</code>（L3442）在 <code>close_position</code>（L3448）之前写入，close 失败分支无归还（对比镜像路径 4316/4357 失败有 <code>_release_mirror</code>）→ 一次瞬断即该仓 24h 内永不再 partial。</div>
+  <div class="impact">「峰值回吐 50% 锁利」保护静默失效：用户看到的浮盈变成不再受保护的回吐，无日志无告警。</div>
+  <div class="fix">建议：close 失败时 pop 归还标记（与镜像路径对称），或先 close 成功再置位。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>跟号对账兜底在主号 0 持仓时失效（根治留口）</h3><span class="loc">trade_executor.py:4282</span><span class="vstat verified">✅ 已亲自复核</span></div>
+  <div class="desc"><b>发现：</b>2026-08-15 新增的「主号平了跟号没平」对账兜底条件 <code>if (_lk and _lps and lt and ...)</code> 要求 <code>_lps</code>（主号持仓）非空；主号平掉<b>最后一笔</b>后 <code>_lps=[]</code> → 条件恒假 → 兜底整段跳过。</div>
+  <div class="impact">恰在最坏场景（主号只剩该单且平掉 + 跟号 Worker 掉线错过广播）失效 → 跟号裸奔仓只能等 SL/TP，根治留口。</div>
+  <div class="fix">建议：去掉 <code>_lps</code> 非空前提，改用主号「最近平仓票号集合」或独立查询判定孤儿仓。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>混元空响应被当「合法 HOLD」且上报健康 True → 永不降级</h3><span class="loc">hunyuan_client.py:258-270 / :297</span><span class="vstat verified">✅ 已亲自复核（前半）</span></div>
+  <div class="desc"><b>发现：</b><code>_call</code> 空内容重试后 <code>return ""</code>；<code>_call_async</code> L297 直接返回可能为 None 的 <code>content</code>。analyze 走 <code>_safe_json_loads("")</code> → HOLD/conf=0，<b>不设 <code>_api_failed</code></b> → debate_engine 判 <code>hy_api_failed=False</code> 并向健康监视器报 True（对比 DS 空响应有 <code>_api_failed=True</code>）。</div>
+  <div class="impact">混元系统性空响应时，系统以「双脑制衡」名义<b>单脑运行且永不进入降级车道</b>——同时毒化决策质量与降级判定两个根基，无可见信号。</div>
+  <div class="fix">建议：空内容/None 视为失败（设 <code>_api_failed=True</code> + 上报健康 False），与 DS 行为对齐。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>喂给 AI 的时间错位（3 处叠加）</h3><span class="loc">debate_engine.py:221 / mt5_worker.py:465 / market_analyzer.py:132</span><span class="vstat">⚠️ agent 报告（行号已核）</span></div>
+  <div class="desc"><b>发现：</b>① 持仓 <code>open_time</code> 按本机 GMT+8 解释转 epoch 与 <code>time.time()</code>(UTC) 相减 → AI 看到持仓 age 偏小 8h；② MT5 K线 <code>time</code> 用 <code>datetime.fromtimestamp()</code> 按本机还原 → 无 tz 的 ISO 直喂 AI 的 SMC/FVG/摆动点（偏移约 11h）；③ 交易时段判定用 <code>datetime.now()</code> 依赖主机时区，换机即错位。</div>
+  <div class="impact">AI 对「当下时间 / 持仓新鲜度 / 结构时效」的感知整体错位，比单点假数据更隐蔽。</div>
+  <div class="fix">建议：三处统一走 UTC（epoch 直接除 1000 或用 timezone.utc）。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>2s 快速追踪上移 SL 不回写 DB、不广播（两条 SL 路径口径分裂）</h3><span class="loc">trade_executor.py:3794 vs :3470</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b>per-position 2s 快监 <code>modify_sl_tp</code> 成功后仅打日志；主循环路径（3470）却有 <code>_sync_trade_sl_to_db</code> + 广播。同一 SL 移动两种处理。</div>
+  <div class="impact">DB 与 MT5 实际 SL 脱节 → 对账推算/审计失真（铁律：对账禁用量原始 SL，须用最近上移 SL）。</div>
+  <div class="fix">建议：2s 快监 SL 上移后同样回写 trades.sl + 广播 move_sl（或统一收敛到一条路径）。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>L3 篮子全平后无条件 return + 120s 冷却 → 部分平仓失败当轮 L2/追踪全跳过</h3><span class="loc">trade_executor.py:3097-3106</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b>L3 篮子检查在 for 循环前，触发后无条件 <code>return</code> 且 <code>_L3_LAST_LOCK</code> 无条件置 120s 冷却；篮子内部分仓位平不掉时，L2 反转/追踪止损当轮全部被跳过。</div>
+  <div class="impact">回吐亏损放大：L3 冷却窗口内其余单失去 L2 保护。</div>
+  <div class="fix">建议：仅在全平成功后才 return；失败仓不置冷却或缩短冷却。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>orderflow CVD「买盘枯竭」与「卖压放大」恒等，信号失真</h3><span class="loc">orderflow_cvd.py:390-391 / :438-439</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b><code>buy_pressure_dry = sell_pressure_high = (delta_recent &lt; 0)</code>，两布尔永远相同；get_orderflow_snapshot 按 OR 汇总时该源必同时触发两信号。</div>
+  <div class="impact">CVD 源语义失真，向 AI 注入「既枯竭又放大」的矛盾信号，影响方向票质量。</div>
+  <div class="fix">建议：买盘枯竭应取 <code>delta_recent&lt;0 且 近期走弱</code>，卖压放大取 <code>delta 相对历史分位</code>，两者独立计算。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>主号行情不可用时返回全 0 报价且无降级标记</h3><span class="loc">market_analyzer.py:175（疑似）</span><span class="vstat">⚠️ agent 报告·疑似</span></div>
+  <div class="desc"><b>发现：</b><code>{"bid":0.0,"ask":0.0,"last":0.0,"spread":0.0}</code> 无 simulated 标记（对比 mock 快照已打标）。执行器沿此路径取价有 0 价成交风险。</div>
+  <div class="impact">极端情况下可能以 0 价参与计算 → 开仓/平仓价异常。</div>
+  <div class="fix">建议：与 mock 快照一致加 <code>simulated: true</code> 标记，下游识别并拒绝。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>intelligent_sizing fixed 模式手数比 smart 大 100 倍（疑似）</h3><span class="loc">intelligent_sizing.py:181</span><span class="vstat">⚠️ agent 报告·疑似（需复核 sl_points 口径）</span></div>
+  <div class="desc"><b>发现：</b>fixed 分支 <code>risk/(sl_points*1.0)</code> vs smart 分支 <code>risk/(sl_points*100)</code>（黄金 ×100 乘数缺失）→ fixed 模式手数恒打满 max_lot，风险预算失效。</div>
+  <div class="impact">若 sl_points 同为「点数」口径 → 实际敞口超标 100 倍级。</div>
+  <div class="fix">建议：统一止损点数→价格乘数换算，或去掉 fixed 分支单列。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><h3>_safe_send 对下单命令 at-least-once：断管重发可双倍敞口（疑似）</h3><span class="loc">mt5_service.py:511</span><span class="vstat">⚠️ agent 报告·疑似</span></div>
+  <div class="desc"><b>发现：</b>place_order/close_position 走 <code>_safe_send</code>；Worker 已成交但响应前管道断 → <code>_is_respawn_error</code> 命中 → 重发原命令，无幂等键（<code>_claim_copy</code> 去重仅覆盖跟单入口，不覆盖服务层重试）。</div>
+  <div class="impact">连接抖动时可重复开仓 → 真金白银双倍敞口。</div>
+  <div class="fix">建议：下单命令加幂等键（如 request_id），Worker 侧按 (account, request_id) 去重。</div>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--yellow)"></span>P2 · 一致性 / 可追溯性 <span class="cnt">（14 条）</span></h2>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>L1 副驾补位漏查 LOCAL_COPILOT_VOTE_ENABLED（#11 遗留）</h3><span class="loc">debate_engine.py:490-501</span><span class="vstat verified">✅ 已亲自复核</span></div>
+  <div class="desc"><b>发现：</b>#11 已把开关接入 meta_agent 第五票与 L2 关键路径，但 DS 单云失联的 L1 副驾补位（<code>_local_copilot</code>）不查开关 → 开关关闭时仍会被 8B 顶 DS 全权重票。</div>
+  <div class="impact">开关语义不完整（默认 True 时无碍，显式关闭后 L1 仍用 8B）。</div>
+  <div class="fix">建议：L1 补位入口同样判 <code>getattr(settings,"LOCAL_COPILOT_VOTE_ENABLED",True)</code>。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>决策快照缺融合票与真实双脑置信 → 第四票不可回放</h3><span class="loc">decision_snapshot.py:73-179</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b><code>ts_fusion_dir/weight/conf/agree/hit_avg/models</code>、<code>deepseek_confidence/hunyuan_confidence</code>、<code>calibrated_confidence</code>、<code>gate_stats</code> 均未进快照。</div>
+  <div class="impact">违反「快照必须可追溯」契约：融合票（第四票）的历史贡献无法回放归因。</div>
+  <div class="fix">建议：快照补齐融合票与双脑置信字段（与 #4 同模式补特征）。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>45s 决策缓存对象被下游原地改写（脏缓存复用）</h3><span class="loc">debate_engine.py:670-671 + trade_executor.py:2032-2033</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b>缓存存对象引用；拦截时执行器写 <code>proofread_blocked/block_reason</code> 到缓存对象 → 同账号 45s 内复用被改写过的对象，下一笔快照/前端误标「被拦截」。</div>
+  <div class="impact">前端溯源误标、决策快照脏数据。</div>
+  <div class="fix">建议：缓存返回深拷贝，或下游不写回决策对象。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>fusion 180s 过期阈值 &lt; 实际 ~300s 刷新周期（疑似）</h3><span class="loc">fusion_service.py:39</span><span class="vstat">⚠️ agent 报告·疑似</span></div>
+  <div class="desc"><b>发现：</b>快照约每 300s 才刷完，而 age&gt;180s 即判「僵死作废」→ 正常周期内 40% 时间融合第四票缺席、静默回退单 Chronos。</div>
+  <div class="impact">关云/低模型场景置信口径切换，融合票间歇性掉线。</div>
+  <div class="fix">建议：过期阈值调至 &gt; 刷新周期（如 360s），或缩短刷新周期。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>dashboard 与 executor 共享模块级决策缓存（疑似）</h3><span class="loc">dashboard.py:50 vs trade_executor.py:618</span><span class="vstat">⚠️ agent 报告·疑似</span></div>
+  <div class="desc"><b>发现：</b>dashboard 引擎（MetaAgent 未学权重）若触发 decide() 会写入 <code>_SHARED_DECISION_CACHE</code>，executor 45s 内复用同 account_id 缓存，可能按未学习权重开仓。</div>
+  <div class="impact">缓存复用可能绕过已学权重，开仓决策与训练不一致。</div>
+  <div class="fix">建议：dashboard 只读快照或 executor 校验缓存来源标记。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>worker 平仓返回无 net_profit →「含佣优先」铁律名存实亡</h3><span class="loc">mt5_worker.py:1079-1086</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b>close 仅返回 <code>{volume, close_price, profit}</code>，<code>get_deal_by_position</code> 同缺 net_profit → <code>_record_close(4634)</code>/<code>_reconcile(1130)</code> 的 <code>net_profit or profit</code> 恒取不含佣 profit。</div>
+  <div class="impact">佣金/隔夜从不计入已实现盈亏 → 本轮 #9 只修了读取顺序，但源头无 net_profit，效果打折。</div>
+  <div class="fix">建议：worker close/deal 响应补 commission/swap 计算 net_profit（与 _reconcile 路径语义对齐）。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>外部 partial 对账按最后一笔 deal 覆盖主行 profit 且不缩 volume</h3><span class="loc">trade_executor.py:1181-1185</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b>外部 partial 对账 <code>t.profit = _pf</code> 覆盖式更新（对比自平 4702 累加式），<code>_ev=deal.volume</code> 不缩主行 volume。</div>
+  <div class="impact">早期 partial 已实现盈亏丢失，多次平仓账本聚合失真（trade_exits 明细仍对，主行累计错）。</div>
+  <div class="fix">建议：外部 partial 也走累加式 + 缩 volume，与自平路径同构。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>out-deal 滑窗用 entry-deal 兜底 → 假记「平在开仓价 breakeven」</h3><span class="loc">trade_executor.py:1127-1154</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b><code>_deals_map.setdefault</code> 用 entry deal 兜底 out deal；<code>_unverified</code> 仅当 <code>_cp==0 and _pf==0</code> → 平仓 deal 滑出 recent 窗口而 entry-deal 仍命中时，假记平在开仓价。</div>
+  <div class="impact">假盈亏静默入库，违背「绝不假造」原则（虽比永久 pending 好，但语义错误）。</div>
+  <div class="fix">建议：entry-deal 命中不算 out-deal 匹配，仍应 pending_verify。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>ATR(14) 三套口径并存（简单平均 vs Wilder）</h3><span class="loc">regime_detect.py:73 / smc_features.py:36 vs market_analyzer.py:582</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b>前两者用 <code>sum(trs)/period</code> 简单平均，后者用 Wilder 递推 → 同一 ATR(14) 三套值，extension_z/结构锚/波动率区各自为政。</div>
+  <div class="impact">特征口径不一致 → 同一行情在不同模块判出不同波动状态，融合语义漂移。</div>
+  <div class="fix">建议：抽公共 ATR 工具函数（Wilder 递推），三处统一引用。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>regime/smc 直接下标 b["close"]，缺 key 即 KeyError 被外层吞 → 静默降级</h3><span class="loc">regime_detect.py:98 / smc_features.py:277</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b><code>b["close"]</code> 缺 key 抛 KeyError，被 market_analyzer 外层 try 吞掉 → SMC/Regime 整段静默降级 neutral，功能隐性丢失。</div>
+  <div class="impact">数据缺字段时 AI 拿不到 SMC/体制特征且无告警。</div>
+  <div class="fix">建议：改用 <code>.get()</code> 防御取值，缺字段打 warn 日志。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>MACD 无信号线：histogram 直接等于 MACD 线 → 金叉死叉失效</h3><span class="loc">market_analyzer.py:527-536</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b><code>signal=None, histogram=macd_line</code> → 动能/金叉死叉类判断全部失效。</div>
+  <div class="impact">依赖 MACD 动能的特征失真（若下游有消费则错）。</div>
+  <div class="fix">建议：补 signal = EMA(macd_line, 9)，histogram = macd - signal。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>DXY 样本不足时硬编码 -0.65「常态值」进决策链（疑似）</h3><span class="loc">market_data.py:146/230 + smc_features.py:318</span><span class="vstat">⚠️ agent 报告·疑似</span></div>
+  <div class="desc"><b>发现：</b>DXY 用 <code>date.today()</code>（本机日）拉取；样本不足回退 <code>-0.65</code>（标注 statistical-norm）并驱动 SMC 评分 ±0.15。</div>
+  <div class="impact">标注后的假数据仍参与打分 → 决策链含非真实输入。</div>
+  <div class="fix">建议：样本不足时该特征置 None 并让下游跳过，而非用常态值填充。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>孤儿终端清理存在误杀窗口（滚动重启双实例并存）</h3><span class="loc">mt5_launcher.py:301</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b><code>cleanup_orphan_terminals</code> 仅按「路径匹配 + 本进程未登记」判定孤儿，不校验终端是否被仍存活的旧实例/用户手动持有 → 滚动重启双实例并存时新实例启动即杀旧实例正在服务的终端。</div>
+  <div class="impact">重连风暴（当前 <code>_spawn</code> 首次接入即触发清理）。</div>
+  <div class="fix">建议：加「终端 PID 所属 python 进程是否仍存活」二次校验，存活则不杀。</div>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>worker close 的 net_profit 与对账路径语义不一致</h3><span class="loc">mt5_worker.py:1079 vs _reconcile deal 路径</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc"><b>发现：</b>close_position 返回的 profit/net_profit 为 <code>(价差×手×100)</code> 不含 commission/swap；<code>_reconcile_positions</code> 走 deal 的 net_profit（含佣隔夜）→ 同一单两条路径 net_profit 不同。</div>
+  <div class="impact">依赖 net_profit 的「连续亏损冷却」判定不稳，统计口径漂移。</div>
+  <div class="fix">建议：统一 worker close 计算含佣净额（调 MT5 deal 的 commission/swap）。</div>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--blue)"></span>P3 · 工程细节 <span class="cnt">（6 条）</span></h2>
+
+<div class="issue P3">
+  <div class="head"><span class="badge P3">P3</span><h3>meta_agent GATE_STATS / ModelPerformance 无锁并发写 → 统计失真</h3><span class="loc">meta_agent.py:374/379/1767-1771</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc">多账号并发 read-modify-write 门触发率/HOLD 率统计失真（仅监控，不影响交易）；L1833 把权重当 confidence 喂 avg_confidence，口径污染。</div>
+</div>
+
+<div class="issue P3">
+  <div class="head"><span class="badge P3">P3</span><h3>哨兵字段断链：meta_agent 读的字段哨兵永不返回 → 恒 False</h3><span class="loc">meta_agent.py:1209/1215 vs reversal_sentinel.py:123-131</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc">读 <code>at_extreme_high/overbought/at_stale_bottom/oversold</code>，哨兵只返回 signal/confidence/evidence/extension_z 等 → 体制背书通道双侧死代码（对称，非偏置）。</div>
+</div>
+
+<div class="issue P3">
+  <div class="head"><span class="badge P3">P3</span><h3>关云模式白算副驾/视觉票（每轮白付一次本地推理）</h3><span class="loc">meta_agent.py:816-840 + :905-911</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc">chrono_is_dir 且开关开时必调本地 8B，但关云分支 L905 直接 <code>final=chronos_dir</code>、decision_scores 完全不用 → 空转。</div>
+</div>
+
+<div class="issue P3">
+  <div class="head"><span class="badge P3">P3</span><h3>MT5 comment 截断 20 字符 → 超大票号镜像/对账错位（疑似）</h3><span class="loc">mt5_worker.py:52</span><span class="vstat">⚠️ agent 报告·疑似</span></div>
+  <div class="desc"><code>WXAI-L{...}</code> 超长时被截断，<code>L(\d+)</code> 匹配残缺号 → 镜像/对账可能错位。</div>
+</div>
+
+<div class="issue P3">
+  <div class="head"><span class="badge P3">P3</span><h3>mt5_launcher _launched_pid_alive 仅按名+PID → PID 复用可误判</h3><span class="loc">mt5_launcher.py:62</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc">进程名+PID 判断存活，PID 被系统回收复用时误判旧进程存活。</div>
+</div>
+
+<div class="issue P3">
+  <div class="head"><span class="badge P3">P3</span><h3>_cmd_locks / _SPAWN_LOCKS 只增不减（长跑内存增长）</h3><span class="loc">mt5_service.py</span><span class="vstat">⚠️ agent 报告</span></div>
+  <div class="desc">UUID 键只增不减，remove_account 未清理 → 长跑后 dict 膨胀（流失量低）。</div>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--green)"></span>本轮已顺手修复 <span class="cnt">（1 条 · 自纠）</span></h2>
+
+<div class="issue FIXED">
+  <div class="head"><span class="badge FIXED">已修</span><h3>降级车道 import 无保护（#11 改动引入的回归，审计当场自纠）</h3><span class="loc">debate_engine.py:947-958</span><span class="vstat verified">✅ 已修并 py_compile 通过</span></div>
+  <div class="desc">上一轮 #11 把 <code>local_llm_service</code> 的 3 个 import 从 try 块内移到了函数顶层（为复用 <code>_gate</code>），若模块导入失败将崩掉整条降级车道——而降级车道是 L2/L3 安全网。已加保护：import 失败视同副驾不可用（<code>_local_ok = lambda: False</code>）→ vote=None → 落 L3 熔断，绝不崩。</div>
+  <div class="fix">本轮生效文件：<code>app/core/debate_engine.py</code>（其余修复待下一批落地）。</div>
+</div>
+
+<div class="plan">
+  <h2>建议修复批次（按优先级，落地后需双击 restart_task_backend.bat 重载）</h2>
+  <ol>
+    <li><span class="ph">第一批 · P0/P1 止血（7 项）</span>IDOR 越权过滤 → #5 时区写入端统一 UTC → mt5_ticket 查询补账号过滤 → _PARTIAL_DONE 失败归还 → 跟号兜底去 _lps 前提 → 混元空响应设 _api_failed → 2s 追踪回写 SL。</li>
+    <li><span class="ph">第二批 · P1 资金安全（4 项）</span>L3 return/冷却收敛 → CVD 恒等修正 → 全 0 报价打标 → intelligent_sizing fixed 乘数 → _safe_send 幂等键。</li>
+    <li><span class="ph">第三批 · P2 一致性（8 项）</span>L1 补位查开关 → 快照补融合票 → 缓存深拷贝 → fusion 过期阈值 → worker 补 net_profit → 外部 partial 累加式 → out-deal 兜底改 pending → ATR 统一工具函数。</li>
+    <li><span class="ph">第四批 · P3 工程（6 项）</span>GATE_STATS 加锁 → 哨兵字段对齐 → 关云跳过推理 → comment 防截断 → PID 复用校验 → 锁清理。</li>
+  </ol>
+</div>
+
+<div class="foot">
+  万象Ai 智能交易系统 · 端到端全链路审计报告 · 2026-08-15 20:5x · 数据来源：4 路并行深挖 + 8 处关键点亲自复核<br>
+  标注「✅ 已亲自复核」= 本报告作者直接读码确认；「⚠️ agent 报告」= 深挖 agent 报告，修复前需复核。
+</div>
+
+</div>
+</body>
+</html>

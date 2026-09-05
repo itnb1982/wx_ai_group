@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>万象Ai 多模型融合决策调研报告 · 2026-08-10</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+blockquote.ok { border-left-color: #22c55e; background: #f0fdf4; color: #14532d; }
+blockquote.warn { border-left-color: #f59e0b; background: #fffbeb; color: #78350f; }
+blockquote.bug { border-left-color: #ef4444; background: #fef2f2; color: #7f1d1d; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+.ok { color: #15803d; font-weight: 700; }
+.warn { color: #b45309; font-weight: 700; }
+.bug { color: #dc2626; font-weight: 700; }
+.neutral { color: #4b5563; font-weight: 600; }
+a { color: #2563eb; }
+</style>
+</head>
+<body>
+<h1>多模型融合决策调研报告</h1>
+<p style="color:#6b7280; font-size:14px;">调研时间：2026-08-10 02:15（GMT+8）&nbsp;|&nbsp;调研人：AI Agent &nbsp;|&nbsp;主题：是否将参考面板四个时序模型（Chronos-2 / TimesFM-2.5 / Time-MoE / Moirai）实时喂给 Qwen3-8B + DeepSeek + 混元做信号方向门</p>
+
+<h2>一、用户建议复述</h2>
+<blockquote>
+将信号参考面板的四个本地时序模型结果（方向、置信度、预测末端价、预测区间）实时输入给 Qwen3-8B，并联合 DeepSeek V4、混元 Hy3，共同作为开单信号的“方向门”/融合决策层，判断方向是否合理。
+</blockquote>
+
+<h2>二、当前四个参考模型输出画像</h2>
+<p>基于 2026-08-10 02:07 信号参考面板快照（XAUUSD H1，last_price=4341.36）：</p>
+<table>
+<thead><tr><th>模型</th><th>方向</th><th>置信度</th><th>预测末端价</th><th>预测区间</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>Chronos-2(120M)</td><td>HOLD</td><td>0.08</td><td>4339.34</td><td>4306.42 ~ 4371.84</td><td>本地时序第三票，已接入决策链</td></tr>
+<tr><td>TimesFM-2.5(200M)</td><td>HOLD</td><td>0.046</td><td>4342.49</td><td>—</td><td>参考面板，未接入</td></tr>
+<tr><td>Time-MoE(200M)</td><td>SELL</td><td>0.75</td><td>4317.30</td><td>—</td><td>参考面板，未接入</td></tr>
+<tr><td>Moirai(447M)</td><td>SELL</td><td>1.00</td><td>4166.59</td><td>4109.81 ~ 4242.79</td><td>参考面板，未接入</td></tr>
+</tbody>
+</table>
+
+<h2>三、全球调研结论综述</h2>
+
+<h3>3.1 学术界/工业界对多模型融合交易的共识</h3>
+<ul>
+<li><strong>没有单一模型在所有 regime 下都最好。</strong>论文 <em>Adaptive Market Intelligence: A MoE Framework for Volatility-Sensitive Stock Forecasting</em>（2025）指出，MoE 框架在高波动/低波动 regime 下分别比单一模型提升 MSE 33%/28%。</li>
+<li><strong>时序基础模型（TSFM）在金融数据上优势有限且需谨慎评估。</strong>Noguer i Alonso & Pereira Franklin（2026）对 TimeGPT、TimesFM-2.5、Moirai-2.0、Chronos、Chronos-2 的评测发现：虽然 TSFM 在排名分布上占优，但相对随机游走的收益“很小且稀疏”，只有 Chronos（AMZN）和 Moirai（GOOG）在 Diebold-Mariano 检验中显著优于随机游走。</li>
+<li><strong>预训练是起点，金融微调才是关键。</strong>PapersWithBacktest 指出，通用预训练模型在金融 zero-shot 上往往表现一般，必须在特定资产/频率上做 few-shot fine-tuning 才可能有实际收益。</li>
+<li><strong>概率校准比点预测更重要。</strong>ICLR 2026 论文 <em>Beyond Accuracy: Are TSFMs Well-Calibrated?</em> 指出，现有指标（CRPS/WQL/MSIS）会混淆校准与锐度，应使用专门校准指标评估不确定性估计是否可信。</li>
+<li><strong>LLM 适合作为“解释/审计/元学习器”，而非直接方向票。</strong>TradExpert（2025）用四个专门 LLM 处理新闻/市场/因子/基本面，再由通用 LLM 综合；MoE-F（ICLR 2025）用在线过滤门控动态加权多个 LLM/专家，在金融市场运动任务上比最佳单一 LLM 提升 F1 17%/48.5%。</li>
+</ul>
+
+<h3>3.2 关键文献要点</h3>
+<table>
+<thead><tr><th>来源</th><th>核心结论</th></tr></thead>
+<tbody>
+<tr><td>MoE-F (ICLR 2025)</td><td>用在线随机滤波（Wonham-Shiryaev filter）动态加权 N 个 LLM/专家，针对每个时间步预测最优组合；在金融新闻驱动的市场运动任务上显著优于单一模型。</td></tr>
+<tr><td>FactorMoE (Springer 2026)</td><td>动态门控网络根据市场状态选择 alpha 因子组合，避免静态线性加权；对量化投资中的因子失效问题有效。</td></tr>
+<tr><td>GS-FUSE (2026)</td><td>Granger 因果监督的门控融合：只有当文本/事件信息提供超出历史价格的增量预测价值时才开启融合；适用于多源信息融合。</td></tr>
+<tr><td>Pretrained TSFMs for Financial Return Forecasting (2026)</td><td>TSFM 排名好看，但经济可预测性增益很小；本地监督模型在特定资产上仍可胜出；提醒不要迷信 zero-shot TSFM。</td></tr>
+<tr><td>PapersWithBacktest TSFM Wiki</td><td>TimesFM 2.5 偏单变量/企业级；Chronos-2 生态最广；Moirai-2 最擅长多变量/跨资产；金融应用必须 fine-tune。</td></tr>
+</tbody>
+</table>
+
+<h2>四、将四个模型接入决策链的可行性分析</h2>
+
+<h3>4.1 技术可行性</h3>
+<table>
+<thead><tr><th>维度</th><th>评估</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>数据可用性</td><td><span class="ok">已具备</span></td><td>四个模型已在 <code>/api/ts-reference/snapshot</code> 实时输出方向、置信度、pred_end、区间。</td></tr>
+<tr><td>代码接入难度</td><td><span class="ok">低</span></td><td>可在 <code>meta_quality.py / meta_agent.py</code> 中新增“参考模型投票”字段，类似现有 Chronos 第三票机制。</td></tr>
+<tr><td>架构红线</td><td><span class="warn">需谨慎</span></td><td>当前架构红线：参考模块禁止 import 交易决策链模块。若反向让决策链消费参考模块是允许的；但让参考模块反向影响决策链会破坏解耦。</td></tr>
+<tr><td>延迟/成本</td><td><span class="warn">增加</span></td><td>每次决策需额外运行 3 个 TSFM 推理（Chronos 已在跑）+ 可能增加 LLM 调用上下文长度。本地 GPU 8GB 显存需评估同时加载 4 个模型的稳定性。</td></tr>
+<tr><td>模型异质性</td><td><span class="ok">可处理</span></td><td>方向/置信度/预测价可作为统一输入，由 Meta-Agent 或 Qwen 做融合。</td></tr>
+</tbody>
+</table>
+
+<h3>4.2 设计合理性分析</h3>
+
+<h4>方案 A：把四个模型作为“第四/五/六票”直接加入加权投票</h4>
+<ul>
+<li><strong>优点：</strong>简单，复用现有 Meta-Agent 加权框架。</li>
+<li><strong>风险：</strong>TimesFM/Time-MoE/Moirai 目前只做 zero-shot，未针对 XAUUSD H1 微调；其置信度（如 Moirai 1.00）可能过自信；直接加权可能引入噪声，甚至压低盈利交易笔数。</li>
+</ul>
+
+<h4>方案 B：由 Qwen3-8B 做“参考模型结果审计员/融合员”</h4>
+<ul>
+<li><strong>优点：</strong>符合 Qwen 当前 L0 校对员角色定位；让 8B 模型做“元决策”而非直接方向投票，避免违反“8B 模型金融方向判断近随机”的铁律。</li>
+<li><strong>风险：</strong>Qwen 的推理延迟约 21s（p50），若放在交易热路径会拖慢循环；更适合离线/辅助审计，而非实时方向门。</li>
+</ul>
+
+<h4>方案 C：由 DeepSeek + 混元读取四个模型结果后再做方向判断</h4>
+<ul>
+<li><strong>优点：</strong>云模型能力更强，提示中可包含本地时序预测作为附加证据；与现有辩论流程自然结合。</li>
+<li><strong>风险：</strong>会增加 token 消耗和延迟；且云模型对数值时间序列的推理能力有限，可能“看懂文字但算错数字”。</li>
+</ul>
+
+<h4>方案 D：在线门控 / 动态权重（MoE-F 思路）</h4>
+<ul>
+<li><strong>优点：</strong>不固定权重，根据每个模型近期表现动态调整，学术界已证明在金融任务上有效。</li>
+<li><strong>风险：</strong>实现复杂，需要持续跟踪每个模型在最近 N 次预测中的命中率，才能估计“运行表现”。</li>
+</ul>
+
+<h2>五、关键风险</h2>
+<table>
+<thead><tr><th>风险</th><th>说明</th><th>严重度</th></tr></thead>
+<tbody>
+<tr><td>过自信与误校准</td><td>Moirai 置信度 1.00、Time-MoE 0.75，但它们是 zero-shot 在未微调资产上；高置信可能是分布内过度自信，不一定代表真实胜率。</td><td><span class="bug">高</span></td></tr>
+<tr><td>“方向门”变相成过滤层</td><td>用户铁律：优化目标是“多交易多赚钱”，不是“胜率漂亮”。如果新门导致交易笔数腰斩、利润下降，则失败。</td><td><span class="bug">高</span></td></tr>
+<tr><td>增加决策延迟</td><td>本地 8GB GPU 同时跑 4 个模型 + Qwen 推理，可能使单轮决策时间从秒级增至分钟级，错过入场。</td><td><span class="warn">中</span></td></tr>
+<tr><td>数据泄漏/预训练污染</td><td>TSFM 训练集不透明，可能包含未来数据或黄金历史数据，zero-shot 表现不可信。</td><td><span class="warn">中</span></td></tr>
+<tr><td>破坏参考面板解耦红线</td><td>若让参考模块的输出反向进入交易决策链，违反当前“参考模块禁止 import 交易模块”的架构红线。</td><td><span class="warn">中</span></td></tr>
+<tr><td>回测难以验证</td><td>新增 LLM/TSFM 融合层后，必须重新做 walk-forward 回测；仅凭当前面板快照无法证明盈利提升。</td><td><span class="warn">中</span></td></tr>
+</tbody>
+</table>
+
+<h2>六、调研结论与建议</h2>
+
+<h3>6.1 核心结论</h3>
+<blockquote class="warn">
+<p><strong>“把四个参考模型实时喂给 Qwen + DeepSeek + 混元做方向门”在技术上是可行的，但在当前状态下贸然接入交易决策链风险高于收益。</strong></p>
+<ul>
+<li>学术界支持“多模型融合 + 动态门控”能提升预测稳健性，但前提是模型经过资产特定微调、概率校准良好、且融合方式经过 walk-forward 验证。</li>
+<li>当前 TimesFM/Time-MoE/Moirai 均为 zero-shot 参考模型，未针对 XAUUSD H1 微调，Moirai 的 1.00 置信度更可能是过自信而非高胜率信号。</li>
+<li>Qwen3-8B 当前角色应为“校对员/元审计员”，不宜直接作为实时方向门；DeepSeek/混元可读取参考模型结果，但会增加延迟与成本。</li>
+</ul>
+</blockquote>
+
+<h3>6.2 分阶段落地建议</h3>
+<table>
+<thead><tr><th>阶段</th><th>动作</th><th>预期产出</th></tr></thead>
+<tbody>
+<tr><td>Phase 0<br>（建议立即做）</td><td>在参考面板继续观察 4 个模型，记录它们对未来 N 根 K 线（如 4 根 H1）的方向命中率；不接入交易。</td><td>获得各模型在 XAUUSD H1 上的真实命中率、置信校准曲线。</td></tr>
+<tr><td>Phase 1<br>（1-2 周后）</td><td>如果某参考模型命中率显著高于随机（如 >55% 且持续），以“低权重附加票”形式接入 Meta-Agent，权重不超过 0.10，且仅在它与云双脑同向时增强 confidence。</td><td>验证是否提升净利润而不腰斩交易笔数。</td></tr>
+<tr><td>Phase 2<br>（命中率稳定后）</td><td>引入 MoE-F / 动态权重机制：根据近期表现自动调整各参考模型权重；由 DeepSeek/混元在提示中读取参考模型摘要作为辅助证据。</td><td>实现自适应融合，降低单一模型失效影响。</td></tr>
+<tr><td>Phase 3<br>（可选）</td><td>在本地 GPU 资源允许且经过 fine-tune 后，将表现最好的 1-2 个 TSFM 作为正式投票成员；Moirai 因依赖 py312 venv、包冲突复杂，建议最后考虑。</td><td>形成“云双脑 + 1-2 个微调本地时序模型”的稳定组合。</td></tr>
+</tbody>
+</table>
+
+<h3>6.3 与既有铁律的对照</h3>
+<ul>
+<li><strong>多交易多赚钱：</strong>接入新模型必须以“不减少交易笔数、不降低净利润”为及格线；任何方向门若导致过滤增多，即违反用户铁律。</li>
+<li><strong>提准非拦截：</strong>应通过提高信号方向准确率来增加盈利，而不是砍掉能赚钱的入场。动态权重/门控的设计要偏向“增强同向信号”，而非“拦截反向信号”。</li>
+<li><strong>8B 模型不做等权方向投票：</strong>Qwen 可以做参考模型结果摘要/审计，但不能与 DeepSeek/混元/Chronos 并列投票。</li>
+<li><strong>参考模块解耦红线：</strong>若接入，必须由交易决策链主动拉取参考模块输出，不能让参考模块反向 import 交易模块。</li>
+</ul>
+
+<h3>6.4 最终建议</h3>
+<blockquote class="ok">
+<p><strong>建议采纳“观察先行、低权重后入、动态权重”的分阶段方案；不建议明天就直接把四个模型接入方向门。</strong></p>
+<p>先用 1-2 周收集四个模型在真实行情中的命中率数据，再选择其中 1-2 个表现最好的以低权重接入，并严格按“净利润↑ + 交易笔数不腰斩”验收。DeepSeek/混元可以在提示中读取参考模型摘要作为辅助证据，但 Qwen 应保持校对员角色，不做实时方向门。</p>
+</blockquote>
+
+</body>
+</html>

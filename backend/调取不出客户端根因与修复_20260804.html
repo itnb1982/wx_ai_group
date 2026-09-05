@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>点连接调取不出本地客户端 — 根因与修复报告</h1>
+<p>日期：2026-08-04 23:10</p>
+<p>系统：万象Ai XAUUSD 自动量化交易系统</p>
+<hr>
+<h2>一、现象</h2>
+<p>用户在网页点击某账号的「连接」按钮后，<strong>本地 MT5 客户端窗口不出现 / 调取不出来</strong>。</p>
+<p>但后端数据库显示 4 个账号全部 <code>is_connected=1 / ONLINE</code>，且系统仍在正常交易、正常下单。</p>
+<hr>
+<h2>二、根因（100% 定位）</h2>
+<p><code>tasklist</code> 发现系统里跑了 <strong>6 个 terminal64.exe 进程</strong>（正常应为 4 个），其中 2 个是</p>
+<p><strong>「Not Responding（无响应）+ 窗口标题暂缺」的僵尸进程</strong>：</p>
+<table><thead><tr><th>僵尸 PID</th><th>路径</th><th>对应账号</th></tr></thead><tbody><tr><td>3012</td><td><code>E:\mt5_4\terminal64.exe</code></td><td>跟号4（1610098464）</td></tr><tr><td>32704</td><td><code>F:\mt5\terminal64.exe</code></td><td>主号（1610093299）</td></tr></tbody></table>
+<h3>断裂链路</h3>
+<pre><code>僵尸进程占着终端路径
+  → is_terminal_running() 误判"已在运行"
+  → ensure_terminal 阶段2 的 _check_algo_trading()
+      附着到无响应的死进程 → 读 trade_allowed 卡住/失败
+  → 连接逻辑异常
+  → 前端"点连接调取不出客户端"</code></pre>
+<h3>僵尸成因</h3>
+<p>MT5 升级 / 重启时，旧终端进程在 <code>mt5.shutdown()</code> 后<strong>延迟退出</strong>（做设置保存清理），</p>
+<p>与新启动的实例短暂重叠，旧实例最终变成「Not Responding」僵尸残留。</p>
+<hr>
+<h2>三、即时修复（已执行）</h2>
+<ol><li>用 <code>wmic process ... call Terminate</code> 精准杀掉两个僵尸进程（ReturnValue=0）</li><li>用 Win32 API（<code>ctypes</code> <code>ShowWindow(SW_RESTORE)</code> + <code>SetForegroundWindow</code>）</li></ol>
+<p>   把 4 个 MT5 客户端窗口恢复并显示到屏幕 —— <strong>用户此刻应能在屏幕上看到它们</strong></p>
+<hr>
+<h2>四、代码加固（mt5_launcher.py，已编译 + 实盘重启生效）</h2>
+<h3>1. <code>_kill_terminal</code> 重写：杜绝僵尸残留</h3>
+<ul><li><code>kill</code> 之后<strong>轮询等待进程真正退出</strong>（up to 10s），不留重叠窗口期</li><li>去掉危险的 <code>taskkill /IM terminal64.exe</code>（会误杀其他账号的终端）</li><li>无 <code>psutil</code> 时退化为 <code>wmic</code> <strong>按路径精确杀</strong></li></ul>
+<h3>2. 新增 <code>_show_terminal_window(tag)</code></h3>
+<ul><li>用 <code>ctypes</code> 枚举窗口，按登录号（tag）匹配对应 MT5 客户端窗口并置前</li><li>失败（如服务无桌面会话）静默忽略，不影响连接</li></ul>
+<h3>3. 连接即调出客户端</h3>
+<ul><li><code>ensure_terminal</code> 阶段2（终端已运行）+ <code>_start_terminal</code> 冷启动后，</li></ul>
+<p>  均调用 <code>_show_terminal_window(tag)</code></p>
+<ul><li><strong>效果：以后点「连接」或系统重启 Worker 时，会自动把本地客户端窗口调到用户眼前</strong></li></ul>
+<hr>
+<h2>五、验证（重启后）</h2>
+<table><thead><tr><th>指标</th><th>结果</th></tr></thead><tbody><tr><td>MT5 进程数</td><td><strong>4</strong>（僵尸未复发）</td></tr><tr><td>4 Worker 就绪</td><td>✅ 全部就绪，余额正常读取</td></tr><tr><td>算法交易开关</td><td>4 账号 <code>trade_allowed</code> 全 = <strong>True</strong></td></tr><tr><td>交易循环</td><td>✅ 正常（23:07 跟单 + 信号生成）</td></tr></tbody></table>
+<hr>
+<h2>六、结论</h2>
+<p>「点连接调取不出客户端」= <strong>僵尸进程干扰</strong> + <strong>终端常驻不弹窗</strong> 共同导致。</p>
+<p>现已根治：即时清僵尸 + 代码层防僵尸复发 + 连接/重启时自动把客户端窗口调到前台。</p>
+<p>以后再遇到 MT5 升级 / 崩溃，系统会在 Worker 启动时自动检测、修复、并把客户端窗口调到眼前，</p>
+<p>无需手动干预。</p></body></html>

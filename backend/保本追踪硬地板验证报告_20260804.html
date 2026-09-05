@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>保本 / 追踪「硬地板」落地验证报告</h1>
+<p><strong>日期</strong>：2026-08-04　<strong>系统</strong>：万象Ai XAUUSD 自动量化交易系统（商业版多账号）</p>
+<p><strong>改动文件</strong>：<code>backend/app/services/trade_executor.py</code></p>
+<p><strong>新增测试</strong>：<code>test_hardfloor.py</code>、<code>test_hardfloor_integration.py</code></p>
+<hr>
+<h2>一、用户的核心担忧</h2>
+<blockquote>盈利单在仓的时候，AI 会不会启动走追踪止损 / TP？如果他不启动，那不是由赚钱变成亏钱了吗？</blockquote>
+<p>这正是此前 M1 出场 Agent 接管持仓时存在的<strong>致命漏洞</strong>：AI 一旦接管，浮盈单可能失去确定性保本。</p>
+<hr>
+<h2>二、根因（漏洞定位）</h2>
+<p><code>trade_executor._manage_positions</code> 原代码逻辑：</p>
+<pre><code>plan = exit_decisions.get(str(pos.get("ticket")))   # M1 对该持仓的决策
+if plan is None:
+    plan = smart_evaluate_position(...)              # 无 M1 → 用规则引擎
+# 有 M1 的 plan 时：直接用它，跳过 smart_evaluate_position 整段！</code></pre>
+<p><strong>问题</strong>：M1（AI 出场 Agent）通过缓存 / 粘滞机制返回某笔持仓的 <code>plan</code>，即使只是 <code>action=hold, new_sl=None</code>（命中缓存、不移动止损），也会让规则引擎 <code>smart_evaluate_position</code> <strong>整段被跳过</strong>——包括：</p>
+<ul><li>早期保本（浮盈 ≥ 0.3×ATR 时把 SL 移到开仓价 + 缓冲）</li><li>TP1/TP2 后的追踪止损</li></ul>
+<p>后果：<strong>浮盈单在 0~0.3×ATR 这个窗口内，M1 返回 hold 无 new_sl 时，没有任何确定性保本</strong> → 价格回吐就可能由赚变亏。</p>
+<hr>
+<h2>三、修复方案（硬地板）</h2>
+<p>原则：<strong>规则引擎的保本 / 追踪 SL 永远先计算、永远应用，不可被 M1 跳过；M1 只能给出「更锁利」的 SL 才覆盖</strong>。</p>
+<h3>1. 新增模块级合并函数 <code>_merge_hard_floor_sl</code></h3>
+<pre><code>def _merge_hard_floor_sl(*, pos_type, current_sl, rule_new_sl, m1_new_sl):
+    # 候选集 = {规则引擎SL, M1的SL, 当前SL} 中有效者
+    #   buy 单：取最大 SL（最锁利，离入场最远、留利最多）
+    #   sell 单：取最小 SL（最锁利）
+    # 最优者等于当前 SL → 返回 None（不移动，避免无意义 modify）</code></pre>
+<h3>2. 改写 <code>_manage_positions</code> 持仓循环入口</h3>
+<pre><code># ① 永远先算规则引擎（含保本/追踪 SL）—— 硬地板
+rule_plan = smart_evaluate_position(...)
+rule_new_sl = rule_plan.get("new_sl")
+
+plan = exit_decisions.get(str(pos.get("ticket")))
+if plan is None:
+    plan = rule_plan                      # 无 M1 → 完全用规则引擎（原逻辑）
+else:
+    # 有 M1 → action/reason 用 M1；new_sl 走硬地板合并
+    merged_sl = _merge_hard_floor_sl(
+        pos_type=..., current_sl=..., rule_new_sl=rule_new_sl, m1_new_sl=plan.get("new_sl"))
+    plan = dict(plan); plan["new_sl"] = merged_sl</code></pre>
+<h3>3. 设计要点</h3>
+<ul><li><strong>保本确定性恢复</strong>：只要规则引擎算出更锁利的保本 / 追踪 SL，就一定应用，无论 M1 是否接管。</li><li><strong>不削弱 AI</strong>：M1 的反向 / 分批 / 全平决策完全保留；仅当 M1 给出比规则引擎更优（更锁利）的追踪 SL 时才覆盖。</li><li><strong>跟号兼容</strong>：信号塔分流逻辑下，仅主号（<code>_is_leader=True</code>）走完整 AI 出场 + 硬地板；跟号通过 <code>publish_leader_exit</code> 镜像主号广播的移损 / 平仓，闭环一致。</li></ul>
+<hr>
+<h2>四、验证结果</h2>
+<h3>单测 <code>test_hardfloor.py</code> —— 8 / 8 PASS</h3>
+<table><thead><tr><th>场景</th><th>结果</th></tr></thead><tbody><tr><td>buy 保本地板不被 M1(None) 覆盖</td><td>✅ 取规则引擎 2000.5</td></tr><tr><td>buy M1 更优追踪覆盖规则</td><td>✅ 取 M1 2010.0</td></tr><tr><td>buy 双方无 SL → 不动</td><td>✅ None</td></tr><tr><td>sell 保本地板</td><td>✅ 取规则引擎 1999.5</td></tr><tr><td>sell M1 更优追踪覆盖</td><td>✅ 取 M1 1990.0</td></tr><tr><td>等于当前 SL → 不动</td><td>✅ None</td></tr><tr><td>当前 SL=0 → 用规则引擎保本</td><td>✅ 2000.5</td></tr><tr><td>未知类型 → None</td><td>✅ None</td></tr></tbody></table>
+<h3>集成测试 <code>test_hardfloor_integration.py</code> —— 3 / 3 PASS（mock MT5 / DB）</h3>
+<table><thead><tr><th>场景</th><th>结果</th></tr></thead><tbody><tr><td><strong>M1 接管 hold 无 new_sl + 浮盈 0.3ATR → 保本地板应用</strong></td><td>✅ <code>modify_sl_tp(ticket=12345, sl=2000.5)</code> 被调用</td></tr><tr><td>M1 更优追踪覆盖规则</td><td>✅ sl=2010.0</td></tr><tr><td>无持仓安全返回</td><td>✅ 不调用 modify / close</td></tr></tbody></table>
+<p><strong>核心结论</strong>：此前"M1 接管 → 浮盈单失去确定性保本"的漏洞已被钉死——即使 M1 返回 hold，规则引擎算出的保本 SL 仍会被强制应用。</p>
+<hr>
+<h2>五、实盘状态</h2>
+<ul><li>重启后端（杀旧 uvicorn → supervisor 自动拉起，新 PID 18232），<strong>新代码已生效</strong>（持仓管理日志行号 668 → 699）。</li><li>4 个账号全部 Worker 就绪、主号余额正常恢复、无 <code>IPC send failed</code>。</li><li>当前 <code>errors</code> 为正常 AI 门控（<code>AI置信度不足(0.00&lt;0.5)</code>），非故障。</li><li>当前无浮盈持仓，故暂无实盘浮盈保本日志；逻辑已由单测 + 集成测试完全覆盖，待出现浮盈持仓即自动生效。</li></ul>
+<hr>
+<h2>六、一句话总结</h2>
+<blockquote><strong>盈利单在仓时，保本 / 追踪现在是一道不可被 AI 跳过的硬地板</strong>——M1 接管也拦不住它；同时 M1 若给出更优追踪，仍优先用 AI 的。盈利单「由赚变亏」的窗口被彻底焊死。</blockquote></body></html>

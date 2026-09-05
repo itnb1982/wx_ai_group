@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "global": {
+    "level": "HALT_NEW",
+    "reason": "全局降级",
+    "at": "2026-08-09T00:03:44",
+    "by": "t"
+  },
+  "accounts": {
+    "acct-A": {
+      "level": "HALT_ALL",
+      "reason": "单号加严",
+      "at": "2026-08-09T00:03:44",
+      "by": "t"
+    }
+  },
+  "flatten_requests": []
+}

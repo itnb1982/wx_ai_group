@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>AI 大脑盯盘持仓——篮子级 AI 持仓管理方案（PositionAction 协议）</h1>
+<blockquote>2026-08-17 用户实盘观察触发：三单 SELL 合计最高浮盈 +10 美金，AI 无任何干预，&lt;br&gt;回吐至 0/亏损全程"智能平仓"静默。用户结论：<strong>智能平仓不智能——AI 大脑只管开仓，&lt;br&gt;不管持仓；持仓管理退化成逐单机械规则，没有篮子级联动视图。</strong>&lt;br&gt;本方案实现"AI 大脑盯盘持仓 + 篮子级处置"，纯加法、不砍交易。</blockquote>
+<hr>
+<h2>一、问题根因（实盘证据）</h2>
+<table><thead><tr><th>#</th><th>根因</th><th>证据</th></tr></thead><tbody><tr><td>A</td><td><strong>AI 大脑看到持仓但无法表达处置意见</strong>——输出协议只有 <code>direction/confidence</code>，没有"平/减/持"字段</td><td>debate_engine 已注入 <code>my_open_positions</code>+<code>portfolio_state</code>（AI 看得见账本），但 JSON 输出 schema 无持仓处置项 → AI 只能"继续开/不开"，不能"我手里的单该平"</td></tr><tr><td>B</td><td><strong>L3 篮子锁利阈值过粗</strong>——basket_tp=30 美元，三单 +10 远未触发，回吐 20 全程无保护</td><td>trade_executor L3154：<code>basket_profit &gt;= basket_th</code> 纯静态阈值，无"峰值回吐"概念</td></tr><tr><td>C</td><td><strong>持仓管理逐单化</strong>——smart_exit/ai_exit M1 每笔独立评估，无"三单合计浮盈在回吐"的组合视图</td><td><code>_manage_positions</code> 对每笔 <code>for pos in positions</code> 独立跑规则</td></tr><tr><td>D</td><td><strong>AI 出场只判"反向"不判"动能衰竭/利润回吐"</strong>——ai_exit M1 只在 AI 置信反向≥0.6 时平，浮盈回吐靠规则 peak_move（单笔）</td><td>单笔 peak_move 回吐≥30% 才有动作，三单合计回吐无篮子版</td></tr></tbody></table>
+<h2>二、设计目标</h2>
+<ol><li><strong>AI 大脑每次决策时主动评估当前全部持仓</strong>（篮子视角：方向/手数/浮盈/回吐/持有时长）</li><li><strong>输出明确的持仓处置建议</strong>：<code>hold</code>（持有）/ <code>trim</code>（减半）/ <code>close_all</code>（全平）</li><li><strong>行情不利时提前动作</strong>：浮盈回吐/结构破位 → AI 主动介入，不等机械阈值</li><li><strong>铁律不变</strong>：提准非拦截（不砍开仓）、防抖防误杀（连续确认+置信门槛）、多赚钱（锁利）</li><li><strong>跟单同步</strong>：处置结果复用现有 <code>publish_leader_exit</code> 广播（full_close/partial_close），跟号镜像消费</li></ol>
+<h2>三、分层设计（L0→L4）</h2>
+<h3>L0：AI 输出协议扩展（debate_engine + deepseek_client + hunyuan_client）</h3>
+<ul><li>debate_engine prompt 增加指令：</li></ul>
+<pre><code>  你有 N 笔持仓（见 my_open_positions），请基于行情与持仓浮盈/回吐情况，
+  在 JSON 中输出 position_action 字段：
+    {"action": "hold|trim|close_all", "confidence": 0~1, "reason": "简短理由"}
+  hold=继续持有；trim=行情不利减仓一半；close_all=行情反转/风险高全平。
+  没有持仓或判断不清 → action=hold。</code></pre>
+<ul><li>JSON schema 扩展：<code>position_action</code>（缺失/非法 → 解析层回退 hold，零影响）</li><li>解析兼容：deepseek <code>_parse_response</code> / hunyuan <code>_safe_json_loads</code> 提取 <code>position_action</code> 字段，任何异常回退 hold</li></ul>
+<h3>L1：meta_agent 加权融合 + 防抖确认</h3>
+<ul><li>按现有 DS/HY 权重融合两票的 position_action：</li><li>同向（都 close_all / 都 trim）→ 融合置信 = 加权均值</li><li>分歧（DS trim + HY hold）→ 取更保守档（hold），置信 = max(两票置信) × 0.5（分歧降权）</li><li><strong>防抖确认</strong>：非 hold 动作需<strong>连续 2 轮（约 2 分钟）同向</strong>才可执行（篮子级确认状态，模块级 dict）</li><li>置信门槛：<code>BASKET_AI_MIN_CONF=0.60</code> 才可执行</li><li>输出：<code>basket_action = {action, confidence, reason}</code> 挂到 decision 对象</li></ul>
+<h3>L2：执行层（trade_executor._manage_positions 主号路径）</h3>
+<ul><li><code>close_all</code>：逐笔平仓 + <code>publish_leader_exit(full_close)</code> 广播 + <code>_record_close("篮子AI全平·回吐保护")</code>；120s 冷却（同 L3）；部分失败不置冷却、下轮重试</li><li><code>trim</code>：每笔平 50%（<code>partial_close</code> 广播，close_pct=0.5）；防碎单：若单笔 volume≤0.02 则不减（避免碎单）</li><li>与 L3 共存：AI 处置是"提前量"（浮盈小/回吐早介入），L3 是规则兜底（浮盈大）</li><li>位置：放在 L3 篮子护盾<strong>之前</strong>（AI 先判断，规则兜底）</li></ul>
+<h3>L3：篮子回吐保护（规则补充——AI 不动作时的机械兜底）</h3>
+<ul><li>跟踪篮子浮盈峰值（模块级 dict <code>_BASKET_PEAK_PNL[account]</code>，每轮更新）</li><li>触发条件：篮子浮盈 ≥ <code>BASKET_PULLBACK_MIN_FLOOR</code>(6美元) 且 从峰值回吐 ≥ <code>BASKET_PULLBACK_PCT</code>(50%) 或绝对值 ≥ <code>BASKET_PULLBACK_ABS</code>(8美元) → 全平锁利</li><li>这正是用户案例的直接修法：三单 +10 → 回吐到 +5（回吐 50%）→ 触发全平，不会回吐到 0/亏损</li><li>参数可配置（strategy_configs 继承主号）</li></ul>
+<h3>L4：视觉看护修复（VisionExit 恢复后作为额外信号源）</h3>
+<ul><li>已加失败日志（重启后可见失败原因）</li><li>恢复后其 full_close/partial_close 决策作为篮子处置的<strong>同向加分票</strong>（vision agree → 置信提升）</li></ul>
+<h2>四、与现有层的关系（不破坏任何保护）</h2>
+<pre><code>L1 硬 SL/TP（MT5 原生）      ── 不变
+L2 smart_exit 规则（保本/追踪/分批/单笔回吐）── 不变
+M1 AI 逐单出场（ai_exit 反向判）── 不变
+L3 篮子护盾（浮盈≥阈值全平）  ── 不变
+★ 新增：AI 篮子处置（PositionAction）── 在 L3 之前，AI 提前介入
+★ 新增：篮子回吐保护（规则）  ── 在 L3 之前，峰值回吐即锁</code></pre>
+<h2>五、参数（config.py + strategy_configs）</h2>
+<table><thead><tr><th>参数</th><th>默认</th><th>说明</th></tr></thead><tbody><tr><td><code>BASKET_AI_MGMT_ENABLED</code></td><td>True</td><td>总开关</td></tr><tr><td><code>BASKET_AI_MIN_CONF</code></td><td>0.60</td><td>AI 处置置信门槛</td></tr><tr><td><code>BASKET_AI_CONFIRM_CYCLES</code></td><td>2</td><td>连续确认轮数（防抖）</td></tr><tr><td><code>BASKET_AI_TRIM_PCT</code></td><td>0.5</td><td>trim 减仓比例</td></tr><tr><td><code>BASKET_PULLBACK_ENABLED</code></td><td>True</td><td>篮子回吐保护开关</td></tr><tr><td><code>BASKET_PULLBACK_MIN_FLOOR</code></td><td>6.0</td><td>最低浮盈（美元）才看回吐</td></tr><tr><td><code>BASKET_PULLBACK_PCT</code></td><td>0.5</td><td>峰值回吐 50% 触发</td></tr><tr><td><code>BASKET_PULLBACK_ABS</code></td><td>8.0</td><td>或绝对回吐 $8 触发</td></tr></tbody></table>
+<h2>六、改动文件清单</h2>
+<ol><li><code>app/core/deepseek_client.py</code> — prompt 指令 + <code>position_action</code> 解析（兼容回退）</li><li><code>app/core/hunyuan_client.py</code> — <code>_safe_json_loads</code> 提取 <code>position_action</code></li><li><code>app/core/debate_engine.py</code> — prompt 组装传参（my_open_positions 已有）</li><li><code>app/core/meta_agent.py</code> — 加权融合 + 防抖确认 + 挂 decision 字段</li><li><code>app/services/trade_executor.py</code> — <code>_manage_positions</code> 消费篮子处置 + 篮子回吐保护</li><li><code>app/config.py</code> — 参数</li><li><code>tests/test_basket_ai_mgmt.py</code> — 新单测（协议解析/融合/回吐触发）</li></ol>
+<h2>七、验证方式</h2>
+<ol><li><strong>单测</strong>：position_action 解析（hold/trim/close_all/非法回退 hold）</li><li><strong>单测</strong>：meta_agent 融合（DS trim+HY hold → 分歧降权不动作；DS+HY 都 close_all → 执行）</li><li><strong>单测</strong>：篮子回吐触发（峰值 10 → 当前 4 → 触发全平；峰值 5 → 未达 floor 不触发）</li><li><strong>实盘前向验证</strong>：下次三单合计浮盈 +10 后开始回吐，观察 AI 是否提前介入（预期 ≤2 轮确认内出 close_all/trim，回吐 50% 规则兜底）</li></ol>
+<h2>八、风险与护栏</h2>
+<ul><li><strong>AI 抖动误杀</strong> → 连续 2 轮确认 + 置信 0.6 + 120s 冷却，三重护栏</li><li><strong>trim 碎单</strong> → volume≤0.02 不减</li><li><strong>跟号一致性</strong> → 复用现有广播机制，跟号镜像消费，不引入新通道</li><li><strong>解析失败</strong> → 一律回退 hold，任何异常不影响现有决策链</li><li><strong>纯加法</strong> → 不删除/修改现有 L1/L2/L3/M1 任何保护逻辑</li></ul>
+<hr>
+<p>*状态：方案待落地。用户重启后实施（重启加载：快监顺序/凭证回退/VisionExit 日志/shadow 落库）。*</p></body></html>

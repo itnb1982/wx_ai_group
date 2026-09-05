@@ -1,0 +1,21 @@
+﻿===18:10 主号平仓后 三副号镜像账户分布===
+3540bf33
+8ecb1ff9
+b3db40fd
+===18:10 前后 主号L3/快监触发行===
+[32m2026-08-04 18:10:06.000[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_manage_positions[0m:[36m684[0m - [1m[L3护盾] 2877213e 篮子浮盈 +11.15≥10.00$ → 全平锁利重开[0m
+===empty_response 上下文(是否retry成功/降级)===
+[32m2026-08-04 17:47:01.447[0m | [33m[1mWARNING [0m | [36mapp.services.ai_exit[0m:[36m_bg_evaluate[0m:[36m255[0m - [33m[1m[AI出场][诊断] 2877213e 后台评估无有效决策(error=empty_response, decisions=0)[0m
+[32m2026-08-04 17:48:36.972[0m | [33m[1mWARNING [0m | [36mapp.services.ai_exit[0m:[36m_bg_evaluate[0m:[36m255[0m - [33m[1m[AI出场][诊断] 2877213e 后台评估无有效决策(error=empty_response, decisions=0)[0m
+[32m2026-08-04 17:50:14.421[0m | [33m[1mWARNING [0m | [36mapp.services.ai_exit[0m:[36m_bg_evaluate[0m:[36m255[0m - [33m[1m[AI出场][诊断] 2877213e 后台评估无有效决策(error=empty_response, decisions=0)[0m
+[32m2026-08-04 17:53:32.556[0m | [33m[1mWARNING [0m | [36mapp.services.ai_exit[0m:[36m_bg_evaluate[0m:[36m255[0m - [33m[1m[AI出场][诊断] 2877213e 后台评估无有效决策(error=empty_response, decisions=0)[0m
+[32m2026-08-04 18:06:37.721[0m | [33m[1mWARNING [0m | [36mapp.services.ai_exit[0m:[36m_bg_evaluate[0m:[36m255[0m - [33m[1m[AI出场][诊断] 2877213e 后台评估无有效决策(error=empty_response, decisions=0)[0m
+[32m2026-08-04 18:08:54.827[0m | [33m[1mWARNING [0m | [36mapp.services.ai_exit[0m:[36m_bg_evaluate[0m:[36m255[0m - [33m[1m[AI出场][诊断] 2877213e 后台评估无有效决策(error=empty_response, decisions=0)[0m
+(总数: 6)
+===AI出场/辩论 是否频繁回退规则===
+[32m2026-08-04 17:38:46.304[0m | [1mINFO    [0m | [36mapp.services.ai_exit[0m:[36mevaluate[0m:[36m216[0m - [1m[AI出场][诊断] 2877213e 无新鲜缓存→本轮回退规则引擎[0m
+[32m2026-08-04 17:40:18.410[0m | [1mINFO    [0m | [36mapp.services.ai_exit[0m:[36mevaluate[0m:[36m216[0m - [1m[AI出场][诊断] 2877213e 无新鲜缓存→本轮回退规则引擎[0m
+[32m2026-08-04 17:41:58.401[0m | [1mINFO    [0m | [36mapp.services.ai_exit[0m:[36mevaluate[0m:[36m216[0m - [1m[AI出场][诊断] 2877213e 无新鲜缓存→本轮回退规则引擎[0m
+[32m2026-08-04 17:43:32.766[0m | [1mINFO    [0m | [36mapp.services.ai_exit[0m:[36mevaluate[0m:[36m216[0m - [1m[AI出场][诊断] 2877213e 无新鲜缓存→本轮回退规则引擎[0m
+[32m2026-08-04 17:45:00.609[0m | [1mINFO    [0m | [36mapp.services.ai_exit[0m:[36mevaluate[0m:[36m216[0m - [1m[AI出场][诊断] 2877213e 无新鲜缓存→本轮回退规则引擎[0m
+[32m2026-08-04 17:46:39.792[0m | [1mINFO    [0m | [36mapp.services.ai_exit[0m:[36mevaluate[0m:[36m216[0m - [1m[AI出场][诊断] 2877213e 无新鲜缓存→本轮回退规则引擎[0m

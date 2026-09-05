@@ -1,0 +1,360 @@
+/* ══════════════════════════════════════════════════════════════════════
+   V6 Phase 8.4 — 授权与激活 UI 样式
+   拆成独立模块而非继续堆进 1400 行的 global.css：
+   授权是一个内聚的功能域，独立文件让它可以整块删改而不牵动全站。
+
+   配色规则（沿用 Phase 4 风控面板结论，刻意与盈亏色脱钩）：
+     金 = 正常 / 黄 = 需关注但仍可交易 / 红 = 已停开新仓
+   绝不用绿色表示"授权正常" —— 客户会把绿色读成"在赚钱"。
+   全部颜色走 global.css 的令牌，不新增硬编码色板。
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ─── 顶部提示条（sticky，不遮挡内容） ─── */
+.lic-banner {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: -14px -14px 14px;
+  padding: 10px 16px;
+  border-bottom: 1px solid transparent;
+  font-size: 12.5px;
+  backdrop-filter: blur(8px);
+}
+.lic-banner.lic-warn {
+  background: linear-gradient(180deg, rgba(255, 207, 77, 0.16), rgba(255, 207, 77, 0.07));
+  border-bottom-color: rgba(255, 207, 77, 0.35);
+  color: #ffe9a8;
+}
+.lic-banner.lic-block {
+  background: linear-gradient(180deg, rgba(255, 92, 108, 0.18), rgba(255, 92, 108, 0.08));
+  border-bottom-color: rgba(255, 92, 108, 0.42);
+  color: #ffd2d7;
+}
+.lic-banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+.lic-banner.lic-block .lic-banner-dot {
+  animation: licPulse 1.6s ease-in-out infinite;
+}
+@keyframes licPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.lic-banner-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lic-banner-main b { font-weight: 800; }
+.lic-banner-hint { opacity: 0.85; font-weight: 500; }
+
+/* 「持仓不受影响」必须显眼 —— 客户看到红条第一反应是「我的单被平了？」 */
+.lic-banner-safe {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(46, 230, 160, 0.14);
+  color: var(--green);
+  border: 1px solid rgba(46, 230, 160, 0.3);
+}
+.lic-banner-btn {
+  margin-left: auto;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid currentColor;
+  color: inherit;
+  transition: background 0.15s;
+}
+.lic-banner-btn:hover { background: rgba(255, 255, 255, 0.2); }
+.lic-banner-x {
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0.5;
+  padding: 0 2px;
+}
+.lic-banner-x:hover { opacity: 1; }
+
+/* ─── 侧栏授权徽章 ─── */
+.lic-badge {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  color: var(--sub);
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+.lic-badge:hover { background: rgba(255, 255, 255, 0.06); }
+.lic-badge-ok { border-color: rgba(255, 207, 77, 0.28); }
+.lic-badge-ok .lic-badge-ic,
+.lic-badge-ok .lic-badge-state { color: var(--gold); }
+.lic-badge-warn {
+  border-color: rgba(255, 207, 77, 0.5);
+  background: rgba(255, 207, 77, 0.07);
+}
+.lic-badge-warn .lic-badge-ic,
+.lic-badge-warn .lic-badge-state { color: #ffd873; }
+.lic-badge-bad {
+  border-color: rgba(255, 92, 108, 0.55);
+  background: rgba(255, 92, 108, 0.09);
+}
+.lic-badge-bad .lic-badge-ic,
+.lic-badge-bad .lic-badge-state { color: var(--red); }
+.lic-badge-ic { flex-shrink: 0; display: flex; }
+.lic-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.lic-badge-top { display: flex; align-items: center; gap: 6px; }
+.lic-badge-state {
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lic-badge-edition {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: rgba(77, 155, 255, 0.15);
+  color: var(--blue);
+  flex-shrink: 0;
+}
+.lic-badge-sub {
+  font-size: 10px;
+  color: var(--dim);
+  font-family: var(--font-num);
+  display: flex;
+  gap: 8px;
+}
+.lic-badge-quota { opacity: 0.8; }
+
+/* ─── 激活页 ─── */
+.lic-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 880px;
+}
+.lic-empty { color: var(--dim); font-size: 12.5px; padding: 10px 0; }
+.lic-tip {
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.lic-tip code {
+  font-family: var(--font-num);
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.lic-state-hero {
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+}
+.lic-hero-ok {
+  background: linear-gradient(135deg, rgba(255, 207, 77, 0.10), rgba(255, 207, 77, 0.03));
+  border-color: rgba(255, 207, 77, 0.3);
+}
+.lic-hero-warn {
+  background: linear-gradient(135deg, rgba(255, 207, 77, 0.16), rgba(255, 157, 61, 0.06));
+  border-color: rgba(255, 207, 77, 0.45);
+}
+.lic-hero-bad {
+  background: linear-gradient(135deg, rgba(255, 92, 108, 0.16), rgba(255, 92, 108, 0.05));
+  border-color: rgba(255, 92, 108, 0.45);
+}
+.lic-state-name { font-size: 19px; font-weight: 800; letter-spacing: 0.5px; }
+.lic-hero-ok .lic-state-name { color: var(--gold); }
+.lic-hero-warn .lic-state-name { color: #ffd873; }
+.lic-hero-bad .lic-state-name { color: var(--red); }
+.lic-state-msg {
+  font-size: 12px;
+  color: var(--sub);
+  margin-top: 5px;
+  line-height: 1.6;
+}
+.lic-state-safe {
+  margin-top: 10px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  background: rgba(46, 230, 160, 0.1);
+  border: 1px solid rgba(46, 230, 160, 0.28);
+  color: #a7f3d6;
+}
+.lic-state-safe b { color: var(--green); }
+
+.lic-rows {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1px 0;
+}
+.lic-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(31, 45, 74, 0.5);
+}
+.lic-row-l { font-size: 11px; color: var(--dim); min-width: 62px; }
+.lic-row-v { font-size: 12.5px; color: var(--txt); font-weight: 600; }
+.lic-row-v.num { font-family: var(--font-num); }
+
+.lic-machine { display: flex; align-items: center; gap: 10px; }
+.lic-machine-code {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-num);
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  white-space: nowrap;
+  user-select: all; /* 点一下即可全选，clipboard API 不可用时的手动兜底 */
+}
+.lic-machine-meta { font-size: 11px; color: var(--dim); margin-top: 8px; }
+.lic-warn-inline { color: var(--gold); }
+
+.lic-token {
+  width: 100%;
+  resize: vertical;
+  font-family: var(--font-num);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--txt);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 13px;
+  word-break: break-all;
+}
+.lic-token:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: var(--glow);
+}
+.lic-form-line {
+  display: flex;
+  gap: 10px;
+  margin-top: 11px;
+  flex-wrap: wrap;
+}
+.lic-input {
+  flex: 1;
+  min-width: 180px;
+  font-size: 12.5px;
+  color: var(--txt);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 12px;
+}
+.lic-input:focus { outline: none; border-color: var(--blue); }
+.lic-btn {
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 9px;
+  white-space: nowrap;
+  transition: filter 0.15s, background 0.15s;
+}
+.lic-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.lic-btn.primary {
+  background: linear-gradient(135deg, #ffd56b, #ff9d3d);
+  border: none;
+  color: #2a1a00;
+}
+.lic-btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.lic-btn.ghost {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  color: var(--sub);
+}
+.lic-btn.ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--txt);
+}
+
+.lic-result {
+  margin-top: 12px;
+  padding: 10px 13px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lic-result.ok {
+  background: rgba(46, 230, 160, 0.1);
+  border: 1px solid rgba(46, 230, 160, 0.3);
+  color: #a7f3d6;
+}
+.lic-result.bad {
+  background: rgba(255, 92, 108, 0.1);
+  border: 1px solid rgba(255, 92, 108, 0.32);
+  color: #ffd2d7;
+}
+.lic-result-msg { flex: 1; min-width: 0; line-height: 1.6; }
+
+/* 错误码必须能一眼看到并整段复制 —— 客服靠它一步定位是粘漏还是签错机器 */
+.lic-result-code {
+  font-family: var(--font-num);
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  user-select: all;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--sub);
+}
+
+.lic-legal { opacity: 0.92; }
+.lic-disclaimer { font-size: 11.5px; color: var(--sub); line-height: 1.8; }
+.lic-legal-foot { font-size: 11px; color: var(--dim); margin-top: 9px; }
+
+@media (max-width: 720px) {
+  .lic-banner-btn { margin-left: 0; }
+  .lic-rows { grid-template-columns: 1fr; }
+}

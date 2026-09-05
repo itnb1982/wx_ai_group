@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai · 端到端深挖审计报告</title>
+<style>
+  :root{
+    --bg:#0b0e17; --panel:#141a2a; --panel2:#1b2236; --line:#27304a;
+    --txt:#e6ecff; --sub:#9aa6c8; --acc:#46e0c8; --acc2:#7c8cff;
+    --p0:#ff5470; --p1:#ff8a3d; --p2:#ffd23d; --p3:#5bd1ff;
+    --ok:#3ee08a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0b0e17,#0c1020);color:var(--txt);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.65;padding:32px}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{border:1px solid var(--line);border-radius:16px;padding:26px 30px;
+    background:radial-gradient(120% 140% at 0% 0%,rgba(124,140,255,.16),transparent 55%),var(--panel)}
+  h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px}
+  h1 small{color:var(--acc);font-weight:600}
+  .meta{color:var(--sub);font-size:13px;margin-top:8px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card .n{font-size:30px;font-weight:700;color:var(--acc)}
+  .card .l{color:var(--sub);font-size:12.5px;margin-top:4px}
+  h2{margin:30px 0 12px;font-size:19px;border-left:4px solid var(--acc);padding-left:12px}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 18px}
+  .tag{font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid var(--line)}
+  .t-p0{color:var(--p0);border-color:var(--p0)}
+  .t-p1{color:var(--p1);border-color:var(--p1)}
+  .t-p2{color:var(--p2);border-color:var(--p2)}
+  .t-p3{color:var(--p3);border-color:var(--p3)}
+  .t-ok{color:var(--ok);border-color:var(--ok)}
+  .t-v{color:var(--acc2);border-color:var(--acc2)}
+  table{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:13px}
+  th,td{border:1px solid var(--line);padding:10px 11px;vertical-align:top;text-align:left}
+  th{background:var(--panel2);color:var(--acc);font-weight:600;position:sticky;top:0}
+  tr:nth-child(even){background:rgba(255,255,255,.018)}
+  .sev{font-weight:700;white-space:nowrap}
+  .sev.P0{color:var(--p0)} .sev.P1{color:var(--p1)} .sev.P2{color:var(--p2)} .sev.P3{color:var(--p3)}
+  code{background:#0c1322;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+    font-family:Consolas,"Courier New",monospace;font-size:12px;color:#9fe9ff}
+  .v{color:var(--acc2);font-weight:600;font-size:11px;border:1px solid var(--acc2);border-radius:4px;padding:0 5px}
+  .a{color:var(--sub);font-weight:600;font-size:11px;border:1px solid var(--sub);border-radius:4px;padding:0 5px}
+  .note{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--acc2);
+    border-radius:10px;padding:14px 18px;margin:14px 0;color:var(--sub);font-size:13px}
+  .okbox{background:var(--panel);border:1px solid var(--ok);border-radius:10px;padding:14px 18px;margin:14px 0;font-size:13px}
+  .okbox b{color:var(--ok)}
+  ul{margin:8px 0 8px 0;padding-left:20px}
+  li{margin:5px 0}
+  footer{margin-top:34px;color:var(--sub);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
+  .plan{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:18px 22px}
+  .plan ol{margin:6px 0;padding-left:22px}
+  .plan li{margin:9px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>万象Ai 智能交易系统 · <small>端到端深挖审计报告</small></h1>
+  <div class="meta">系统：纯AI多租户 XAUUSD 交易系统（React/Vite + FastAPI + MT5 多账号 Worker） &nbsp;|&nbsp;
+  审计日期：2026-08-13 &nbsp;|&nbsp; 方法：5 模块并行只读审计 + 主代理逐条交叉验证</div>
+</header>
+
+<div class="grid">
+  <div class="card"><div class="n">4</div><div class="l">P1 高优（已逐条核实）</div></div>
+  <div class="card"><div class="n">10</div><div class="l">P2 中等</div></div>
+  <div class="card"><div class="n">7</div><div class="l">P3 健壮性/说明</div></div>
+  <div class="card"><div class="n">0</div><div class="l">P0 崩溃/阻断</div></div>
+</div>
+
+<div class="legend">
+  <span class="tag t-p0">P0 严重</span>
+  <span class="tag t-p1">P1 高优</span>
+  <span class="tag t-p2">P2 中等</span>
+  <span class="tag t-p3">P3 说明</span>
+  <span class="tag t-v">✓ 主代理核实</span>
+  <span class="tag t-v">代理报告</span>
+</div>
+
+<div class="okbox">
+  <b>整体健康度：良好，无 P0 级崩溃/阻断 bug。</b>
+  多账号隔离（行情快照无 account_id 累积、按账号分锁、MT5 终端路径精确归属）正确；置信校准层确实仅展示、零泄漏进闸门/手数（<code>config.py:137-138</code> 确认 <code>AFFECTS_GATES/SIZING=False</code>）；
+  历史 P0 修复（REAL 券商 price=0 回退、partial 明细表、最大持仓上限、反转哨兵多头误发、SELL 软惩罚对称化、保本护栏误 hold）均已落地且复核查无复发；
+  market_analyzer 注入结构锚、降级分支保证 key 始终存在、休市/空数据降级不崩。
+  本次发现的问题集中在<b>跨租户隔离、双脑对称性、结构 TP 分支、对账价格失真、可移植性边界</b>五类，均非系统性崩塌。
+</div>
+
+<h2>一、P1 · 高优先级（建议本轮修复）</h2>
+<table>
+<tr><th style="width:34px">#</th><th style="width:52px">严重度</th><th>模块</th><th>文件:行号</th><th>根因 / 现象</th><th>建议修复</th><th style="width:64px">核实</th></tr>
+
+<tr>
+<td>1</td><td class="sev P1">P1</td><td>执行/健康</td>
+<td><code>dashboard.py:592-657</code></td>
+<td><b>净值曲线缓存跨租户泄漏。</b><code>_EQUITY_CACHE</code> 为全局变量，写入时按 <code>user.id</code> 过滤账号，但读取仅判 <code>ts&lt;60</code>、不校验 user。60 秒内用户 B 会拿到用户 A 的净值/盈利曲线 → 多租户越权（1账号=1客户铁律下严重）。</td>
+<td>缓存键改为 <code>(user.id, days)</code>，对齐 <code>_ACCT_CACHE</code> 做法；或按 user 分片。</td>
+<td><span class="v">✓核实</span></td>
+</tr>
+
+<tr>
+<td>2</td><td class="sev P1">P1</td><td>决策融合</td>
+<td><code>hunyuan_client.py:334-374</code><br>对照 <code>deepseek_client.py:502</code></td>
+<td><b>双脑输入不对称 → 方向偏置。</b>DeepSeek prompt 注入了 <code>meta_quality</code>（Chronos 本地时序方向票），混元 prompt 完全不含该字段。混元永远看不到本地时序方向，无法作为对称第三辩论角色制衡，系统性制造方向偏置（违反 system prompt「BUY/SELL 完全对称」）。</td>
+<td>混元 <code>user_prompt</code> 同步注入 <code>market_data.get('meta_quality', {})</code> 块，与 DeepSeek 对齐。</td>
+<td><span class="v">✓核实</span></td>
+</tr>
+
+<tr>
+<td>3</td><td class="sev P1">P1</td><td>结构感知</td>
+<td><code>smc_features.py:394</code><br>+ <code>smart_exit.py:593</code></td>
+<td><b>BUY 结构延伸 TP 死代码（我 2026-08-13 新增逻辑一半失效）。</b><code>derive_structure_anchors</code> 给 BUY 的 <code>tp_anchor_buy=min(_buy_tp)</code>（最近摆动高点），但消费端 smart_exit 要求 <code>structure_tp &gt; entry+2.5×ATR</code> 才延伸；最近摆动高点通常 &lt;2.5×ATR → 条件永不成立，BUY 结构 TP 从不生效（SELL 用 max 能生效，不对称）。</td>
+<td>BUY TP 锚点取更远处摆动高点，或放宽 smart_exit 守卫（&gt; entry+MIN_SL_DIST 即可）；两方向语义统一。</td>
+<td><span class="v">✓核实</span></td>
+</tr>
+
+<tr>
+<td>4</td><td class="sev P1">P1</td><td>执行/对账</td>
+<td><code>mt5_worker.py:835</code><br><code>trade_executor.py:1109/1146</code></td>
+<td><b>REAL 券商平仓价 price=0 缺回退 → 价格失真。</b>worker 的 <code>get_deal_by_position</code> 对 <code>deal.price</code> 未做 ≤0 防护（而 <code>close_position:1058</code> 已回退）；executor 对账在 <code>deal.price=0 但 profit≠0</code> 时（<code>_unverified</code> 要求两者皆0才标 pending）把 <code>close_price</code> 记成 0：利润对、价格失真 → 下游按价重算再现假±4000、归因/可视化污染。</td>
+<td>worker 端 <code>deal.price&lt;=0</code> 时回退反向市价或由 <code>open_price+profit/vol/100</code> 反推；executor 两侧加 <code>if _cp&lt;=0:</code> 防护（参照 <code>:3831</code> open_price 回填）。</td>
+<td><span class="v">✓核实</span></td>
+</tr>
+</table>
+
+<h2>二、P2 · 中等优先级</h2>
+<table>
+<tr><th style="width:34px">#</th><th style="width:52px">严重度</th><th>模块</th><th>文件:行号</th><th>根因 / 现象</th><th>建议修复</th><th style="width:64px">核实</th></tr>
+
+<tr><td>5</td><td class="sev P2">P2</td><td>可移植</td><td><code>trade_executor.py:1725</code></td>
+<td><b>硬编码 F 盘路径（新发现）。</b>被拒信号原生 sqlite3 回写兜底写死 <code>"F:/WanxiangAI/backend/data/wx_prod.dat"</code> → 无 F 盘/不同布局机器写错库，违反「严禁 F 盘硬编码」铁律。</td>
+<td>改用 <code>settings.get_database_url()</code> 解析路径或 <code>runtime_paths</code>，全项目统一数据目录。</td>
+<td><span class="v">✓核实</span></td></tr>
+
+<tr><td>6</td><td class="sev P2">P2</td><td>决策融合</td><td><code>meta_agent.py:979-1040</code><br>对照 <code>:769-778</code></td>
+<td><b>SMC 订单流锚缺 extension_z 豁免。</b>A 门用「价格统计性延伸 |z|≥1.5 或趋势末端」科学放行逆势反转单；SMC 锚仅认哨兵 REVERSE + 末端，不认 extension_z。当 SMC 偏置仍逆、哨兵未发、非末端时，会重罚/翻向 A 门已放行的合法反转 → 违反「提准非拦截」，可能砍掉真反转利润。</td>
+<td>SMC 锚内复用 A 门 <code>_genuine_extension</code> 豁免（已延伸则不再翻向/降权）。</td>
+<td><span class="v">✓部分核实</span></td></tr>
+
+<tr><td>7</td><td class="sev P2">P2</td><td>决策融合</td><td><code>meta_agent.py:1034</code></td>
+<td><b>SMC soft 默认 ×0.5 实为拦截。</b>叠加 4H 偏置×0.8、体制×0.85 后 0.75→0.34，跌破执行器 0.58 门槛 → 整笔 HOLD。与「提准非拦截」标签矛盾。</td>
+<td>soft 降权应 ≤×0.85，或仅在 conf 偏低时降权；保证正常逆势单不被误杀。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>8</td><td class="sev P2">P2</td><td>决策融合</td><td><code>deepseek_client.py:804-809</code></td>
+<td><b>辩论空响应静默记票。</b>反驳轮空内容 fallback 成「自身初始决策」且不置 <code>_api_failed</code> → API 无返回仍算有效投票，辩论卡显示「模型未返回内容」却计入方向。</td>
+<td>空响应置 <code>_api_failed</code> 并令该轮决策降级，不污染票数。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>9</td><td class="sev P2">P2</td><td>决策融合</td><td><code>meta_agent.py:653/680/684</code></td>
+<td><b>平票偏向 BUY。</b><code>max(decision_scores)</code> 字典序 BUY 先于 SELL，对抗性 BUY/SELL 平票取 BUY，系统性偏多。</td>
+<td>平票显式判 HOLD 或加权随机，消除字典序偏置。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>10</td><td class="sev P2">P2</td><td>结构感知</td><td><code>smc_features.py:313-324</code></td>
+<td><b>DXY 宏观加成静默吞异常。</b><code>try…except Exception: pass</code> 把外部快照解析全吞，行情管线异常无法定位，且 <code>score±0.15</code> 可翻转 global_bias（看似生效实则跳过）。</td>
+<td>至少 <code>logger.debug</code> 记录跳过原因，保证可观测。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>11</td><td class="sev P2">P2</td><td>结构感知</td><td><code>smc_features.py:272-333</code></td>
+<td><b>tf_count 把 available=False 周期计入。</b>MT5 重启时高层级 H4/H1 空、仅低周期有数据，偏向被低周期噪声主导却仍报 <code>tf_count=7</code> 误导「全周期已分析」。</td>
+<td>tf_count 仅统计 <code>available=True</code> 且含摆动结构的周期。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>12</td><td class="sev P2">P2</td><td>结构感知</td><td><code>regime_detect.py:198</code></td>
+<td><b>末端哨兵在 H1 缺位时失效。</b>H1 缺回退 M15&lt;20 根时 <code>ma20=最新收盘</code>，<code>extension_z≈0</code>，<code>at_stale</code> 永远 False → 趋势末端「接飞刀」哨兵失灵。</td>
+<td>H1 不可用时显式标 <code>extension_z=None</code> 而非近似 0，下游按缺失处理。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>13</td><td class="sev P2">P2</td><td>仓位/平仓</td><td><code>trade_executor.py:2897</code></td>
+<td><b>peak_move 用剩余持仓量换算，partial 后失真。</b>MFE 按开仓时量记，partial 减半后剩余量变小 → <code>peak_move=MFE/(vol×100)</code> 被放大（如 0.5→0.25 余，peak_move 翻倍），回吐锁利阈值错乱。</td>
+<td>peak_move 用开仓原始量（trade.volume 或首笔 trade_exits），不随时间变化。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>14</td><td class="sev P2">P2</td><td>仓位/平仓</td><td><code>trade_executor.py:3821-3822</code></td>
+<td><b>trade_exits 明细 mfe/mae 恒为 0。</b>写 <code>DebateDecision.mfe</code>（该对象无此属性）→ 恒 0；真实 MFE 只进了 <code>trade.mfe</code>，与「每次平仓一行且含 MFE」要求不符。</td>
+<td>明细表改用 <code>_ai_exit._EXIT_MFE.get(_mk)</code> 等真实来源。</td>
+<td><span class="a">代理</span></td></tr>
+</table>
+
+<h2>三、P3 · 健壮性 / 架构说明（非 bug，建议择机优化）</h2>
+<table>
+<tr><th style="width:34px">#</th><th style="width:52px">严重度</th><th>模块</th><th>文件:行号</th><th>根因 / 现象</th><th>建议</th><th style="width:64px">核实</th></tr>
+
+<tr><td>15</td><td class="sev P3">P3</td><td>校准归因</td><td><code>brain_audit.py</code><br><code>meta_agent.py:495/1268</code></td>
+<td><b>brain_audit 是观测日志非闭环控制。</b>确实被 <code>record()</code> 调用写审计，但无消费方读 <code>brain_audit.db</code> 反向调权重；真闭环在 <code>EvolutionEngine</code>。代理原报「死代码」有误，实为「只写不读」的观测层。</td>
+<td>文档明确标注「仅观测」；若要闭环，需接读方驱动权重衰减。</td>
+<td><span class="v">✓核实</span></td></tr>
+
+<tr><td>16</td><td class="sev P3">P3</td><td>结构感知</td><td><code>smc_features.py:399</code></td>
+<td><code>available=False</code> 时 <code>source_tf</code> 仍非空 → 下游误读为有锚源。</td>
+<td><code>available=False</code> 时 <code>source_tf=""</code>。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>17</td><td class="sev P3">P3</td><td>结构感知</td><td><code>smc_features.py:386</code></td>
+<td><code>sl_anchor_buy</code> 取最近摆动低点（紧贴 entry），黄金高波动易被噪声明扫。</td>
+<td>取「次近」或加 buffer，避免被正常回踩扫损。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>18</td><td class="sev P3">P3</td><td>执行</td><td><code>trade_executor.py:2353-2358</code></td>
+<td>跟号镜像 SL 用主号绝对价；跨账号实时查主号持仓失败被 <code>pass</code> 静默吞。</td>
+<td>确认是否应套「主号 SL 相对其开仓价偏移」；跨账号查询失败记日志。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>19</td><td class="sev P3">P3</td><td>数据管线</td><td><code>market_analyzer.py:87</code></td>
+<td><code>_cached_snapshot</code> 赋值后无读取方，死代码。</td>
+<td>删除或接上消费逻辑。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>20</td><td class="sev P3">P3</td><td>可移植</td><td><code>runtime_paths.py:52</code></td>
+<td><code>data_dir</code> 缺 <code>%LOCALAPPDATA%</code> 兜底（规范列三级，实现仅前两级）。</td>
+<td>补第三级 <code>%LOCALAPPDATA%</code> 兜底。</td>
+<td><span class="a">代理</span></td></tr>
+
+<tr><td>21</td><td class="sev P3">P3</td><td>决策融合</td><td><code>decision_gates.py:23-35</code></td>
+<td>逆共识闸门降级为共识方向后置信仍用原 META 值（小瑕疵）。</td>
+<td>下游按新方向语义处理置信即可，可忽略。</td>
+<td><span class="a">代理</span></td></tr>
+</table>
+
+<div class="note">
+<b>关于代理误报的纠正（信任但验证）：</b>
+① <b>brain_audit</b> 代理报「死代码/伪闭环」，实测 <code>meta_agent.py:495/1268</code> 确有 <code>record()</code> 调用，只是只写不读——降为 P3 架构说明，非 bug。
+② <b>SMC 订单流锚</b> 代理称「完全不检查豁免」，实测 <code>meta_agent.py:979-1040</code> 已含哨兵 REVERSE 豁免与强共识≥0.75 豁免；缺口仅在「不认 extension_z 豁免」→ 收敛为 P2 #6。
+③ <b>双 data 目录分叉</b> 代理称 brain_audit 用 backend/data 而主库用 root/data；实测 brain_audit 独立库是设计使然（注释「不污染生产库」），非缺陷，故未列为 bug。
+</div>
+
+<h2>四、修复优先级建议（落地需用户物理重启后端生效）</h2>
+<div class="plan">
+<ol>
+<li><b>P1-#1 跨租户净值泄漏</b>：最易修、影响合规。改缓存键 <code>(user.id, days)</code>，10 行内搞定。</li>
+<li><b>P1-#2 混元缺 meta_quality</b>：双脑对称，直接影响方向准确率。在 hunyuan <code>user_prompt</code> 注入 meta_quality 块（对齐 DeepSeek）。</li>
+<li><b>P1-#4 REAL 平仓价=0 回退</b>：对账价格失真，修 <code>mt5_worker.py:835</code> + executor 两侧 ≤0 防护。</li>
+<li><b>P1-#3 BUY 结构 TP 死代码</b>：我新增逻辑的一半，修锚点语义或放宽 smart_exit 守卫，守住「无结构零行为变化」。</li>
+<li><b>P2 批量</b>：#5 F盘硬编码（可移植）、#6 SMC extension_z 豁免、#7 soft×0.5 降权上限、#13/#14 partial/MFE 失真——均属「提准非拦截」与数据真实性的补强。</li>
+</ol>
+<p style="color:var(--sub);font-size:12.5px;margin-bottom:0">验收口径（铁律）：任何改动须满足 <b>交易笔数不腰斩 / 净利润不降 / PF&gt;1</b>；结构锚定与 SMC 调整须保证「无信号时零行为变化」。所有改动需重启后端，观察日志确认新逻辑生效。</p>
+</div>
+
+<footer>
+本报告由 5 个并行只读审计代理产出初稿，主代理对 4 个 P1 及 3 处关键结论逐条 Read 源码交叉验证。
+标注 <span class="v">✓核实</span> = 主代理亲自读代码确认；<span class="a">代理</span> = 代理报告、建议修复前再核对一次。
+未改动任何业务代码（本次为纯审计）。修复方案待确认后落地，落地需用户重启后端。
+</footer>
+
+</div>
+</body>
+</html>

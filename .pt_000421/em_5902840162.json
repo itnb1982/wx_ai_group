@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "global": {
+    "level": "NORMAL",
+    "reason": "",
+    "at": "",
+    "by": ""
+  },
+  "accounts": {},
+  "flatten_requests": [
+    {
+      "id": "3b2946586824",
+      "scope": "acct-A",
+      "reason": "爆仓风险",
+      "by": "ops",
+      "at": "2026-08-09T00:04:25",
+      "result": {
+        "closed": 3,
+        "failed": 0
+      }
+    }
+  ]
+}

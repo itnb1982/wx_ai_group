@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai 主号亏损审计 · 2026-08-04</title>
+<style>
+  :root{
+    --bg:#0d1117; --card:#161b22; --line:#30363d; --txt:#e6edf3; --sub:#8b949e;
+    --red:#ff6b6b; --green:#3fb950; --amber:#d29922; --blue:#58a6ff; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.6}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 60px}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:1px}
+  h2{font-size:19px;margin:34px 0 12px;padding-left:11px;border-left:4px solid var(--blue)}
+  h3{font-size:15px;color:var(--sub);margin:18px 0 8px}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-align:center}
+  .kpi .v{font-size:24px;font-weight:700}
+  .kpi .l{font-size:12px;color:var(--sub);margin-top:4px}
+  .red{color:var(--red)} .green{color:var(--green)} .amber{color:var(--amber)} .blue{color:var(--blue)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:right}
+  th{background:#1c2230;color:var(--sub);font-weight:600;text-align:right}
+  td.l,th.l{text-align:left}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+  .bar{height:22px;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:12px;color:#fff;font-weight:600}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:14px 0}
+  .step{background:#1c2230;border:1px solid var(--line);border-radius:8px;padding:12px 14px;flex:1;min-width:150px}
+  .step .n{font-size:11px;color:var(--sub)}
+  .step .t{font-weight:700;margin:3px 0}
+  .step .f{font-size:12px;color:var(--sub)}
+  .step.bad{border-color:var(--red)} .step.bad .f{color:var(--red)}
+  .step.ok{border-color:var(--green)} .step.ok .f{color:var(--green)}
+  .tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin:2px 3px}
+  .tag.r{background:rgba(255,107,107,.15);color:var(--red)}
+  .tag.g{background:rgba(63,185,80,.15);color:var(--green)}
+  .tag.a{background:rgba(210,153,34,.15);color:var(--amber)}
+  ul{margin:8px 0;padding-left:20px} li{margin:6px 0}
+  code{background:#1c2230;padding:2px 6px;border-radius:4px;color:var(--blue);font-size:12.5px}
+  .quote{border-left:3px solid var(--amber);padding:6px 14px;background:rgba(210,153,34,.07);margin:10px 0;font-size:13.5px}
+  .foot{color:var(--sub);font-size:12px;margin-top:30px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>万象Ai · 主号历史交易亏损审计</h1>
+  <div class="sub">审计对象：主号 liumanchun1（login 1610093299，行情主号+交易主号，UUID 2877213e）· 数据窗口 2026-08-03 21:13 ~ 08-04 20:35（约32小时）· 数据源 wx_prod.dat → trades 表（1363笔，含每笔AI决策轨迹）</div>
+
+  <div class="card">
+    <h3 style="margin-top:0">一句话结论</h3>
+    <p style="font-size:15px"><b class="red">系统不是在"亏在AI看错方向"，而是在"AI一变卦就平仓"被反复鞭锯放血。</b>
+    主号已平仓 186 笔，净亏 <b class="red">-50.52</b>，PF 仅 <b class="red">0.83</b>（盈亏比<1即必亏）。亏损几乎全部来自 <b class="red">两条"AI出场"通道</b>（L2规则反转 -176 + M1的LLM出场 -56 = <b class="red">-232</b>）；而唯一盈利的是<b class="green">规则通道 L3 篮子锁利 +182</b>。入场门槛 0.5（抛硬币胜率50.5%）叠加反转平仓门槛仅0.6且<b>完全不看持仓盈亏</b>，构成了"低质量入场 + 噪声出场"的亏损闭环。</p>
+  </div>
+
+  <h2>一、数据概览</h2>
+  <div class="grid">
+    <div class="kpi"><div class="v">186</div><div class="l">已平仓样本</div></div>
+    <div class="kpi"><div class="v red">-50.52</div><div class="l">总净盈亏($)</div></div>
+    <div class="kpi"><div class="v red">0.83</div><div class="l">盈亏比 PF</div></div>
+    <div class="kpi"><div class="v amber">50.5%</div><div class="l">胜率</div></div>
+    <div class="kpi"><div class="v red">-3.24</div><div class="l">平均亏损</div></div>
+    <div class="kpi"><div class="v green">+2.63</div><div class="l">平均盈利</div></div>
+    <div class="kpi"><div class="v red">-13.67</div><div class="l">最大单笔亏</div></div>
+    <div class="kpi"><div class="v green">+14.19</div><div class="l">最大单笔盈</div></div>
+  </div>
+  <div class="quote">⚠️ <b>PF=0.83 是死穴</b>：平均亏(-3.24)比平均盈(+2.63)大 23%，且亏损单(92)略多于盈利单(94)。这是典型"小赚大亏"结构——而它恰恰由"AI一变卦就平"制造（截断赢利+放大止损）。</div>
+
+  <h2>二、亏损归因：按出场原因分组</h2>
+  <table>
+    <tr><th class="l">出场机制</th><th>笔数</th><th>合计盈亏($)</th><th>胜率</th><th>平均每笔</th><th class="l">性质</th></tr>
+    <tr><td class="l">L2 AI反转平仓（规则）</td><td>107</td><td class="neg">-176.26</td><td class="neg">29.0%</td><td class="neg">-1.65</td><td class="l"><span class="tag r">放血主因</span></td></tr>
+    <tr><td class="l">M1 AI出场（LLM）</td><td>9</td><td class="neg">-56.17</td><td class="neg">11.1%</td><td class="neg">-6.24</td><td class="l"><span class="tag r">放血</span></td></tr>
+    <tr><td class="l">L3 篮子浮盈锁利（规则）</td><td>70</td><td class="pos">+181.91</td><td class="pos">88.6%</td><td class="pos">+2.60</td><td class="l"><span class="tag g">唯一盈利</span></td></tr>
+    <tr style="font-weight:700;background:#1c2230"><td class="l">合计</td><td>186</td><td class="neg">-50.52</td><td>50.5%</td><td class="neg">-0.27</td><td class="l"></td></tr>
+  </table>
+  <div class="card">
+    <div style="font-size:13px;color:var(--sub);margin-bottom:8px">盈亏贡献对比（绿=赚，红=亏）</div>
+    <div style="margin:6px 0"><span style="display:inline-block;width:120px;color:var(--sub);font-size:12px">L3 规则锁利 +182</span><div class="bar" style="width:80%;background:var(--green)">+181.91</div></div>
+    <div style="margin:6px 0"><span style="display:inline-block;width:120px;color:var(--sub);font-size:12px">L2 反转平仓 -176</span><div class="bar" style="width:78%;background:var(--red)">-176.26</div></div>
+    <div style="margin:6px 0"><span style="display:inline-block;width:120px;color:var(--sub);font-size:12px">M1 AI出场 -56</span><div class="bar" style="width:25%;background:var(--red)">-56.17</div></div>
+  </div>
+  <div class="quote">🔑 <b>铁证对比</b>：AI 驱动的出场（L2+M1）合计 <b class="red">-232</b>，规则驱动的出场（L3）合计 <b class="green">+182</b>。同一批单子，AI 说"平"就亏、规则说"平"就赚——问题不在市场，在<b>"AI 当前信号与开仓方向相反就平仓"</b>这条反射弧。</div>
+
+  <h2>三、AI 交易全流程审计（信号→开单→平仓）</h2>
+  <div class="flow">
+    <div class="step"><div class="n">① 信号抓取</div><div class="t">辩论引擎 decide()</div><div class="f">DS+混元双模型互辩，各出初判+反驳</div></div>
+    <div class="step bad"><div class="n">② 开单决策</div><div class="t">MetaAgent 终裁</div><div class="f">加权聚合→方向+置信；<b class="red">门槛 min_confidence=0.5 过低</b></div></div>
+    <div class="step ok"><div class="n">③ 风控护栏</div><div class="t">risk_engine</div><div class="f">点差/日亏/回撤/单笔 一票否决（放行正常）</div></div>
+    <div class="step"><div class="n">④ 主号下单</div><div class="t">open_position</div><div class="f">主号开仓→signal 广播给跟号镜像</div></div>
+    <div class="step bad"><div class="n">⑤ 平仓</div><div class="t">L1/L2/L3/M1</div><div class="f"><b class="red">L2/M1 的"AI反向即平"在放血</b>；L3 规则锁利在赚钱</div></div>
+  </div>
+
+  <h3>② 开仓决策环节的问题</h3>
+  <p>开仓门槛 <code>min_confidence=0.5</code>，等于"抛硬币也开"。按终裁置信度分组的盈亏：</p>
+  <table>
+    <tr><th class="l">终裁置信度</th><th>笔数</th><th>总盈亏($)</th><th>平均每笔</th></tr>
+    <tr><td class="l">&lt;0.55</td><td>2</td><td class="neg">-1.76</td><td class="neg">-0.88</td></tr>
+    <tr><td class="l">0.55–0.60</td><td>37</td><td class="neg">-16.60</td><td class="neg">-0.45</td></tr>
+    <tr><td class="l">0.60–0.65</td><td>40</td><td class="neg">-30.10</td><td class="neg">-0.75</td></tr>
+    <tr><td class="l" style="color:var(--green)">0.65–0.70</td><td>73</td><td class="pos">+10.62</td><td class="pos">+0.15</td></tr>
+    <tr><td class="l">≥0.70</td><td>34</td><td class="neg">-12.68</td><td class="neg">-0.37</td></tr>
+  </table>
+  <p class="sub">数据说话：<b>置信度 &lt;0.65 的开仓合计 -48.46（79笔），≥0.65 的才勉强打平</b>。42.5% 的开仓根本低于 0.65。这不是"信号被拦截"，是"低质量信号本就不该开"。</p>
+
+  <h3>⑤ 平仓环节的问题（核心）</h3>
+  <ul>
+    <li><b class="red">L2 反转平仓</b>（<code>smart_exit.py</code> 88-96行）：只要 <code>ai_reverse_close_confidence≥0.60</code> 且方向与持仓相反，就标记反转，连 2 轮确认即全平。<b>门槛仅比开仓(0.5)高 0.1，且完全不判断持仓是盈是亏</b>。结果：把盈利单也提前平掉（截断赢利）、把亏损单在噪声翻转时平掉（鞭锯）。107 笔 -176。</li>
+    <li><b class="red">M1 AI出场</b>：LLM 逐仓评估，但其平仓理由高度雷同——"与AI开仓信号相悖，建议离场"，本质与 L2 同一套"AI变卦即平"逻辑。9 笔 -56、胜率 11%。（注：M1 刚在 v28 修复空转，历史样本少，但方向已暴露同样缺陷。）</li>
+    <li><b class="green">L3 篮子锁利</b>：篮子浮盈≥<code>basket_tp_amount=10$</code> 即全平锁利，规则驱动、胜率 88.6%，是系统唯一现金流。但它 $10 就触发，也偏早（限制了大赢家）。</li>
+  </ul>
+
+  <h2>四、三大根因</h2>
+  <div class="card">
+    <p><span class="tag r">根因1</span> <b>"AI变卦即平"的低门槛反转出场（最大出血点）</b></p>
+    <p class="sub">反转平仓门槛 0.60 ≈ 开仓门槛 0.5，且无视持仓盈亏。AI 每周期重判，噪声一翻转就平。L2+M1 两条通道合计 -232。修复方向：提门槛至 0.75+，并加"持仓浮盈时不反向平"（让赢利单走追踪/TP）。</p>
+  </div>
+  <div class="card">
+    <p><span class="tag r">根因2</span> <b>入场门槛 0.5 过低 = 抛硬币</b></p>
+    <p class="sub">50.5% 胜率印证无边缘。低置信(&lt;0.65)开仓净亏 -48。修复方向：min_confidence 提至 0.65（"提准"而非"拦截"——砍掉的是本就亏损的硬币单）。</p>
+  </div>
+  <div class="card">
+    <p><span class="tag a">根因3</span> <b>方向偏置：BUY 胜率仅 30.4% vs SELL 57.1%</b></p>
+    <p class="sub">BUY 方向净亏 -30.11、胜率 30.4%。AI/辩论在"做多"上系统性偏弱（可能校准偏移或时段特性）。修复方向：对 BUY 要求更高置信，或排查辩论引擎 BUY 校准；不要双向同门槛。</p>
+  </div>
+
+  <h2>五、可规避亏损量化</h2>
+  <table>
+    <tr><th class="l">可规避类别</th><th>笔数</th><th>合计亏损($)</th><th class="l">说明</th></tr>
+    <tr><td class="l">低置信(&lt;0.6)开仓的亏损单</td><td>21</td><td class="neg">-77.69</td><td class="l">根因2直接导致</td></tr>
+    <tr><td class="l">持仓&lt;10分钟即亏损平仓</td><td>52</td><td class="neg">-87.36</td><td class="l">鞭锯/噪声出场典型</td></tr>
+    <tr><td class="l">AI反转+持仓&lt;20分钟亏损</td><td>60</td><td class="neg">-140.09</td><td class="l">根因1直接导致（最大头）</td></tr>
+  </table>
+  <div class="quote">若仅把"AI反转平仓"门槛提至 0.75 且盈利单不反向平，按历史结构估算可止血约 <b class="green">150~200$</b> 的亏损（当前主号总亏才 50$，说明这部分的"未实现回血"本可落袋）。</div>
+
+  <h2>六、修复建议（提准，非盲目拦截）</h2>
+  <ul>
+    <li><b class="blue">R1（最高优先）</b> 反转平仓门槛 <code>ai_reverse_close_confidence</code> 0.60 → <b>0.75</b>；并加硬规则：<b>持仓浮盈&gt;0 时不触发反转平</b>（赢利单交给追踪/TP）。L2+M1 同步适用。预期：消除 -176 中的鞭锯部分。</li>
+    <li><b class="blue">R2</b> 开仓门槛 <code>min_confidence</code> 0.5 → <b>0.65</b>；BUY 方向再额外 +0.05（治方向偏置）。数据已证明 &lt;0.65 的开仓净亏 -48。</li>
+    <li><b class="blue">R3</b> L3 篮子锁利 <code>basket_tp_amount</code> 10 → 适当提高（如 25~30$），减少过早平掉潜在大赢家，让赢利单多跑。</li>
+    <li><b class="blue">R4</b> M1 出场提示词校准：把"与开仓信号相悖即离场"改为"综合浮盈/趋势/ATR 偏移再决策"，避免重蹈 L2 覆辙。</li>
+    <li><b class="blue">R5</b> 长期：MetaAgent 反馈环应把"低置信开仓→亏损"计入模型权重衰减；M4(OPRO)演化激进度需等满 50 笔平仓样本才会触发（当前冷启动未触发）。</li>
+  </ul>
+
+  <h3>附带发现（与本次亏损无关，但应知晓）</h3>
+  <ul>
+    <li><code>net_profit</code> 字段全为 0.0（疑似未更新），审计以 <code>profit</code> 为准；<code>mfe/mae</code> 字段全 0（未填充），限制了"最大有利/不利偏移"分析——建议补采集以支撑更细的出场质量评估。</li>
+    <li>跟号(1610097175/3301/8464) 镜像主号，主号亏则跟号同步亏（各自 -118~-136），修复主号即修复全队。</li>
+  </ul>
+
+  <div class="foot">
+    审计方法：直接读取生产 DB（wx_prod.dat→trades 表，每笔含 DeepSeek/混元/终裁决策+置信、风控是否通过、MFE/MAE、出场原因），对主号 186 笔已平仓单做全量统计；流程代码逐段核对（trade_executor.py / smart_exit.py / meta_agent.py / strategy_configs）。所有数字均来自真实成交记录，非模拟。生成时间 2026-08-04。
+  </div>
+</div>
+</body>
+</html>

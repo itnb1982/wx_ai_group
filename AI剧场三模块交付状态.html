@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XAU/USD 万象Ai · AI 工作剧场三模块交付状态</title>
+<style>
+  :root{
+    --bg:#0a0e17; --card:#121829; --card2:#0f1524; --line:#1f2a44;
+    --cyan:#22d3ee; --purple:#a78bfa; --gold:#fbbf24; --green:#34d399; --red:#f87171;
+    --txt:#e6edf6; --sub:#8aa0c0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 600px at 50% -10%,#13203b 0%,var(--bg) 60%);
+    color:var(--txt);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    min-height:100vh;padding:36px 20px}
+  .wrap{max-width:980px;margin:0 auto}
+  header{text-align:center;margin-bottom:28px}
+  h1{font-size:26px;letter-spacing:1px;
+    background:linear-gradient(90deg,var(--cyan),var(--purple),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--sub);font-size:13px;margin-top:8px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+  .mod{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-radius:16px;padding:20px;position:relative;overflow:hidden}
+  .mod::before{content:"";position:absolute;inset:0 0 auto 0;height:3px}
+  .mod.d::before{background:linear-gradient(90deg,var(--cyan),transparent)}
+  .mod.e::before{background:linear-gradient(90deg,var(--purple),transparent)}
+  .mod.f::before{background:linear-gradient(90deg,var(--gold),transparent)}
+  .mod h3{font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%;box-shadow:0 0 10px currentColor}
+  .d .dot{color:var(--cyan);background:var(--cyan)}
+  .e .dot{color:var(--purple);background:var(--purple)}
+  .f .dot{color:var(--gold);background:var(--gold)}
+  .num{font-size:42px;font-weight:700;line-height:1.1;margin:10px 0 4px}
+  .d .num{color:var(--cyan)} .e .num{color:var(--purple)} .f .num{color:var(--gold)}
+  .note{color:var(--sub);font-size:12px;line-height:1.6}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;margin-bottom:16px}
+  .panel h2{font-size:15px;margin-bottom:12px;color:var(--cyan)}
+  .kv{display:grid;grid-template-columns:140px 1fr;gap:8px 14px;font-size:13px}
+  .kv .k{color:var(--sub)} .kv .v{color:var(--txt)}
+  .bubble{background:#0c1322;border:1px solid var(--line);border-left:3px solid var(--purple);
+    border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.7;color:#dbe6f5;margin-top:8px}
+  .tag{display:inline-block;background:rgba(251,191,36,.12);color:var(--gold);
+    border:1px solid rgba(251,191,36,.3);border-radius:6px;padding:1px 8px;font-size:11px;margin-right:6px}
+  code{background:#0c1322;border:1px solid var(--line);border-radius:6px;padding:2px 7px;
+    font-family:"SFMono-Regular",Consolas,monospace;color:var(--green);font-size:12.5px}
+  pre{background:#0c1322;border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+    overflow-x:auto;font-size:12.5px;color:var(--green);line-height:1.7;margin-top:8px}
+  .ok{color:var(--green);font-weight:600}
+  .footer{text-align:center;color:var(--sub);font-size:12px;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>XAU/USD 万象Ai 自动量化交易系统 v1.0</h1>
+    <div class="sub">AI 工作剧场 · 三大智能模块交付验证状态卡　|　验证时间：2026-08-03 03:xx</div>
+  </header>
+
+  <div class="grid">
+    <div class="mod d">
+      <h3><span class="dot"></span>辩论擂台</h3>
+      <div class="num">3</div>
+      <div class="note">DeepSeek V4（激进派）· 混元 Hy3（稳健派）· Meta 裁决三方同台，含完整推理链与人话解读</div>
+    </div>
+    <div class="mod e">
+      <h3><span class="dot"></span>进化时间线</h3>
+      <div class="num">1</div>
+      <div class="note">双模型引擎初始化记录已落盘，权重自进化日志框架就位（开/平仓后自动写权重更新）</div>
+    </div>
+    <div class="mod f">
+      <h3><span class="dot"></span>交易执行流</h3>
+      <div class="num">20</div>
+      <div class="note">XAUUSD 多周期（M15/H1/H4）实时扫描事件滚动呈现，冷启动即有真实行情流</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>① 辩论擂台 · Meta 裁决实测快照</h2>
+    <div class="kv">
+      <div class="k">最终裁决</div><div class="v"><span class="tag">HOLD</span> 置信度 45%</div>
+      <div class="k">共识强度</div><div class="v"><span class="ok">strong（强共识）</span> · 共识度 92%</div>
+      <div class="k">模型权重</div><div class="v">DeepSeek 0.55 / 混元 0.45</div>
+      <div class="k">风险评级</div><div class="v">medium（5/10）· 体制：downtrend 下跌趋势</div>
+    </div>
+    <div class="bubble">
+      💡 <b>人话解读：</b>两个 AI 都明确说：现在「下跌趋势」没什么机会，风险一般也犯不着去博，别动比乱动强，等真正的好机会。
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>② 访问入口与登录</h2>
+    <div class="kv">
+      <div class="k">后端/前端地址</div><div class="v"><code>http://127.0.0.1:8080/</code>（同源托管，已验证 HTTP 200）</div>
+      <div class="k">登录账号</div><div class="v">1558895@qq.com（itnb）　密码：用户自有</div>
+      <div class="k">AI 接口</div><div class="v"><code>GET /api/dashboard/ai-flow</code> → { debate, evolution, feed, weights, ts }</div>
+      <div class="k">连接状态</div><div class="v"><span class="ok">后端 LISTENING（PID 26740）· 4 个 MT5 模拟盘账号已重连</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>③ 待办：永久根治 Windows Defender 锁库（需管理员，非 AI 可代执行）</h2>
+    <div class="note" style="margin-bottom:6px">
+      临时方案（已生效）：进程内存环形缓冲作实时流保底 + SQLite 仅作可选兜底，服务已正常启动、三模块全活。
+      若要恢复数据库持久化（落库不再报 readonly），需以<b>管理员身份</b>运行以下命令，把项目目录加入 Defender 排除项：
+    </div>
+    <pre>powershell -Command "Add-MpPreference -ExclusionPath 'C:\Users\15588\WorkBuddy\WanxiangAI'"</pre>
+    <div class="note">执行后重启后端即可；届时被锁的残留 SQLite（backend/data/wx_*、wanxiangai.db、backend/wx_active.db）可一并删除。</div>
+  </div>
+
+  <div class="footer">万象Ai · 商业化 AI 交易软件　|　三模块冷启动全部真实呈现，已达「给客户看上去高大上」交付标准</div>
+</div>
+</body>
+</html>

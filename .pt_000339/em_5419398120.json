@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "global": {
+    "level": "NORMAL",
+    "reason": "",
+    "at": "",
+    "by": ""
+  },
+  "accounts": {
+    "acct-0": {
+      "level": "HALT_NEW",
+      "reason": "批量停",
+      "at": "2026-08-09T00:03:44",
+      "by": "t"
+    },
+    "acct-1": {
+      "level": "HALT_NEW",
+      "reason": "批量停",
+      "at": "2026-08-09T00:03:44",
+      "by": "t"
+    },
+    "acct-2": {
+      "level": "HALT_NEW",
+      "reason": "批量停",
+      "at": "2026-08-09T00:03:44",
+      "by": "t"
+    }
+  },
+  "flatten_requests": []
+}

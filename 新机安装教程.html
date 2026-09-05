@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai 智能交易系统 — 新机安装部署教程</h1>
+<blockquote>适用版本：万象Ai 智能交易系统 v1.4.0（商业版多租户 XAUUSD 纯 AI 交易系统）&lt;br&gt;适用对象：运维人员 / 客户在新 Windows 电脑上从零部署&lt;br&gt;编写日期：2026-08-09（含 2026-08-08 后端崩溃根因修复后的稳定配置）</blockquote>
+<hr>
+<h2>0. 一句话结论</h2>
+<p>把整个 <code>F:\WanxiangAI</code> 项目目录拷到新机器 → 跑 <code>bootstrap.bat</code> 一键初始化 → 单独装好 <strong>Moirai 的 Python 3.12 独立 venv</strong> → 跑 <code>start_all.bat</code> 启动 → 浏览器登录 <code>http://127.0.0.1:8080</code>。</p>
+<p><strong>唯独 Moirai 参考模型是个特例</strong>（必须 Python 3.12 独立 venv，见第 5 节），其余全部自动完成。</p>
+<hr>
+<h2>1. 系统架构速览</h2>
+<table><thead><tr><th>组件</th><th>技术</th><th>说明</th></tr></thead><tbody><tr><td>前端</td><td>React 18 + Vite 5</td><td>已预构建到 <code>frontend/dist</code>，由 uvicorn 一体托管</td></tr><tr><td>后端 API</td><td>FastAPI + uvicorn</td><td>监听 <code>127.0.0.1:8080</code>，同时托管前端与 API</td></tr><tr><td>守护进程</td><td><code>supervisor.py</code></td><td>看门狗，后端崩溃自动重启（自愈）</td></tr><tr><td>交易执行</td><td>MT5 多账号 Worker</td><td>每账号独立进程，错峰下单</td></tr><tr><td>参考服务</td><td>本地时序四模型</td><td>Chronos-2 / TimesFM-2.5 / Time-MoE / Moirai 协奏（观测增强，不进入交易决策链）</td></tr></tbody></table>
+<p><strong>架构铁律（务必理解，避免误操作）</strong>：</p>
+<ul><li>一个交易账号 = 一个独立客户；所有模块按"租户"隔离，禁止写死账号数。</li><li>参考面板是<strong>观测</strong>，其结论<strong>绝不</strong>反向控制交易开关（提准非拦截）。</li><li>平台级熔断只关"信号源水龙头"，<strong>绝不</strong>强平客户持仓（只关水龙头，不抽走桶里的水）。</li></ul>
+<hr>
+<h2>2. 硬件与软件前置要求</h2>
+<table><thead><tr><th>项目</th><th>要求</th><th>备注</th></tr></thead><tbody><tr><td>操作系统</td><td>Windows 10 / 11 64 位</td><td>本机实测 Windows 11</td></tr><tr><td>GPU</td><td>NVIDIA，支持 CUDA 12.4</td><td>本机 RTX 3060 Ti 8GB；无 GPU 可 CPU 降级（Chronos 单次 ~300-800ms，可接受）</td></tr><tr><td><strong>生产 Python</strong></td><td><strong>3.11 及以上</strong>（本机 3.13.14）</td><td>用于项目 <code>.venv</code>：torch(CUDA) + chronos + mt5 + fastapi</td></tr><tr><td><strong>Moirai Python</strong></td><td><strong>必须为 3.12.x</strong></td><td>uni2ts 锁 numpy 1.26，Python 3.13 无预编译 wheel（详见第 5 节）</td></tr><tr><td>Node.js</td><td>18+（<strong>可选</strong>）</td><td>前端已带预构建 <code>frontend/dist</code>，改源码才需</td></tr><tr><td>MetaTrader 5</td><td>终端程序</td><td>交易账号登录用</td></tr><tr><td>网络</td><td>首次安装需联网拉依赖</td><td>模型权重随项目分发，离线可用</td></tr></tbody></table>
+<blockquote><strong>关键认知</strong>：这台机器上需要<strong>两个 Python</strong>。生产 <code>.venv</code> 用 3.11+；Moirai 独立 venv 必须用 3.12。两者互不干扰——这正是"四缺一"那次踩坑的结论。</blockquote>
+<hr>
+<h2>3. 快速安装（推荐路径）</h2>
+<blockquote>全程用<strong>原生 PowerShell（管理员）或 cmd</strong>，<strong>不要用 Git Bash / MSYS2 / Cygwin</strong>（见第 9 节坑 1，torch 在这些终端会段错误）。</blockquote>
+<p><strong>步骤 A — 进入项目目录</strong></p>
+<pre><code>cd F:\WanxiangAI</code></pre>
+<p><strong>步骤 B — 一键初始化（自动完成 5 件事）</strong></p>
+<pre><code>.\bootstrap.bat</code></pre>
+<p><code>bootstrap.bat</code> 会自动：</p>
+<ol><li>发现宿主机 Python（或读 <code>WX_PYTHON</code> 环境变量），校验版本 ≥ 3.11；</li><li>在项目内创建 <code>.venv</code> 虚拟环境；</li><li>安装后端依赖（<code>backend/requirements.txt</code>）；</li><li>若检测到 <code>models/chronos-2</code> 且未设 <code>WX_SKIP_ML</code>，安装本地时序依赖（<code>requirements-ml.txt</code>，torch CUDA 约 2.5-3GB）；</li><li>若检测到 Node 则构建前端（否则用预构建 <code>frontend/dist</code>）；</li><li>运行 <code>init_deployment.py</code> 生成 <code>.env</code> / 建库 / 创建管理员账号。</li></ol>
+<blockquote>跳过本地时序模型（不装 torch，系统降级为 SMC/Regime 规则终审，仍能交易）：&lt;br&gt;<code>`</code>powershell&lt;br&gt;$env:WX_SKIP_ML=1; .\bootstrap.bat&lt;br&gt;<code>`</code></blockquote>
+<p>脚本结尾会打印<strong>首次登录邮箱与密码</strong>，并写入项目根目录 <code>首次登录凭据.txt</code>。</p>
+<p><strong>步骤 C — 安装 Moirai 独立 venv（见第 5 节，★★ 必做）</strong></p>
+<p><strong>步骤 D — 启动系统</strong></p>
+<pre><code>.\start_all.bat</code></pre>
+<p>会弹出一个 <code>WanxiangAI-Supervisor</code> 窗口并显示状态，<strong>关掉它系统仍在后台运行</strong>。</p>
+<p><strong>步骤 E — 浏览器登录</strong></p>
+<p>打开 <code>http://127.0.0.1:8080</code>，用步骤 B 拿到的邮箱密码登录。</p>
+<hr>
+<h2>4. 生产环境 <code>.venv</code> 详解（bootstrap 自动做，这里讲原理）</h2>
+<p><strong>为什么 <code>.venv</code> 不随项目拷贝</strong>：Windows 上 <code>.venv\Scripts\python.exe</code> 只是个转发器，真实标准库/DLL 在创建它的那台机器 Python 安装目录里（记录在 <code>pyvenv.cfg</code> 的 <code>home=</code> 字段）。直接拷到别的机器会找不到路径而失败。因此交付包只带源码，venv 由 <code>bootstrap.bat</code> 在目标机现场生成。</p>
+<p><strong>依赖三件套</strong>（<code>backend/</code> 下）：</p>
+<ul><li><code>requirements.txt</code> — 核心：fastapi/uvicorn/sqlalchemy/mt5/pydantic/jose/redis/celery…</li><li><code>requirements-ml.txt</code> — 重型可选：torch==2.6.0(cu124) + transformers 5.x + chronos-forecasting + accelerate（约 2.5-3GB）</li><li><code>requirements-dev.txt</code> / <code>requirements-optional.txt</code> — 开发/可选</li></ul>
+<p><strong>解释器发现顺序</strong>（商业可移植靠它，见 <code>start_all.bat</code> 与 <code>runtime_paths.find_python</code>）：</p>
+<pre><code>WX_PYTHON 环境变量 → 项目 .venv → 项目 venv → PATH 中 python → py launcher</code></pre>
+<p>整目录拷到任意电脑都能跑，靠的就是这个"相对路径 + 运行时发现"，<strong>严禁硬编码盘符</strong>。</p>
+<hr>
+<h2>5. Moirai 独立 venv（★★ 最易踩坑，必读）</h2>
+<h3>5.1 为什么必须独立、且必须是 Python 3.12</h3>
+<p>Moirai 依赖 <code>uni2ts</code>，其锁定 <code>numpy~=1.26.0</code>。</p>
+<ul><li><strong>Python 3.13</strong>：numpy 1.26 <strong>没有</strong>预编译 wheel，只能源码编译 → 需要 MSVC 工具链 → 本机没有 → <code>pip install</code> 必失败（<code>Unknown compiler(s) "cl"</code>）。</li><li><strong>Python 3.12</strong>：numpy 1.26 有 <code>cp312</code> 预编译 wheel，<strong>无需 MSVC</strong>，一行装好。</li></ul>
+<p>结论：用本机已装（或新装）的 <strong>Python 3.12.x</strong> 建一个完全独立的 venv：<code>F:\WanxiangAI\models\moirai_venv_py312</code>。它<strong>不污染</strong>生产 <code>.venv</code>。</p>
+<h3>5.2 一键安装（推荐）</h3>
+<p>用管理员 PowerShell：</p>
+<pre><code>cd F:\WanxiangAI\models
+.\install_moirai_venv.ps1</code></pre>
+<p>脚本默认用 <code>C:\Users\15588\AppData\Local\Programs\Python\Python312\python.exe</code> 建 <code>F:\WanxiangAI\models\moirai_venv_py312</code>。若你的 3.12 装在别处，传参：</p>
+<pre><code>.\install_moirai_venv.ps1 -PyExe "D:\Python312\python.exe" -VenvDir "F:\WanxiangAI\models\moirai_venv_py312"</code></pre>
+<h3>5.3 手动安装（等价命令）</h3>
+<pre><code># 1. 用 Python 3.12 建 venv
+C:\Python312\python.exe -m venv F:\WanxiangAI\models\moirai_venv_py312
+
+# 2. 装依赖（全预编译 wheel，无需 MSVC）
+F:\WanxiangAI\models\moirai_venv_py312\Scripts\python.exe -m pip install `
+  "numpy~=1.26.0" torch tsagentkit-uni2ts pandas gluonts
+
+# 3. 校验 uni2ts 可导入
+F:\WanxiangAI\models\moirai_venv_py312\Scripts\python.exe -c "import uni2ts; print('uni2ts OK')"</code></pre>
+<h3>5.4 自动点亮</h3>
+<p>参考服务 <code>MoiraiP</code> 会<strong>优先探测</strong> <code>moirai_venv_py312</code>（其次 <code>moirai_venv</code>）。装好即自动点亮前端「信号源参考」面板的 <strong>Moirai 卡片</strong>，无需改任何代码。</p>
+<h3>5.5 本地权重</h3>
+<p><code>models/moirai-moe-small</code>（或 <code>moirai-1.1-R-small</code>）已随项目分发。推理优先读本地权重，避免 HuggingFace Hub 联网超时。</p>
+<hr>
+<h2>6. 本地时序模型权重</h2>
+<p><code>models/</code> 下已随项目分发四个模型目录：</p>
+<pre><code>models/chronos-2/           # Amazon Chronos-2 (120M，多变量+协变量 DXY/US10Y/VIX)
+models/timesfm-2.5-200m/    # Google TimesFM 2.5 (200M)
+models/timemoe-200m/        # Time-MoE (200M)
+models/moirai-moe-small/    # Salesforce Moirai (447M，走 Python 3.12 venv)</code></pre>
+<p>若缺失，用下载器（<strong>走 modelscope.cn 镜像</strong>，huggingface.co 本机超时）：</p>
+<pre><code>F:\WanxiangAI\.venv\Scripts\python.exe backend\scripts\download_ts_models.py</code></pre>
+<blockquote><strong>已知坑（HF trust_remote_code 模型）</strong>：Time-MoE 等远程代码模型在 transformers 5.x 惰性加载下，RoPE <code>inv_freq</code> 等 <code>persistent=False</code> 的 buffer 可能未被初始化 → 拿到<strong>未初始化内存</strong> → 预测结果是噪声且不可复现（全程零异常零警告，是静默正确性杀手）。&lt;br&gt;所有 trust_remote_code 时序模型须过一遍 <code>backend/app/services/hf_lazy_buffer_fix.py</code> 的体检修复（<code>inspect_buffers</code> / <code>repair_rope_buffers</code>）。实测 Time-MoE 中招、Chronos-2 / TimesFM 健康。</blockquote>
+<hr>
+<h2>7. 启动与守护（★★ 禁用 Git Bash）</h2>
+<h3>7.1 启动</h3>
+<pre><code>.\start_all.bat</code></pre>
+<p><code>supervisor.py</code> 行为：</p>
+<ul><li>每 5s 探一次 <code>http://127.0.0.1:8080/api/health</code>；</li><li>连续 4 次失败（~20s）判定"无声假死"→ 强杀 uvicorn 子进程并重启；</li><li>启动期宽限 <code>STARTUP_GRACE=240s</code>（覆盖数据库自愈预算），转入健康后才启用严格存活探测；</li><li>单一实例守卫（mutex + PID 锁），防止重复拉起。</li></ul>
+<h3>7.2 ★★ 致命陷阱：禁用 Git Bash / MSYS2 / Cygwin 启动后端</h3>
+<p>在 Git Bash / MSYS2 / Cygwin 终端里 <code>import torch</code> 会触发 <strong>0xC0000005 ACCESS_VIOLATION 段错误</strong>（exit 139 / 3221225477，try/except 抓不住），而同一解释器在<strong>原生 cmd / PowerShell</strong> 下完全正常。</p>
+<p>后果：Chronos 探针误判"本地模型永久不可用"并写盘 <code>backend/data/torch_probe_cache.json</code> → 本地时序模型<strong>再也不加载</strong>。</p>
+<p><strong>若已中招</strong>：删除 <code>backend/data/torch_probe_cache.json</code>，用原生终端重启即可恢复。</p>
+<h3>7.3 重启后端的标准姿势</h3>
+<pre><code>F:\WanxiangAI\.venv\Scripts\python.exe backend\restart_backend.py</code></pre>
+<p>它只杀 uvicorn 子进程，<code>supervisor</code> 会自动重新拉起（不杀 supervisor 本身）。</p>
+<hr>
+<h2>8. 验证系统是否正常</h2>
+<p>按以下顺序逐项验证（均用 curl，端口 8080）：</p>
+<p><strong>① 健康检查</strong></p>
+<pre><code>curl -s http://127.0.0.1:8080/api/health
+# 期望：{"status":"ok"/"degraded", ...} 且 HTTP 200</code></pre>
+<p><strong>② 登录拿 token</strong></p>
+<pre><code>curl -s -X POST http://127.0.0.1:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"你的邮箱","password":"你的密码"}'
+# 期望：{"access_token":"...","token_type":"bearer",...}</code></pre>
+<p><strong>③ 参考面板四卡片（核心验收）</strong></p>
+<pre><code>curl -s http://127.0.0.1:8080/api/ts-reference/snapshot \
+  -H "Authorization: Bearer <上面拿到的token>"
+# 期望：models 数组含 Chronos-2 / TimesFM-2.5 / Time-MoE / Moirai，
+#       且每个 available:true（四张卡片全亮）</code></pre>
+<p><strong>④ 启动自动交易</strong></p>
+<pre><code>curl -s -X POST http://127.0.0.1:8080/api/trade/auto/start \
+  -H "Authorization: Bearer <token>"
+# 期望：{"ok":true,"msg":"自动交易循环已在运行"}</code></pre>
+<p><strong>⑤ 密钥管理</strong></p>
+<pre><code>curl -s http://127.0.0.1:8080/api/keys/ -H "Authorization: Bearer <token>"
+# 期望：{"keys":[...]} 密钥列表（注意路径带尾斜杠 /api/keys/）</code></pre>
+<p><strong>⑥ 前端肉眼验收</strong></p>
+<p>浏览器登录后查看：</p>
+<ul><li>「信号源参考」面板四张卡片（Chronos-2 / TimesFM-2.5 / Time-MoE / Moirai）应全部可用；</li><li>「自动交易」开关可正常开启；</li><li>登录用 <code>1558895@qq.com</code> / 密码见 <code>首次登录凭据.txt</code>（演示环境）。</li></ul>
+<hr>
+<h2>9. 常见问题与坑（按踩坑频率排序）</h2>
+<p><strong>坑 1 — Git Bash 起后端 → torch 段错误（最致命）</strong></p>
+<p>症状：本地时序模型全部不可用、后端频繁异常。</p>
+<p>原因：Git Bash / MSYS2 下 <code>import torch</code> 段错误（见第 7.2 节）。</p>
+<p>解决：一律用原生 PowerShell / cmd / <code>start_all.bat</code>；若已写坏缓存，删 <code>backend/data/torch_probe_cache.json</code> 后用原生终端重启。</p>
+<p><strong>坑 2 — Moirai 装不上（用了 Python 3.13）</strong></p>
+<p>症状：<code>pip install uni2ts</code> 报 <code>Unknown compiler(s) "cl"</code> / MSVC 缺失。</p>
+<p>原因：numpy 1.26 无 3.13 wheel。</p>
+<p>解决：换 Python 3.12 建独立 venv（见第 5 节）。</p>
+<p><strong>坑 3 — 后端反复重启循环</strong></p>
+<p>复合根因（2026-08-09 已修复，记录在此供排障）：</p>
+<ol><li><code>supervisor_uvicorn.log</code> 膨胀到 200MB+ → IO/磁盘压力 → 已加 50MB×3 代轮转；</li><li>Chronos 用 <code>torch_dtype=torch.bfloat16</code> 在 RTX 3060 Ti 上触发 <code>mat1 Float != BFloat16</code> 协同预测异常 → 已改 <code>torch.float32</code>；</li><li>Moirai 子进程 180s 超时可能挂起拖垮 uvicorn 健康探测 → 已加 60s 子进程超时 + 75s 线程池隔离 + 参考服务刷新 300s。</li></ol>
+<p>排障顺序：先看 <code>supervisor.log</code> 有无"健康探测连续 4 次失败"；再看 <code>supervisor_uvicorn.log</code> 有无 <code>mat1</code>/<code>dtype</code> 报错；最后看日志体积。</p>
+<p><strong>坑 4 — 首次起不来 / 登不进</strong></p>
+<p>原因：<code>.env</code> 未生成（<code>SECRET_KEY</code> 为空后端拒绝启动）或数据库未建。</p>
+<p>解决：确认跑过 <code>bootstrap.bat</code> 第 5 步 <code>init_deployment.py</code>（可重复执行，不覆盖已有数据）。</p>
+<p><strong>坑 5 — 前端白屏</strong></p>
+<p>原因：浏览器缓存了旧 <code>index.html</code>。</p>
+<p>解决：后端 <code>NoCacheHTMLMiddleware</code> + <code>deploy.py</code> 给资源引用注入 <code>?v=&lt;mtime&gt;</code> 已兜底；硬刷（Ctrl+F5）即可。</p>
+<p><strong>坑 6 — 参考面板某卡片"暂不可用"</strong></p>
+<p>原因：对应模型权重缺失或其 venv 未就绪。</p>
+<p>影响：<strong>仅该卡片不可用，主交易链路不受影响</strong>（参考面板是观测，不进决策链）。</p>
+<hr>
+<h2>10. 商业化可移植要点（交付 checklist）</h2>
+<ul><li>✅ 整目录拷贝到任意 Windows 电脑须能跑：所有路径走 <code>backend/runtime_paths.py</code>（<code>data_dir()</code>/<code>data_path()</code>），<strong>严禁硬编码盘符</strong>。</li><li>✅ <code>.venv</code> / <code>moirai_venv_py312</code> <strong>不随包分发</strong>（含机器特定 Python 路径），目标机 <code>bootstrap.bat</code> 现场生成。</li><li>✅ <code>.env</code> / 生产数据库 <strong>不随包分发</strong>（含密钥），<code>init_deployment.py</code> 现场生成管理员账号与 <code>.env</code>。</li><li>✅ 可移植审计：跑 <code>backend/scripts/audit_portability.py</code> 检查有无硬编码路径。</li><li>✅ 前端品牌/视觉单一源 <code>frontend/src/brand/identity.js</code>，禁手写；版本号单一源 <code>F:\WanxiangAI\VERSION</code>。</li></ul>
+<hr>
+<h2>11. 目录结构速查</h2>
+<pre><code>F:\WanxiangAI\
+├─ bootstrap.bat              # 一键初始化（建 venv/装依赖/建库/管理员）
+├─ start_all.bat              # 启动（原生 cmd，拉起 supervisor）
+├─ build.bat                  # 打包 EXE + Inno Setup 安装包（发布用）
+├─ VERSION                    # 版本号单一源
+├─ backend\
+│  ├─ supervisor.py           # 看门狗守护进程
+│  ├─ restart_backend.py      # 标准重启（杀 uvicorn 子进程）
+│  ├─ requirements.txt        # 核心依赖
+│  ├─ requirements-ml.txt     # 本地时序依赖（torch CUDA，可选）
+│  ├─ app\services\           # chronos_service / ts_reference_* / mt5_*
+│  ├─ scripts\                # init_deployment / download_ts_models / audit_portability
+│  └─ data\                   # 运行数据（.venv 不在此，由 bootstrap 生成于根）
+├─ frontend\                  # React 源码 + dist（预构建产物）
+├─ models\
+│  ├─ chronos-2\ timesfm-2.5-200m\ timemoe-200m\ moirai-moe-small\
+│  ├─ moirai_venv_py312\      # ★ Moirai 专用 Python 3.12 独立 venv
+│  └─ install_moirai_venv.ps1 # Moirai venv 一键安装脚本
+└─ 首次登录凭据.txt            # bootstrap 生成的管理员账号密码</code></pre>
+<hr>
+<h2>12. 最小可行部署清单（照抄即可）</h2>
+<pre><code># 1. 以管理员打开原生 PowerShell，进入项目根目录
+cd F:\WanxiangAI
+
+# 2. 一键初始化（装生产 .venv + 依赖 + 建库 + 管理员）
+.\bootstrap.bat
+
+# 3. 装 Moirai 独立 venv（Python 3.12，必须）
+cd models; .\install_moirai_venv.ps1; cd ..
+
+# 4. 启动（弹 supervisor 窗口，可关，后台常驻）
+.\start_all.bat
+
+# 5. 浏览器访问并登录
+#    http://127.0.0.1:8080
+#    账号密码见「首次登录凭据.txt」</code></pre>
+<blockquote>记住三条红线：<strong>① 启动只用原生 PowerShell/cmd，禁用 Git Bash；② Moirai 必须 Python 3.12 独立 venv；③ 参考面板是观测，不进交易决策链。</strong></blockquote></body></html>

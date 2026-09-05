@@ -1,0 +1,1 @@
+﻿robocopy exit=1  terminal64存在=True

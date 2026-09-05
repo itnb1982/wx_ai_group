@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>AI 自主仓位管理（Position Manager）落地报告</h1>
+<blockquote>用户授权（「可以，开干」）· 2026-08-14 · 纯加法增强层 · 零新 MT5 订单类型 · 一键回退</blockquote>
+<h2>一、解决了什么</h2>
+<p>用户的核心诉求：<strong>开单后 AI 大脑要按实时行情自主管理仓位</strong>——</p>
+<ol><li><strong>利润走不动，立马平仓</strong>：利润和行情成正比，行情走不动就锁定利润离场，不在一笔仓位耗着。</li><li><strong>开错单，找最小亏损位置平仓</strong>：实时对照行情发现方向开错、短时间不朝盈利方向走，AI 自己找到亏损最小的位置平仓，不等到硬止损位等死。</li></ol>
+<p>两个疑问已正面回答：</p>
+<ul><li><strong>60 秒看一次不够 → 拆成双循环</strong>：确定性「利润走不动」机械层在每交易周期（已有持仓管理循环）直接抓，亚秒级生效，不依赖大模型；本地 8B 管仓每 15 秒一次，只做判断题。</li><li><strong>只看 M15+H1 看不清 → 补多周期</strong>：保留 H1/H4 regime + M15 结构，新增 <strong>M5 实时 K 线微观特征</strong>（自算 RSI/EMA20、动量停滞、反转结构破位），不让 AI 直接看 M1 tick 噪声图（避免误杀）。</li><li><strong>本地零 token 实时看行情 → 可行</strong>：本地 qwen3:8b（已部署）零 token 高频管仓；确定性层连模型都不需要。</li></ul>
+<h2>二、架构（业界 SOTA 双循环）</h2>
+<pre><code>持仓管理循环（trade_executor._manage_positions，每 ~60s）
+  ├─ 规则引擎 smart_exit（保本/追踪/硬地板，永远先算）
+  ├─ M1 云端 AI 出场（DeepSeek，60s TTL + 12s 节流）
+  └─ ★ Position Manager（本次新增·纯加法）
+       ① 确定性「利润走不动」机械平仓  ── 盈利单 + M5 窄幅震荡 + 未创新高 + 持够时间 → 全平
+       ② 确定性「开错单最小亏损平」门槛 ── 浮亏 + M5 反转确认(RSI+EMA破位) + 亏损超硬SL×40% → 全平
+            └─ 叠加本地 qwen3:8b 双确认（FULL_MIN_LOSS 且置信≥0.45）
+       ③ 本地 8B 追踪锁利（TRAIL_TIGHTEN）── 仅盈利单，上移 SL 锁利，绝不砍单</code></pre>
+<p><strong>融合优先级</strong>：stall 机械平仓 &gt; min_loss 最小亏损平 &gt; 本地 8B 追踪锁利。</p>
+<h2>三、铁律对齐（不破坏现有红线）</h2>
+<table><thead><tr><th>铁律</th><th>落地点</th></tr></thead><tbody><tr><td>提准非拦截</td><td>只增强出场判断，不砍交易笔数、不新增过滤</td></tr><tr><td>零新 MT5 订单类型</td><td>复用 full_close / modify_sl_tp 既有路径</td></tr><tr><td>硬 SL 不可被 AI 移除</td><td><code>_clamp_trailing_sl</code> 把 new_sl 夹在「市价与硬 SL 之间」；trade_executor 侧再走 <code>_merge_hard_floor_sl</code></td></tr><tr><td>亏损单保护（_with_trend 闸门）</td><td>min_loss 仅对逆势错单生效；加 <code>_pm_min_loss</code> 显式豁免，避免错单越亏越多</td></tr><tr><td>浮盈回吐锁利（peak_move）</td><td>独立运行，不冲突</td></tr><tr><td>L2 反转防抖 / 防碎单</td><td>独立运行，不冲突</td></tr><tr><td>多租户 N 账号</td><td>按 <code>account_id</code> 单例，全账号统一生效，不写死账号数</td></tr></tbody></table>
+<h2>四、改动文件清单</h2>
+<table><thead><tr><th>文件</th><th>改动</th></tr></thead><tbody><tr><td><code>backend/app/config.py</code></td><td>新增 <code>POSITION_MANAGER_*</code> 配置块（12 个参数，含 <code>POSITION_MANAGER_ENABLED</code> 一键回退）</td></tr><tr><td><code>backend/app/services/local_llm_service.py</code></td><td>新增 <code>PositionManageVote</code>@dataclass + <code>position_manage()</code> 方法 + <code>_build_position_manage_prompt()</code> + 状态监控 <code>position_manager</code> 角色 + <code>POSITION_MANAGE_TIMEOUT</code></td></tr><tr><td><code>backend/app/services/position_manager.py</code></td><td><strong>新建</strong> <code>PositionManagerAgent</code>：确定性停滞检测 + 最小亏损门槛 + 本地 8B 管仓调用 + 追踪 SL 夹紧 + M5 实时取数（15s 缓存）+ 单例工厂</td></tr><tr><td><code>backend/app/services/trade_executor.py</code></td><td>顶部 import；<code>__init__</code> 注入 <code>self.position_manager</code>；持仓循环 merge <code>pm_plan</code>（full_close / trail_tighten）；亏损单保护加 <code>_pm_min_loss</code> 豁免</td></tr></tbody></table>
+<h2>五、参数锁定（已对你陈述，不再问）</h2>
+<ul><li>管理调用节流：<strong>持有时每笔每 15 秒</strong>请求一次本地 8B</li><li>停滞触发：M5 连续 <strong>3 根</strong>波幅 <code>&lt; ATR×0.6</code> + 持仓 <strong>≥90s</strong> + 利润 <code>&lt; 峰值×0.95</code></li><li>最小亏损平：M5 反转确认（RSI&lt;45 且跌破 EMA20，BUY 对称）+ 浮亏 <strong>&gt; 硬 SL×40%</strong> + 持仓 <strong>≥60s</strong> + 本地 8B 双确认（置信≥0.45，不可用则仅确定性门槛）</li><li>追踪锁利：new_sl 距市价 <strong>≥ ATR×0.3</strong> 留呼吸空间</li></ul>
+<h2>六、验证结果</h2>
+<ul><li>✅ 四个改动文件 <code>py_compile</code> 通过；整后端 <code>compileall</code> 通过（EXIT=0）</li><li>✅ 独立单测 <code>test_pm_standalone.py</code> 全过：停滞机械平仓 / 最小亏损门槛（下跌反转通过·横盘不误判）/ 追踪 SL 夹紧（BUY+SELL 双向）/ 一键回退返回 None / 确定性最小亏损平放行</li><li>✅ <code>local_llm_service</code> 管仓链路：提示词构建 OK + 容错 JSON 解析（含 <code>&lt;think&gt;</code> 残留、代码围栏）OK + <code>PositionManageVote</code> 反序列化 OK</li></ul>
+<h2>七、部署与回退</h2>
+<ul><li><strong>生效</strong>：重启后端即加载（默认 <code>POSITION_MANAGER_ENABLED=True</code>）。建议先 <strong>DEMO 小仓位</strong>验证 1~2 天，再全量。</li><li><strong>一键回退</strong>：将 <code>POSITION_MANAGER_ENABLED</code> 改为 <code>False</code>，整层失效，原有 M1 云端 + 规则引擎完全不动。</li><li><strong>观察点</strong>：后端日志搜 <code>[仓位管家]</code> 看触发记录；<code>/api/local-model/status</code> 的 <code>roles.position_manager.runs</code> 看本地 8B 管仓调用量。</li></ul></body></html>

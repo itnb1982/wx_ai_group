@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三活跃账号历史订单调研报告 · 2026-08-14</title>
+<style>
+  body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;margin:0;background:#f5f6f8;color:#1f2329;line-height:1.7}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 24px 64px}
+  h1{font-size:26px;border-bottom:3px solid #c0392b;padding-bottom:10px}
+  h2{font-size:20px;margin-top:36px;color:#2c3e50;border-left:5px solid #3498db;padding-left:12px}
+  h3{font-size:16px;color:#34495e;margin-top:24px}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  th,td{border:1px solid #dfe3e8;padding:8px 10px;text-align:left}
+  th{background:#2c3e50;color:#fff;font-weight:600}
+  tr:nth-child(even){background:#f8f9fb}
+  .red{color:#c0392b;font-weight:700}
+  .green{color:#27ae60;font-weight:700}
+  .amber{color:#e67e22;font-weight:700}
+  .card{background:#fff;border-radius:10px;padding:20px 24px;margin:18px 0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .key{background:#fff8e1;border:1px solid #ffd54f;border-radius:8px;padding:16px 20px;margin:18px 0;font-size:15px}
+  .code{background:#1e272e;color:#d2dae2;padding:14px 16px;border-radius:8px;font-family:"SFMono-Regular",Consolas,monospace;font-size:13px;overflow-x:auto;white-space:pre}
+  .tag{display:inline-block;background:#c0392b;color:#fff;border-radius:4px;padding:2px 8px;font-size:12px;margin-right:6px}
+  .muted{color:#7f8c8d;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>三活跃账号历史订单调研报告</h1>
+<p class="muted">生成时间：2026-08-14 15:27 · 数据源：生产库 <code>wx_prod.dat</code> · 调研范围：三个 DEMO 活跃账号全量 + 近期窗口</p>
+
+<div class="key">
+<span class="tag">核心结论</span>
+三笔「错方向」订单<strong>不是数据喂错、也不是指数喂错</strong>——喂给 AI 的全程都是 XAUUSD 行情，与 MT5 终端一致。
+真正根因是 <strong>元代理（MetaAgent）裁决逻辑存在系统性 BUG：在 8/13–8/14 期间，把 15 笔「三脑 SELL 共识」逆着翻成了 BUY 全部亏损</strong>。
+本次已落地修复（共识闸门），待重启后端生效。
+</div>
+
+<h2>一、账号映射确认（按用户澄清）</h2>
+<table>
+<tr><th>MT5 账号号</th><th>名称</th><th>内部 UUID</th><th>角色</th><th>类型</th><th>交易开关</th></tr>
+<tr><td><b>1610098464</b></td><td>liumanchun4</td><td>3540bf33</td><td class="green">主号(信号源)</td><td>DEMO</td><td>开</td></tr>
+<tr><td>1610093299</td><td>liumanchun1</td><td>2877213e</td><td>跟号</td><td>DEMO</td><td>开</td></tr>
+<tr><td>1610097175</td><td>liumanchuan2</td><td>b3db40fd</td><td>跟号</td><td>DEMO</td><td>开</td></tr>
+<tr><td>27958505</td><td>詹启东3</td><td>007d765d</td><td>实仓</td><td>REAL</td><td class="red">关(昨晚停)</td></tr>
+<tr><td>29462312</td><td>詹启东</td><td>a1c25576</td><td>实仓</td><td>REAL</td><td class="red">关</td></tr>
+<tr><td>29463543</td><td>詹启东2</td><td>8f78f759</td><td>实仓</td><td>REAL</td><td class="red">关</td></tr>
+</table>
+<p>截图里的三个账号（1610098464 / 3299 / 7175）正是「其他三个一致的」——<strong>主号 + 两个 DEMO 跟号</strong>，全部在交易。三个詹启东实仓已停，不在本次调研范围。</p>
+
+<h2>二、主副一致性核对</h2>
+<div class="card">
+<h3>近期窗口（2026-08-13 ~ 08-14）</h3>
+<table>
+<tr><th>账号</th><th>成交笔数</th><th>与主号同向匹配</th><th>结论</th></tr>
+<tr><td>主号 1610098464</td><td>39</td><td>—</td><td>基准</td></tr>
+<tr><td>跟号 1610093299</td><td>39</td><td class="green">39 / 39（100%）</td><td>完全一致</td></tr>
+<tr><td>跟号 1610097175</td><td>39</td><td class="green">39 / 39（100%）</td><td>完全一致</td></tr>
+</table>
+<p class="muted">未匹配主号单 = 0。印证用户判断：<strong>三个活跃账号近期严格跟随、方向 100% 同步</strong>。</p>
+<h3>早期历史（2026-08-03 起）为何对不上？</h3>
+<p>早期三账号成交时间相差 30+ 分钟、方向各异，说明那是<strong>跟单机制建立前的独立运行期</strong>，与近期无关。跟单架构经多轮修复（孤儿单/独立平仓根治）后才达到当前 100% 同步。本次调研以近期窗口为准。</p>
+</div>
+
+<h2>三、核心发现：元代理系统性逆共识翻向（BUG）</h2>
+<p>对主号近两日 39 笔交易，逐笔比对 <code>meta_agent_decision</code> 与三脑（DS/HY/Chronos）共识：</p>
+<table>
+<tr><th>类别</th><th>笔数</th><th>胜率</th><th>说明</th></tr>
+<tr><td>meta 与共识一致</td><td>24</td><td>21%</td><td>—</td></tr>
+<tr><td class="red">meta 逆共识（全部 SELL→BUY）</td><td class="red">15</td><td>20%</td><td>15 笔无一例外是「共识 SELL → 翻 BUY」</td></tr>
+</table>
+<p class="red"><strong>关键异常：15 笔背离 100% 是「共识=SELL → meta=BUY」，零例反向（BUY→SELL）。</strong> 单向做多偏置，强烈指向逻辑 bug 而非策略。</p>
+
+<h3>背离明细（节选）</h3>
+<table>
+<tr><th>时间</th><th>三脑共识</th><th>meta 执行</th><th>盈亏</th><th>平仓</th></tr>
+<tr><td>08-13 00:15</td><td>SELL(DS/HOLD/Ch)</td><td class="red">BUY</td><td>-33.42</td><td>sl</td></tr>
+<tr><td>08-13 03:07</td><td>SELL(DS/HOLD/Ch)</td><td class="red">BUY</td><td>-16.95</td><td>sl</td></tr>
+<tr><td>08-13 08:41</td><td>SELL(DS/HOLD/Ch)</td><td class="red">BUY</td><td>-18.96</td><td>ai</td></tr>
+<tr><td>08-13 09:18</td><td>SELL(DS/HOLD/Ch)</td><td class="red">BUY</td><td>-35.34</td><td>sl</td></tr>
+<tr><td>08-13 13:10</td><td>SELL(DS/SELL/Ch=BUY)</td><td class="red">BUY</td><td>+6.04</td><td>external</td></tr>
+<tr><td>08-14 00:13</td><td>SELL(DS/SELL/Ch)</td><td class="red">BUY</td><td>-11.37</td><td>ai</td></tr>
+<tr><td>08-14 11:02</td><td>SELL(DS/SELL/Ch)</td><td class="red">BUY</td><td>-9.55</td><td>external</td></tr>
+</table>
+<p class="muted">注：部分 npf=0 为 <code>mt5_closed_external_unverified</code>（账本漏记，历史遗留），非真实盈亏；但方向错误已发生。</p>
+
+<h2>四、根因定位（代码 + 配置铁证）</h2>
+<div class="card">
+<p><strong>配置</strong> <code>app/config.py:164</code></p>
+<div class="code">SMC_FLOW_GUARD: str = "hard"        # 逆机构订单流直接翻向
+SMC_FLOW_FLIP_CONF: float = 0.66   # 翻向置信门槛</div>
+<p><strong>代码</strong> <code>app/core/meta_agent.py</code> SMC 订单流锚（HARD）分支：</p>
+<div class="code">elif _smc_guard == "hard":
+    _flip_to = "BUY" if _smc_bias == "bullish" else "SELL"
+    ...
+    elif final_confidence >= 0.75:        # 仅高置信共识受保护
+        final_confidence *= 0.85           # 不翻向
+    else:
+        final_decision = _flip_to         # ← 0.66~0.75 的中等共识在此被翻向！</div>
+<p>翻向发生的唯一通道：<code>SMC_FLOW_GUARD=hard</code> + <code>smc_features.global_bias=="bullish"</code> + <code>final_confidence &lt; 0.75</code> 且非极端位。
+代码注释（L1087-1090）自己已承认「单 SMC 子信号不得否决高置信多模型共识」，但仅用 <code>0.75</code> 做保护——
+<strong>0.66~0.75 的中等共识仍被翻向</strong>。实证中三脑 SELL 共识置信恰落此区间，被 <code>smc=bullish</code> 全部翻成 BUY。</p>
+</div>
+
+<h2>五、已落地修复（共识闸门）</h2>
+<p>原则：<strong>只要三脑（DS/HY/Chronos）已有方向共识，单 SMC 子信号只能降权、绝不翻向</strong>；仅当三脑无共识时才允许翻向（保留 Fix A「顺机构订单流」原意）。</p>
+<div class="code"># 计算三脑方向共识（≥2/3 或 2/2 多数）
+_brain_votes = [v for v in (ds_final, hy_final, chronos_dir) if v in ("BUY","SELL")]
+_brain_cons = 多数方向 if 存在 else None
+
+elif _smc_guard == "hard":
+    if _brain_cons is not None:          # ★ 新增闸门
+        final_confidence *= 0.85          # 仅降权，绝不翻向
+    elif final_confidence >= 0.75:
+        final_confidence *= 0.85
+    elif _at_extreme:
+        final_decision = "HOLD"
+    else:
+        final_decision = _flip_to        # 仅无共识时翻向</div>
+<h3>逻辑仿真验证（4 场景）</h3>
+<table>
+<tr><th>场景</th><th>输入</th><th>修复后行为</th></tr>
+<tr><td>A · bug 复现</td><td>三脑SELL + smc=bullish + conf0.66</td><td class="green">降权→0.56（低于开仓门槛→HOLD，不翻向）</td></tr>
+<tr><td>B · 强共识</td><td>三脑SELL + smc=bullish + conf0.80</td><td class="green">降权→0.68（正常开 SELL）</td></tr>
+<tr><td>C · 无共识</td><td>DS=BUY/HY=SELL/Ch=HOLD + smc=bullish</td><td>翻向 BUY（Fix A 原意保留）</td></tr>
+<tr><td>D · 保护BUY</td><td>三脑BUY + smc=bearish + conf0.66</td><td class="green">降权→0.56（保护 BUY 不被翻 SELL）</td></tr>
+</table>
+<p><code>py_compile</code> 与 <code>compileall</code> 全通过。修复为<strong>单点、可回退</strong>（删除新增闸门即可还原）。</p>
+
+<h2>六、结论与下一步</h2>
+<ul>
+<li><span class="green">✓</span> <strong>数据/指数无误</strong>：全链路 XAUUSD，与终端一致。</li>
+<li><span class="green">✓</span> <strong>主副一致</strong>：近期 100% 同步，跟单架构健康。</li>
+<li><span class="red">✗</span> <strong>错方向真因 = 元代理逆共识翻向 BUG</strong>：已修复，待重启生效。</li>
+<li><span class="amber">!</span> <strong>更深层问题仍在</strong>：即便不翻向，主号整体胜率仅 ~20%（共识一致组也是 21%），说明<strong>方向准确率本身偏弱</strong>。翻向 bug 修掉后，方向判断能力仍须专项提升（视觉模型看 H4/M15 结构作第四票、或回测迭代）。</li>
+</ul>
+<div class="key">
+<span class="tag">待办</span>
+① 双击 <code>restart_task_backend.bat</code> 重载后端，使共识闸门生效；<br>
+② 重启后盯盘：原 15 笔「SELL→BUY 逆行」应消失，逆订单流中等共识转为 HOLD 或保持正确方向；<br>
+③ 持续观察整体胜率，规划方向准确率专项提升（视觉/多模态增强）；<br>
+④ 历史 <code>mt5_closed_external_unverified</code> 账本漏记（npf=0）仍待回填清理。
+</div>
+</div>
+</body>
+</html>

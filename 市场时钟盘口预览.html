@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>市场时钟 · 盘口显示预览</title>
+<style>
+  :root {
+    --bg: #070b14;
+    --panel: #111b30;
+    --panel2: #16223c;
+    --line: #1f2d4a;
+    --txt: #e6edf7;
+    --sub: #8aa0c4;
+    --dim: #5b6e91;
+    --gold: #ffcf4d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--txt);
+    min-height: 100vh;
+  }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  .desc { color: var(--sub); font-size: 13px; margin-bottom: 24px; }
+  .desc b { color: var(--gold); }
+  .grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+    max-width: 1100px;
+  }
+  .case {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 18px;
+  }
+  .case h2 { font-size: 14px; color: var(--sub); margin: 0 0 10px; font-weight: 600; letter-spacing: 0.5px; }
+  .case h2 .tag { background: var(--panel2); padding: 2px 8px; border-radius: 4px; font-size: 11px; color: var(--dim); margin-left: 8px; }
+
+  /* 时钟（与前端 .clock 1:1 同步） */
+  .clock {
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--panel2);
+    position: relative; overflow: hidden; padding: 14px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .phase-row { display: flex; align-items: center; gap: 8px; }
+  .state { font-size: 20px; font-weight: 800; }
+  .cd-sub { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .open-since { font-size: 16px; font-weight: 700; color: var(--sub); font-variant-numeric: tabular-nums; }
+  .cd-label { font-size: 11px; color: var(--dim); letter-spacing: 0.5px; }
+  .cd-time { font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--gold); }
+  .meta { font-size: 11px; color: var(--sub); text-align: center; }
+
+  /* 故障徽标 */
+  .fault-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid #ef4444; color: #fecaca;
+    font-size: 11px; font-weight: 700;
+    padding: 3px 8px; border-radius: 6px;
+    display: flex; align-items: center; gap: 5px;
+    animation: pulse 1.4s infinite;
+  }
+  .fault-dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+  .legend { margin-top: 24px; color: var(--sub); font-size: 12px; max-width: 1100px; }
+  .legend b { color: var(--gold); }
+</style>
+</head>
+<body>
+<h1>右上角「市场时钟」 — 4 种盘口显示效果</h1>
+<p class="desc">按当前服务器正常交易盘口（STARTRADER / XM 集团 · GMT+3 基准）显示。
+点击色卡对应：<b>亚盘</b>（浅蓝）/<b>欧盘</b>（金黄）/<b>美盘</b>（紫）/<b>休市</b>（灰）。<br>
+当前真实时间 <b>2026-08-02 周日 22:47 (GMT+3)</b>，属周末休市，距下个开盘 02:12。</p>
+
+<div class="grid">
+
+  <!-- 1. 亚盘 -->
+  <div class="case">
+    <h2>亚盘正常交易中<span class="tag">周一 ~ 周五 01:00-13:00 (GMT+3)</span></h2>
+    <div class="clock" style="border-color: #7dd3fc;">
+      <div class="phase-row">
+        <span class="dot" style="background:#7dd3fc; box-shadow:0 0 12px #7dd3fc; animation:pulse 1.6s infinite;"></span>
+        <span class="state" style="color:#7dd3fc;">🌏 亚盘正常交易中</span>
+      </div>
+      <div class="cd-sub">
+        <span class="open-since">已开 1 天 4 小时 38 分</span>
+      </div>
+      <div class="meta">
+        STARTRADER (XM 集团) · GMT+3 (夏令时/DST) · 服务器时间 2026-08-04 05:38:12<br>
+        数据源：MT5 实时 · 距美盘收尾 16:21:48
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 欧盘 -->
+  <div class="case">
+    <h2>欧盘正常交易中<span class="tag">周一 ~ 周五 13:00-20:00 (GMT+3)</span></h2>
+    <div class="clock" style="border-color: #fbbf24;">
+      <div class="phase-row">
+        <span class="dot" style="background:#fbbf24; box-shadow:0 0 12px #fbbf24; animation:pulse 1.6s infinite;"></span>
+        <span class="state" style="color:#fbbf24;">🌍 欧盘正常交易中</span>
+      </div>
+      <div class="cd-sub">
+        <span class="open-since">已开 1 天 16 小时 12 分</span>
+      </div>
+      <div class="meta">
+        STARTRADER (XM 集团) · GMT+3 (夏令时/DST) · 服务器时间 2026-08-04 17:12:05<br>
+        数据源：MT5 实时 · 距美盘收尾 04:47:55
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 美盘 -->
+  <div class="case">
+    <h2>美盘正常交易中<span class="tag">周一 ~ 周五 20:00-24:00 (GMT+3)</span></h2>
+    <div class="clock" style="border-color: #a78bfa;">
+      <div class="phase-row">
+        <span class="dot" style="background:#a78bfa; box-shadow:0 0 12px #a78bfa; animation:pulse 1.6s infinite;"></span>
+        <span class="state" style="color:#a78bfa;">🌎 美盘正常交易中</span>
+      </div>
+      <div class="cd-sub">
+        <span class="open-since">已开 1 天 21 小时 48 分</span>
+      </div>
+      <div class="meta">
+        STARTRADER (XM 集团) · GMT+3 (夏令时/DST) · 服务器时间 2026-08-04 22:48:30<br>
+        数据源：MT5 实时 · 距美盘收尾 02:11:30
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 休市（当前真实状态）-->
+  <div class="case">
+    <h2>周末休市<span class="tag">周六 / 周日全天 · 当前真实状态</span></h2>
+    <div class="clock" style="border-color: #9ca3af;">
+      <div class="phase-row">
+        <span class="dot" style="background:#9ca3af;"></span>
+        <span class="state" style="color:#cbd5e1;">💤 周末休市</span>
+      </div>
+      <div class="cd-sub">
+        <span class="cd-label">距下个开盘</span>
+        <span class="cd-time">02:12:08</span>
+      </div>
+      <div class="meta">
+        STARTRADER (XM 集团) · GMT+3 (夏令时/DST) · 服务器时间 2026-08-02 22:47:52<br>
+        数据源：MT5 实时
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 故障报警示例 -->
+  <div class="case" style="grid-column: 1 / -1;">
+    <h2>系统故障报警（与盘口共存）<span class="tag">右上角红点 · 4 个 MT5 全在线时此条不出现</span></h2>
+    <div class="clock" style="border-color: #ef4444;">
+      <div class="fault-badge">
+        <span class="fault-dot"></span>
+        故障：MT5:liumanchun2 / Scanner
+      </div>
+      <div class="phase-row">
+        <span class="dot" style="background:#a78bfa; box-shadow:0 0 12px #a78bfa; animation:pulse 1.6s infinite;"></span>
+        <span class="state" style="color:#a78bfa;">🌎 美盘正常交易中</span>
+      </div>
+      <div class="cd-sub">
+        <span class="open-since">已开 1 天 21 小时 48 分</span>
+      </div>
+      <div class="meta">
+        STARTRADER (XM 集团) · GMT+3 (夏令时/DST) · 服务器时间 2026-08-04 22:48:30<br>
+        数据源：MT5 实时 · 距美盘收尾 02:11:30
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="legend">
+  <b>说明</b>：盘口分时段按 GMT+3 基准（STARTRADER 服务器时区）。XAUUSD 真实交易窗口为周一 01:05 ~ 周五 23:55，凌晨 00:00-01:00 与周末全天均归为「休市」。<br>
+  「已开 N 天 Y 小时 Z 分」按本周一 01:00 开盘时刻累计；休市时显示「距下个开盘」倒计时（精确到秒、本地跳秒）。<br>
+  故障报警在 <code>GET /api/dashboard/system-health</code> 检测到异常时浮现，列出具体失败模块。
+</p>
+</body>
+</html>

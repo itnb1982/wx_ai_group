@@ -1,0 +1,41 @@
+﻿.\.venv\Scripts\python.exe : F:\WanxiangAI\.venv\Lib\site-packages\pytest_asyncio\plugin.py:208: PytestDeprecationWarni
+ng: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+所在位置 行:439 字符: 19
++ ... WanxiangAI; .\.venv\Scripts\python.exe -X utf8 -m pytest backend/test ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (F:\WanxiangAI\....cope" is unset.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asy
+ncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explic
+itly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module",
+ "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+........................................................................ [  4%]
+........................................................................ [  9%]
+..................EEEEEEEEEEEEEEEEEEE................................... [ 14%]
+.................................................EEEEEEEEEEEEEEEEEEEEEEE [ 19%]
+EEEEEEEEEEEEEEEEEEEEEEEE...............s................................ [ 24%]
+..EEE................................................................... [ 28%]
+...E.................................................................... [ 33%]
+........................................................................ [ 38%]
+...........EEEE.EE...................................................... [ 43%]
+........................................................................ [ 48%]
+........................................................................ [ 52%]
+...EEEE.....................E.EE....................ssssssssssssssssssss [ 57%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 62%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 67%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 72%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 76%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 81%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 86%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 91%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 96%]
+ssssssssssssssssssssssss....................................             [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] backend\tests\test_execution_controller.py:83: 宸插湪灏佺洏鎬?
+SKIPPED [600] backend\tests\test_sizing_equivalence.py:78: 鏃犳硶浠?v1.4.0-baseline 鍔犺浇鏃у疄鐜帮紙闈?git 鐜鎴?ref 涓嶅瓨鍦級
+SKIPPED [18] backend\tests\test_sizing_equivalence.py:115: 鏃犳硶浠?v1.4.0-baseline 鍔犺浇鏃у疄鐜帮紙闈?git 鐜鎴?ref 涓嶅瓨鍦級
+SKIPPED [1] backend\tests\test_sizing_equivalence.py:132: 鏃犳硶浠?v1.4.0-baseline 鍔犺浇鏃у疄鐜帮紙闈?git 鐜鎴?ref 涓嶅瓨鍦級
+SKIPPED [1] backend\tests\test_sizing_equivalence.py:142: 鏃犳硶浠?v1.4.0-baseline 鍔犺浇鏃у疄鐜帮紙闈?git 鐜鎴?ref 涓嶅瓨鍦級

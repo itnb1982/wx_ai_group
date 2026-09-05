@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "global": {
+    "level": "HALT_ALL",
+    "reason": "崩溃后人工封盘",
+    "at": "2026-08-09T00:03:44",
+    "by": "ops"
+  },
+  "accounts": {},
+  "flatten_requests": []
+}

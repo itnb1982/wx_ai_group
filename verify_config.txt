@@ -1,0 +1,3 @@
+﻿DATABASE_URL= sqlite:///F:/WanxiangAI/backend/data/wx_prod.dat
+DATA_DIR= F:/WanxiangAI/data
+FRONTEND_DIST_DIR= dist_v28

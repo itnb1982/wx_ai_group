@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai XAUUSD 持续验证报告</h1>
+<p><strong>生成时间</strong>：2026-08-11 05:05 (北京)　|　<strong>第 12 轮</strong>　|　<strong>结论：触发 P0 ×1（持续未愈）</strong></p>
+<blockquote>本轮为纯观测，未修改任何交易代码、配置，未下任何单。</blockquote>
+<hr>
+<h2>🚨 P0 醒目告警</h2>
+<h3>P0-1【连续第 2 轮 · 未愈 · 需人工介入】DeepSeek 欠费，死亡票污染裁决，交易链路已冻结 109 分钟</h3>
+<p><strong>DeepSeek 账户余额不足（HTTP 402 Insufficient Balance），但系统仍把它的报错当作一张合法的 HOLD 票、并保留 0.50 权重参与投票，导致所有交易信号被否决。</strong></p>
+<p>裁决日志原文（<code>meta_agent:adjudicate</code>，04:59:21 最后一轮）：</p>
+<pre><code>[fusion_v2] 4模型融合票 = SELL(w=0.22 | conf=98% | 命中率43% | 4模型)
+裁决:R3 双模型观望→HOLD(不开单)   DS=0%  HY=28%  Chronos=SELL
+仓位管理: 持仓0笔/0.0手 浮+0$  意图=open  ← 系统本来想开仓
+裁决: HOLD  置信度:0.14  权重 DS:0.50/HY:0.50</code></pre>
+<p>AI 决策流接口里，DeepSeek 这张票的 <code>reasoning</code> 字段内容就是报错本身：</p>
+<pre><code>{"who":"ds","decision":"HOLD","confidence":0.0,"weight":0.5,
+ "reasoning":"API错误: Error code: 402 - {'error': {'message': 'Insufficient Balance'...}}"}</code></pre>
+<p><strong>证据链（三层交叉验证）</strong></p>
+<table><thead><tr><th>证据</th><th>数值</th></tr></thead><tbody><tr><td>DeepSeek 402 失败次数</td><td><strong>86 次</strong>，fail_streak <strong>85</strong>，total_ok 40 / total_fail 85</td></tr><tr><td>首次出现 / 持续至</td><td>00:37:56 单次 → <strong>03:17 起连续</strong>（03时34次、04时51次）→ 04:59:11</td></tr><tr><td>04 时最终裁决分布</td><td><strong>HOLD 51 / 51 = 100%</strong>，平均置信度仅 0.220</td></tr><tr><td>同期 fusion_v2 融合票</td><td>04 时 <strong>SELL 43 次 + BUY 4 次</strong>，置信度 <strong>98%</strong></td></tr><tr><td>Chronos 独立票</td><td>04 时持续 <strong>SELL</strong></td></tr><tr><td>实际开仓</td><td><strong>0 笔</strong></td></tr></tbody></table>
+<p><strong>裁决质量随 DeepSeek 死亡的塌陷曲线</strong></p>
+<table><thead><tr><th>小时</th><th>最终裁决</th><th>平均置信</th><th>fusion_v2 融合票</th><th>DS 402 次数</th><th>实际开仓</th></tr></thead><tbody><tr><td>00 时</td><td>BUY 2 / SELL 10 / HOLD 2</td><td>0.560</td><td>SELL 14 / BUY 2</td><td>1</td><td>4 笔</td></tr><tr><td>01 时</td><td>BUY 4 / SELL 13 / HOLD 4</td><td>0.536</td><td>SELL 19</td><td>0</td><td>4 笔</td></tr><tr><td>02 时</td><td>BUY 11 / SELL 11 / HOLD 5</td><td>0.476</td><td>SELL 22</td><td>0</td><td>4 笔</td></tr><tr><td>03 时</td><td>BUY 7 / <strong>HOLD 35</strong></td><td>0.291</td><td>SELL 36 / BUY 2</td><td><strong>34</strong></td><td>4 笔（均在 03:10 前）</td></tr><tr><td>04 时</td><td><strong>HOLD 51 / 51</strong></td><td><strong>0.220</strong></td><td>SELL 43 / BUY 4</td><td><strong>51</strong></td><td><strong>0 笔</strong></td></tr></tbody></table>
+<p><strong>冻结窗口</strong>：最后开仓 <code>03:10:26</code> → 市场休市 <code>04:59:21</code>，<strong>108.9 分钟开市时间零开仓</strong>，</p>
+<p>期间约 79 次融合票给出 98% 置信度的 SELL 方向被逐一否决。</p>
+<p><strong>架构层自相矛盾（本轮新增认定）</strong>：风控层已判定 <code>degrade.level=L1</code>、<code>lot_multiplier=0.7</code>、</p>
+<p><strong><code>allow_new_entry: true</code></strong>（明确允许 70% 手数开新仓）；但裁决层的 R3 规则把每一轮都变成 HOLD。</p>
+<p><strong>风控说"可以交易"，裁决说"永远不许交易"——两层策略互相打架，实际结果是完全停摆。</strong></p>
+<p><strong>违反用户核心铁律</strong>："多交易、多赚钱"。这不是市场没机会（4 模型融合 98% 认为有），</p>
+<p>是<strong>一个已欠费的模型在行使否决权</strong>。</p>
+<p><strong>不会自愈，必须人工充值 DeepSeek 账户。</strong></p>
+<hr>
+<h2>一、实时行情快照</h2>
+<table><thead><tr><th>项目</th><th>数值</th></tr></thead><tbody><tr><td>品种 / 最新价</td><td>XAUUSD　<strong>4389.15</strong>（M15 收盘）</td></tr><tr><td>交易所时钟</td><td>server_time <code>2026-08-11 00:11</code> GMT+3(DST)，STARTRADER (XM 集团)</td></tr><tr><td><strong>市场状态</strong></td><td><strong>休市中</strong>，<code>is_open=false</code>，距开市倒计时 <strong>2923 秒（约 49 分钟）</strong></td></tr><tr><td>ATR(14)</td><td>6.50（低波动）</td></tr><tr><td><strong>ADX</strong></td><td><strong>43.2 — 强趋势</strong>（上轮 29.4，趋势进一步强化）</td></tr><tr><td><strong>RSI</strong></td><td><strong>71.8 — 超买区</strong></td></tr><tr><td>EMA20</td><td>4375.22　↑　（现价高出 <strong>+13.93 = 2.14×ATR</strong>）</td></tr><tr><td>布林带</td><td>上轨 4401.28 / 中轨 4373.36 / 下轨 4345.45</td></tr><tr><td>MACD</td><td>11.59 vs signal 10.56，柱 <strong>+1.03</strong>（多头动能仍在但收窄）</td></tr><tr><td>趋势判定</td><td>偏多（趋势可信）</td></tr><tr><td>SMC 全局偏向</td><td><strong>bullish</strong>，体制=区间震荡，4H 偏置=neutral，<strong>延伸 Z=1.356</strong></td></tr><tr><td>订单流 CVD</td><td>源 mt5_proxy，读数=<strong>卖压主动</strong>（本地量能确认下跌），买枯=True</td></tr></tbody></table>
+<p><strong>矛盾信号区判读</strong>：ADX 43.2 说趋势强且可信、SMC 偏多；但 RSI 71.8 超买、价格离 EMA20 达 2.14×ATR、</p>
+<p>订单流显示买盘枯竭 + 卖压主动。<strong>多空双方证据都很硬</strong>，此时 HOLD 本身不算错——</p>
+<p>但当前 HOLD 不是模型权衡的结果，而是欠费模型的机械否决，这是本质区别。</p>
+<p><strong>05:00 后的日志静默已澄清</strong>：<code>[自动交易] 休市中（休市），跳过本轮</code> ×10。属于 broker 日切正常暂停，<strong>非故障</strong>。</p>
+<hr>
+<h2>二、持仓</h2>
+<p><strong>四账号全部 0 持仓</strong>（<code>cache_age_sec</code> 0.05，数据实时）。</p>
+<table><thead><tr><th>账号</th><th>login</th><th>余额</th><th>净值</th><th>持仓</th><th>today_profit</th><th>累计</th><th>今日单数</th></tr></thead><tbody><tr><td>liumanchun4（主号）</td><td>1610098464</td><td>2,827.86</td><td>2,827.86</td><td>0</td><td>−27.26</td><td>−152.91</td><td>25</td></tr><tr><td>liumanchuan2</td><td>1610097175</td><td>2,291.66</td><td>2,291.66</td><td>0</td><td>−34.64</td><td>−692.56</td><td>24</td></tr><tr><td>liumanchun3</td><td>1610093301</td><td>963,090.11</td><td>963,090.11</td><td>0</td><td>−312.13</td><td>−35,972.89</td><td>12</td></tr><tr><td>liumanchun1</td><td>1610093299</td><td>972,843.63</td><td>972,843.63</td><td>0</td><td><strong>−1,356.73</strong></td><td>−18,973.03</td><td>12</td></tr><tr><td><strong>组合</strong></td><td>—</td><td><strong>1,941,053.26</strong></td><td><strong>1,941,053.26</strong></td><td><strong>0</strong></td><td><strong>−1,730.76</strong></td><td>−55,791.39</td><td>73</td></tr></tbody></table>
+<p>MT5 连接 4/4，<code>trade_stale=false</code>，<code>l3_guard_alive</code> / <code>follower_alive</code> 均为 true。</p>
+<p><strong>无未平单 → 本轮无浮盈/浮亏、无 SL 位置可查。</strong></p>
+<p>最后平仓 <code>03:32:36</code>，此后 93 分钟空仓（其中 04:59 起为休市）。</p>
+<hr>
+<h2>三、历史订单合理性</h2>
+<h3>3.1 今日成交概览（北京 00:00 起）</h3>
+<p>20 笔已平：盈 4 / 亏 16，DB 记录合计 <strong>−18,007.23</strong>。</p>
+<p><strong>但这个数字是假的。</strong> 见下。</p>
+<h3>3.2 SL 伪造回写 —— 本轮第二次独立验证，实锤</h3>
+<p>12 笔订单的 <code>close_price</code> 与 <code>sl</code> <strong>完全相等</strong>（差 &lt; 0.005），全部 <code>exit_reason=mt5_closed_external</code>，</p>
+<p>合计记账 <strong>−17,853.74</strong>。根因（上轮已定位源码行）：<code>_reconcile_positions:1106</code></p>
+<p>「deal 未匹配，用 SL/TP 兜底」——系统找不到真实成交回执时，<strong>直接拿止损价当成交价写库</strong>。</p>
+<p><strong>用日志中的真实浮动 P/L 逐笔对照（决定性证据）：</strong></p>
+<table><thead><tr><th>单号</th><th>手数</th><th>DB 记录 P/L</th><th>日志最后真实 P/L</th><th>时间差</th><th>虚增亏损</th></tr></thead><tbody><tr><td>377945135</td><td>1.00</td><td>−2,586.00</td><td><strong>+506.00</strong> (00:41:20)</td><td>平于 00:43</td><td><strong>≈ +3,092</strong></td></tr><tr><td>377945228</td><td>1.00</td><td>−2,564.00</td><td><strong>+495.00</strong> (00:41:22)</td><td>平于 00:43</td><td><strong>≈ +3,059</strong></td></tr><tr><td>377977951</td><td>1.00</td><td>−2,477.00</td><td>−372.00 (01:14:41)</td><td>平于 01:16</td><td>≈ +2,105</td></tr><tr><td>377977945</td><td>1.00</td><td>−2,474.00</td><td>−370.00 (01:14:39)</td><td>平于 01:19</td><td>≈ +2,104</td></tr><tr><td>377895261</td><td>1.00</td><td>−2,525.00</td><td>−1,261.00 (00:20:04)</td><td>—</td><td>≈ +1,264</td></tr><tr><td>378015564</td><td>1.00</td><td>−2,457.00</td><td>−1,524.00 (02:36:17)</td><td>平于 02:38</td><td>≈ +933</td></tr></tbody></table>
+<p><strong>最刺眼的两笔</strong>：#377945135 / #377945228 在最后一次持仓快照时是 <strong>+506 / +495 浮盈</strong>，</p>
+<p>2 分钟后 DB 却记成 <strong>−2,586 / −2,564</strong>。SELL 单要在 2 分钟内从盈利翻成这个亏损，</p>
+<p>金价需暴涨约 31 美元——当时 ATR 仅 6.5，物理上不可能。<strong>这是纯粹的记账伪造。</strong></p>
+<h3>3.3 三源盈亏对照（口径必须分清，禁止直接相减）</h3>
+<table><thead><tr><th>数据源</th><th>今日盈亏</th><th>可信度</th></tr></thead><tbody><tr><td>DB 全量（含 12 笔伪造）</td><td><strong>−18,007.23</strong></td><td>❌ 不可用</td></tr><tr><td>DB 剔除伪造后（8 笔）</td><td>−153.49</td><td>⚠️ 样本残缺</td></tr><tr><td><strong>MT5 实时接口 today_profit</strong></td><td><strong>−1,730.76</strong></td><td>✅ 以此为准</td></tr></tbody></table>
+<p><strong>「今日亏 1.8 万」是账本假象，真实亏损约 1,730 美元。</strong></p>
+<p>DB 虚增亏损约 <strong>16,276 美元</strong>。此污染会直接毒害任何基于 DB 的复盘与模型训练。</p>
+<h3>3.4 出场通道质量</h3>
+<table><thead><tr><th>exit_reason</th><th>笔数</th><th>合计盈亏</th><th>评价</th></tr></thead><tbody><tr><td>mt5_closed_external</td><td>12</td><td>−17,853.74（伪造）</td><td>❌ 记账污染源</td></tr><tr><td>主副对账-清孤儿单</td><td>3</td><td><strong>+1,687.20</strong></td><td>⚠️ 结果好但机制是 bug</td></tr><tr><td>follower_mirror</td><td>1</td><td>−1,759.00</td><td>—</td></tr><tr><td>risk_cut</td><td>2</td><td>−62.46</td><td>✅ 正常</td></tr><tr><td>浮盈回吐锁利</td><td>1</td><td>+15.67</td><td>✅ 机制有效，阈值偏松</td></tr><tr><td>sl</td><td>1</td><td>−34.90</td><td>✅ 正常</td></tr></tbody></table>
+<p><strong>动态利润锁定验证</strong>：<code>move_sl</code> 全周期触发 <strong>317 次</strong>（末次 03:32:36），有持仓时机制确实在工作，</p>
+<p>主号→跟号镜像延迟 1–2 秒。唯一一笔锁利出场 #378065855：峰值 +10.34 → 落袋 +6.42，</p>
+<p><strong>回吐 38%</strong>，触发的是「回吐 ≥20%」固定阈值。在 ATR 6.5 的低波动环境下这个阈值仍然过宽</p>
+<p>（<strong>连续第 8 轮提出，未落地</strong>）。</p>
+<hr>
+<h2>四、各模型健康值</h2>
+<table><thead><tr><th>模型</th><th>健康值</th><th>成功/失败</th><th>关键指标</th><th>状态</th></tr></thead><tbody><tr><td><strong>Chronos-2</strong></td><td><strong>100</strong></td><td>711 / 0</td><td>device=<strong>GPU (CUDA)</strong>，torch 2.6.0+cu124，延迟 122.9ms，2.4 秒前刚出预测，多变量协变量 DXY/US10Y/VIX</td><td>✅ 满血，全系统最可靠</td></tr><tr><td><strong>Qwen3:8b</strong></td><td><strong>74</strong></td><td>26 / 9 (74.3%)</td><td>p95 <strong>10.6s</strong> &lt; 20s ✅，p50 8.0s，last_error <code>ReadTimeout</code></td><td>⚠️ 成功率偏低</td></tr><tr><td><strong>DeepSeek</strong></td><td><strong>0</strong></td><td>40 / <strong>85</strong></td><td>ready=<strong>false</strong>，402 Insufficient Balance，fail_streak 85</td><td>🔴 <strong>欠费停摆</strong></td></tr><tr><td><strong>混元</strong></td><td><strong>100</strong></td><td>125 / 0</td><td>ready=true，ok_streak 125，无报错</td><td>✅ 正常</td></tr></tbody></table>
+<p><code>quad_ready=false</code>，模型就绪 3/4，降级等级 <strong>L1（单云降级）</strong>，手数系数 0.7。</p>
+<p><strong>Qwen 停工性质判定（沿用上轮方法论，再次确认为"次生后果"）</strong></p>
+<ul><li>Qwen 计数器 <code>26 ok / 9 fail</code> 与上轮 <strong>完全一致</strong> → 70 分钟内零新调用</li><li>最后活动 <code>03:13:58</code>「决策核对通过」，<code>last_activity_ago_s</code> = 6741.8s（≈112 分钟）</li><li>决策流里 <code>proofread.status = "skipped"</code></li></ul>
+<p>→ <strong>裁决全 HOLD ⇒ 没有方向性决策 ⇒ 校对员无事可做</strong>。Qwen 本身没坏，是被 P0-1 饿停的。</p>
+<p>修复 DeepSeek 后 Qwen 会自动复工。</p>
+<hr>
+<h2>五、本地模型如何提高盈利确定性</h2>
+<p>按投入产出比排序。<strong>Chronos 是当前唯一 100 分且零失败的组件，应最大化其职责。</strong></p>
+<h3>① 用 Chronos 的 P10/P90 分位带做成交价校验（可 100% 拦下今日 12 笔伪造）</h3>
+<p>写库前用 Chronos 预测带做合理性检查：若回填的 <code>close_price</code> 落在 P10/P90 区间外，</p>
+<p>或与最后一次持仓快照的浮动 P/L 方向矛盾，则<strong>拒绝写入并告警</strong>，而不是拿 SL 兜底。</p>
+<p>今日 P10=4354.49 / P90=4436.20，#377945135 的 +506 浮盈与 −2,586 记账明显矛盾，一票即可否决。</p>
+<p><strong>这是所有后续 ML 工作的前置条件——数据脏时训练只会学到噪声。</strong></p>
+<h3>② 死亡票剔除 + 权重重新归一化（直接解 P0-1，本轮最高优先级）</h3>
+<p>当某模型 <code>down=true</code> 时，<strong>必须把它从投票池移除并对剩余权重重新归一化</strong>，</p>
+<p>而不是保留 0.50 权重、把报错当 HOLD 票。L1 降级时应授权</p>
+<p><strong>Chronos + 混元 + Qwen 三方共识</strong>接管方向决策（手数已降至 70%，风险敞口本就受控）。</p>
+<p>本轮 79 次 98% 置信度的 SELL 就是这样被凭空抹掉的。</p>
+<h3>③ Chronos 带宽驱动的自适应锁利步长</h3>
+<p>用 (P90−P10) 作为波动带宽，动态调整回吐阈值，取代固定 20%：</p>
+<p>带宽窄（如今日 ATR 6.5）→ 收紧到 10–12%；带宽宽 → 放宽到 25–30%。</p>
+<p>可直接改善 #378065855 那种回吐 38% 的情况。<strong>连续 8 轮建议，仍未落地。</strong></p>
+<h3>④ Regime 切换哨兵</h3>
+<p>ADX 从上轮 29.4 → 本轮 43.2，趋势持续强化。上轮已确认「Regime 切换滞后 2 小时」</p>
+<p>是真实亏损的策略层根因。Chronos 可承担哨兵角色：当分位带中枢方向与当前持仓方向背离时降低反向手数</p>
+<p>（<strong>降手数而非拒单</strong>，符合"不限制开单"铁律）。</p>
+<h3>⑤ Qwen 校对员职责平移到出场端</h3>
+<p>入场校对目前完全依赖有方向性决策才触发，一旦裁决层卡死就整体失能。</p>
+<p>把 Qwen 平移到<strong>持仓出场评估</strong>：今日出场评估仅 31 次，是明显的能力空缺，</p>
+<p>且出场决策不依赖云端模型，可在 L1/L2 降级下独立运行。</p>
+<h3>⑥ 打通 mfe/mae 数据链（须等 ①）</h3>
+<p>今日填充率 <strong>仅 10%（2/20）</strong>，因伪造单 mfe/mae 全部为 0。</p>
+<p>这是本地 RL/ML 层最关键的训练标签，数据修复前任何"真进化"都无从谈起。</p>
+<hr>
+<h2>六、不合理之处清单</h2>
+<table><thead><tr><th>编号</th><th>级别</th><th>问题</th><th>状态</th></tr></thead><tbody><tr><td>P0-1</td><td>🔴 P0</td><td>DeepSeek 402 欠费，死亡票保留 0.50 权重当 HOLD 票，109 分钟零开仓</td><td><strong>连续第 2 轮，未愈，需人工充值</strong></td></tr><tr><td>P1-1</td><td>🟠 P1</td><td>SL 伪造回写：12 笔 <code>close_price≡sl</code>，虚增亏损 ≈16,276 美元</td><td>连续第 3 轮，源码行已定位</td></tr><tr><td>P1-2</td><td>🟠 P1</td><td>架构自相矛盾：风控层 <code>allow_new_entry=true</code> vs 裁决层 100% HOLD</td><td><strong>本轮新增认定</strong></td></tr><tr><td>P1-3</td><td>🟠 P1</td><td>mfe/mae 填充率跌至 <strong>10%</strong>（2/20），训练数据链断裂</td><td>恶化中</td></tr><tr><td>P1-4</td><td>🟠 P1</td><td>锁利回吐阈值固定 20%，低波动下过宽（本轮实测回吐 38%）</td><td><strong>连续第 8 轮未落地</strong></td></tr><tr><td>P1-5</td><td>🟠 P1</td><td>「主副对账-清孤儿单」按对账触发而非按盈亏，绕过 smart_exit（本轮 +1,687，第 8 轮 −806.96）</td><td>期望≈0、方差极大</td></tr><tr><td>P2-1</td><td>🟡 P2</td><td>全持仓扫描失败 <strong>78 次</strong>（23时21/00时38/01时19），期间止损/锁利/熔断被跳过</td><td>✅ <strong>01:47:09 后已自愈</strong></td></tr><tr><td>P2-2</td><td>🟡 P2</td><td>「行情为模拟数据 → 强制 HOLD」触发 74 次</td><td>✅ <strong>01:47:31 后已停止</strong></td></tr><tr><td>P2-3</td><td>🟡 P2</td><td>市场时钟 <code>phase_full</code> 显示「<strong>周末休市</strong>」，但今天是周二，实为日切暂停；且 <code>_auto_loop</code> 用 <code>source=static</code> 而接口用 <code>source=mt5</code>，两处数据源不一致</td><td>显示 bug，不影响交易</td></tr><tr><td>P2-4</td><td>🟡 P2</td><td>出场评估全周期仅 31 次（23:25→03:32），相对扫描频次明显偏低</td><td>观察中</td></tr></tbody></table>
+<h3>本轮未触发的项（对照上轮判据）</h3>
+<ul><li>✅ <code>mt5_connected = 4</code>，未降级</li><li>✅ Chronos <code>calls_fail = 0</code>，无失效迹象</li><li>✅ 无未平单 → 无浮亏超阈值风险</li><li>✅ 无持仓 → 「AI 连续多轮未评估持仓」（上轮 P0-2）本轮 <strong>不成立</strong>，非修复、是空仓所致</li><li>✅ 后端零重启（PID 4000，uptime 3.31h，与上轮同一进程）</li><li>✅ RSI 71.8 &gt; 72 阈值附近未开出 BUY 单（因整体零开仓，此判据本轮无效）</li></ul>
+<hr>
+<h2>下轮判据</h2>
+<ol><li><strong>DeepSeek 若仍 402</strong> → 持续 P0 并升级为最高优先级；核查开市后（约 06:00）是否依然零开仓</li><li><strong>若已充值恢复</strong> → 重点验证裁决是否立即恢复方向性输出、Qwen 校对是否自动复工</li><li>开市后 SL 兜底伪造若再现 ≥1 笔 1.0 手 → 升 P0</li><li>Qwen 成功率跌破 70%（当前 74.3%）→ 升 P1 最高</li><li>ADX 若维持 &gt;40 且出现逆势单 → 复核 Regime 哨兵缺失的实际代价</li><li>有持仓后，若 AI 出场评估间隔再超 60 分钟 → 重新触发上轮 P0-2</li></ol>
+<hr>
+<p>*本报告由持续验证器自动生成，仅观测不干预。数据源：<code>/api/health</code>、<code>/api/local-model/status</code>、</p>
+<p><code>/api/dashboard/accounts</code>、<code>/api/dashboard/ai-flow</code>、<code>/api/dashboard/system-health</code>、</p>
+<p><code>/api/dashboard/market-chart</code>、<code>backend/data/wx_prod.dat</code>、<code>backend/supervisor_uvicorn.log</code>。*</p></body></html>

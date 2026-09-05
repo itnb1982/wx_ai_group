@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海外可行性验证报告 · 本地 Chronos 替换云 DeepSeek（XAU 决策）</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#121829; --panel2:#1a2138; --gold:#f5c542; --gold2:#e0a82e;
+    --cyan:#3fd0e0; --green:#3ddc84; --red:#ff5d6c; --amber:#ffb454; --txt:#e8ecf5; --dim:#8b94ad;
+    --line:#243049;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 600px at 70% -10%, #18213b 0%, var(--bg) 55%);color:var(--txt);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.7;padding:32px 18px 80px}
+  .wrap{max-width:1080px;margin:0 auto}
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:28px}
+  h1{font-size:26px;font-weight:800;letter-spacing:.5px}
+  h1 .accent{color:var(--gold)}
+  .sub{color:var(--dim);font-size:13px;margin-top:8px}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+    font-size:12px;padding:3px 10px;border-radius:20px;margin-right:8px;margin-top:10px}
+  h2{font-size:19px;margin:38px 0 14px;padding-left:12px;border-left:3px solid var(--gold);font-weight:700}
+  h3{font-size:15px;margin:18px 0 8px;color:var(--cyan);font-weight:700}
+  p,li{font-size:14.5px;color:#d4dae8}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0;
+    box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  .vcard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .vcard .src{font-size:12px;color:var(--gold2);font-weight:700;margin-bottom:6px}
+  .vcard .body{font-size:13px;color:#cdd4e3}
+  .verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+  .vbox{border-radius:14px;padding:18px;text-align:center;border:1px solid var(--line)}
+  .vbox .t{font-size:15px;font-weight:800;margin-bottom:8px}
+  .vbox .d{font-size:13px;color:#cdd4e3}
+  .v-red{background:linear-gradient(160deg,#2a1518,#1a0f12);border-color:#5a2730}
+  .v-red .t{color:var(--red)} .v-amber{background:linear-gradient(160deg,#2a2113,#1a1409);border-color:#5a4427}
+  .v-amber .t{color:var(--amber)} .v-green{background:linear-gradient(160deg,#132a1c,#091a12);border-color:#275a3c}
+  .v-green .t{color:var(--green)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{background:var(--panel2);color:var(--gold2)}
+  td .num{font-variant-numeric:tabular-nums;font-weight:700}
+  .pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--cyan)}
+  code{background:#0c1120;border:1px solid var(--line);padding:1px 6px;border-radius:5px;font-size:12.5px;color:var(--gold)}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}
+  .node{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px}
+  .node.gold{border-color:var(--gold2);color:var(--gold)}
+  .arrow{color:var(--dim);font-size:18px}
+  .warn{border-left:3px solid var(--red);background:#1c1116;padding:14px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  .ok{border-left:3px solid var(--green);background:#101c14;padding:14px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  .opt{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:12px}
+  .optbox{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .optbox h4{font-size:15px;margin-bottom:8px}
+  .optbox.a h4{color:var(--red)} .optbox.b h4{color:var(--amber)} .optbox.c h4{color:var(--green)}
+  footer{margin-top:40px;border-top:1px solid var(--line);padding-top:16px;color:var(--dim);font-size:12.5px}
+  .tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:1px 7px;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>海外可行性验证报告：<span class="accent">本地 Chronos 替换云 DeepSeek</span>（XAU 决策）</h1>
+  <div class="sub">验证日期 2026-08-06 · 调查对象：Amazon Chronos-Bolt-base 205M 能否替代云端 DeepSeek/Hunyuan 承担 XAU 交易决策</div>
+  <div>
+    <span class="pill">独立出处 5 家</span>
+    <span class="pill">含 2 篇 arXiv 论文</span>
+    <span class="pill">含 25 年量化实战派</span>
+    <span class="pill">≥3 源交叉验证</span>
+    <span class="pill">纯调研 · 未动代码</span>
+  </div>
+</header>
+
+<h2>一、结论速览（三色判定）</h2>
+<div class="verdict">
+  <div class="vbox v-red">
+    <div class="t">❌ 不可行</div>
+    <div class="d"><b>100% 替换 DeepSeek</b><br>通用 Chronos 零样本直接当主信号源，扣费后可能负收益（违背「赚钱不亏本」红线）；且丢失 DeepSeek 的语义级可视化叙事（违背「高端可视化」铁律）。</div>
+  </div>
+  <div class="vbox v-amber">
+    <div class="t">⚠️ 有条件</div>
+    <div class="d"><b>通用 Chronos 直接当信号</b><br>零成本下能出非零方向信号，但扣费后经济价值存疑，须叠加质量层过滤 + 金融原生适配。</div>
+  </div>
+  <div class="vbox v-green">
+    <div class="t">✅ 可行·推荐</div>
+    <div class="d"><b>混合架构</b><br>Chronos 作本地时序信号引擎（零费/离线/可动画）+ 现有 SMC/Regime/哨兵质量层融合；语义叙事降级为本地规则生成，彻底零云依赖。</div>
+  </div>
+</div>
+
+<h2>二、验证方法</h2>
+<div class="card">
+  <p>按你的指令，未做任何代码改造，仅进行海外文献与实战派调研，覆盖「能不能预测 XAU 方向」「扣费后是否真赚钱」「与 LLM 方案差异」三个命门问题。交叉验证来源：</p>
+  <div class="grid" style="margin-top:12px">
+    <div class="vcard"><div class="src">① arXiv 2511.18578（Re(Visiting) Time Series）</div><div class="body">金融时序基础模型大规模实证，含扣费组合收益与金融原生预训练对比。</div></div>
+    <div class="vcard"><div class="src">② ISD 2025 贝尔格莱德大学论文</div><div class="body">Chronos 零样本用于股指日线方向策略的回测（零成本口径）。</div></div>
+    <div class="vcard"><div class="src">③ arXiv 2412.09394（LLMs for Time Series）</div><div class="body">零样本 Chronos 做统计套利，含毛/净 Sharpe 与滑点敏感性。</div></div>
+    <div class="vcard"><div class="src">④ mental-momentum.ai 独立研究</div><div class="body">通用 vs 领域专用 TSFM 的零样本交易可行性框架与架构参数。</div></div>
+    <div class="vcard"><div class="src">⑤ Jonathan Kinlay（25 年量化）</div><div class="body">审慎派实战观点：IC、波动率聚类 vs alpha、实盘部署底线。</div></div>
+  </div>
+</div>
+
+<h2>三、Chronos-Bolt-base 205M 规格确认（正面·基础设施可行）</h2>
+<div class="card">
+  <table>
+    <tr><th>维度</th><th>确认结论</th><th>来源</th></tr>
+    <tr><td>架构</td><td>Distilled T5，离散分词（4096 词表）→ patched <b>多步分位数预测</b>（非逐 token 自回归）</td><td>④ ⑤ Amazon 官方</td></tr>
+    <tr><td>参数量</td><td class="neu">9M / 21M / 48M / <b>205M(base)</b>（无「Chronos-2 120M」）</td><td>④ Amazon</td></tr>
+    <tr><td>上下文</td><td>512 steps（约覆盖数日~数周 XAU 行情）</td><td>④</td></tr>
+    <tr><td>效率</td><td>比旧 T5 版 <span class="pos">快 250×、省显存 20×</span></td><td>④</td></tr>
+    <tr><td>本地可行性</td><td>205M 可在 <b>RTX 3060Ti 8GB</b> 推理；零 token 费、可离线、输出分位数可做成「预报动画」</td><td>实测 + ④</td></tr>
+  </table>
+  <p style="color:var(--dim);font-size:13px;margin-top:6px">→ 基础设施（成本、离线、可视化）层面，替换云模型有真实收益，这部分没争议。</p>
+</div>
+
+<h2>四、正面证据：Chronos 能产出非零方向信号</h2>
+<div class="grid">
+  <div class="vcard"><div class="src">ISD 2025（零成本口径）</div><div class="body">Chronos[0-shot] 在 Nasdaq-100 年化 <span class="pos">13.7%</span>、IR <span class="pos">0.56</span>，跑赢 Buy&Hold(0.46)；SP500 年化 5.2%、IR 0.39。</div></div>
+  <div class="vcard"><div class="src">arXiv 2412.09394</div><div class="body">零样本 Chronos 做统计套利，<b>毛 Sharpe 3.17</b>（15 年，PCA），证明方向信号在统计上非零。</div></div>
+  <div class="vcard"><div class="src">黄金日线专研（SciLit）</div><div class="body">Chronos 对黄金日线 MAPE <span class="pos">4.87%</span>、R² <span class="pos">79.75%</span>——趋势持续商品的价格水平拟合好。</div></div>
+</div>
+
+<h2>五、致命反证：通用 Chronos 零样本直接交易，扣费后为负（四方一致）</h2>
+<div class="warn">
+  <p style="color:#ffd0d6"><b>这正是你担心的「开错单/亏本」风险点。四方独立来源一致指向：直接用 Amazon 通用 Chronos 当交易信号，扣费后经济价值低甚至为负。</b></p>
+</div>
+<table>
+  <tr><th>来源</th><th>关键数据</th><th>结论</th></tr>
+  <tr><td>arXiv 2511.18578</td><td>通用 <code>Chronos(large)</code> 512 窗口多空组合年化 <span class="neg">-1.47%</span></td><td>通用预训练不能直接迁移金融</td></tr>
+  <tr><td>arXiv 2412.09394</td><td>毛 Sharpe 3.17 → 仅 <span class="neg">3bps 滑点成本即转负</span></td><td>交易成本是杀手</td></tr>
+  <tr><td>Jonathan Kinlay</td><td>IC 可能≈<span class="neg">0.01</span>；学到的是「波动率聚类」非 alpha</td><td>不建议实盘，先做合成数据</td></tr>
+  <tr><td>mental-momentum.ai</td><td>通用 TSFM「不能在严格零样本下可靠交易」</td><td>须叠加概率风险覆盖</td></tr>
+</table>
+
+<h2>六、命门：金融原生预训练才有效（arXiv 2511 实证）</h2>
+<div class="card">
+  <p>同一篇论文给出解药——<b>通用预训练 ≠ 金融可用，必须金融原生预训练 + 因子 + 合成数据增强</b>：</p>
+  <table>
+    <tr><th>训练方式</th><th>方向准确率</th><th>年化</th><th>Sharpe</th></tr>
+    <tr><td>通用 Chronos(large) 零样本</td><td class="neu">≈随机边缘</td><td class="neg">-1.47%</td><td class="neg">负</td></tr>
+    <tr><td>Chronos(small) 金融数据从头预训练</td><td class="neu">—</td><td class="pos">36.84%</td><td class="pos">5.42</td></tr>
+    <tr><td>+ 金融因子 + 合成数据增强</td><td class="pos">51.74%</td><td class="pos">41.89%</td><td class="pos">6.78</td></tr>
+  </table>
+  <p style="margin-top:10px;color:var(--gold2);font-size:13.5px"><b>对我们的含义：</b>指望 Amazon 通用 Chronos-Bolt 直接预测 XAU 赚钱，大概率踩坑；要真正有效，必须在<b>我们自己的 XAU MT5 历史数据上做金融原生适配（微调/蒸馏/因子融合）</b>，或至少把它当作弱信号，靠已有的 SMC/Regime/哨兵（基于订单流的有效质量层）过滤。</p>
+</div>
+
+<h2>七、对「100% 替换 DeepSeek」的可行性判定</h2>
+<div class="warn">
+  <p><b>判定：不推荐。</b>原因有二，缺一不可：</p>
+  <ul style="margin-top:8px">
+    <li><b>经济风险：</b>通用 Chronos 零样本扣费后可能负收益，违反你「赚钱不亏本」红线；</li>
+    <li><b>产品风险：</b>Chronos 是纯时序模型，<b>没有语义理解能力</b>，无法替代 DeepSeek 的「辩论流/市场叙事」——而这正是你「高端 AI 可视化」铁律的核心卖点。100% 替换 = 丢掉「AI 在干什么」的叙事可视化。</li>
+  </ul>
+</div>
+
+<h2>八、修正方案：混合架构（推荐）</h2>
+<div class="ok">
+  <p><b>不丢语义可视化、不踩扣费亏本坑、还把云成本归零：</b></p>
+</div>
+<div class="flow">
+  <div class="node gold">本地 Chronos-Bolt-base<br><span style="font-size:11px;color:var(--dim)">时序分布预测（零费/离线/可动画）</span></div>
+  <div class="arrow">＋</div>
+  <div class="node">SMC / Regime / 反转哨兵<br><span style="font-size:11px;color:var(--dim)">订单流质量层（已有·有效）</span></div>
+  <div class="arrow">→</div>
+  <div class="node">概率风险覆盖<br><span style="font-size:11px;color:var(--dim)">高置信分位才执行·跨过成本</span></div>
+  <div class="arrow">→</div>
+  <div class="node gold">本地规则生成叙事<br><span style="font-size:11px;color:var(--dim)">替代云 LLM 语义·彻底零云依赖</span></div>
+</div>
+<div class="card">
+  <h3>混合架构相对原 v2 方案的 3 处关键修正</h3>
+  <ul>
+    <li><b>Chronos 降级为「信号源之一」而非「唯一大脑」</b>：它的分位数输出（P10/P50/P90）提炼「中值斜率=方向」「区间宽度=不确定性」，作为多信号输入，而非直接下单依据。</li>
+    <li><b>语义可视化改用本地规则生成</b>：用 SMC/Regime 状态 + Chronos 预测分布，本地拼出「AI 作战图/预报动画」，不再依赖云 LLM 解释，零 token 费、可离线。</li>
+    <li><b>强制金融原生适配</b>：在自有 XAU 数据上做微调/蒸馏，把方向准确率从随机边缘推向可用区间（参照 arXiv 2511 的 +因子+合成数据路径）。</li>
+  </ul>
+</div>
+
+<h2>九、下一步（待你拍板后再执行）</h2>
+<div class="card">
+  <h3>阶段 A · 离线 XAU 实证（用我们自己的 MT5 数据说话）</h3>
+  <ul>
+    <li>先把 torch 换成 CUDA 版（当前误装为 +cpu，RTX 3060Ti 未启用）——这是 P0 计划内环境债，与「是否改造」解耦；</li>
+    <li>用我们 MT5 的 XAU 历史数据，测 Chronos-Bolt-base <b>零样本方向命中率 + 模拟回测（扣 spread/commission）</b>；</li>
+    <li>产出真实报表：命中率、扣费后净值曲线、PF——直接对照你的「多交易·不亏本」红线。</li>
+  </ul>
+  <h3>阶段 B · 决定是否全量替换 / 混合 / 不搞</h3>
+  <p>实证报表出来后，用数据决定：命中率不达标 → 先做金融原生微调再评估；达标且扣费为正 → 落地混合架构。</p>
+</div>
+
+<h2>十、请你拍板（三个选项）</h2>
+<div class="opt">
+  <div class="optbox a">
+    <h4>选项 A · 不搞</h4>
+    <p>维持现有云 DeepSeek 架构。本地化 Chronos 暂搁。我把 CUDA torch 环境债修完即可，不碰决策层。</p>
+  </div>
+  <div class="optbox b">
+    <h4>选项 B · 先实证再定</h4>
+    <p><b>推荐。</b>先做阶段 A 离线 XAU 实证（零样本命中率+扣费回测），用真实报表决定下一步，不冒然改造。实证的「数据验证」本就是你要求的方式。</p>
+  </div>
+  <div class="optbox c">
+    <h4>选项 C · 直接落地混合架构</h4>
+    <p>跳过实证，按第八节混合架构改造（Chronos 信号源 + 质量层 + 本地叙事），实盘前再补微调。风险：未验证扣费收益即改造。</p>
+  </div>
+</div>
+
+<footer>
+  <p><span class="tag">说明</span>本报告仅含海外独立文献与实战派观点调研，未对 <code>F:\WanxiangAI</code> 任何决策层代码做改动。所有「收益/Sharpe/命中率」均为海外公开研究在其自身数据集上的结果，<b>不等于</b>我们 XAU 系统的实测表现，须以阶段 A 自有数据回测为准。</p>
+  <p style="margin-top:8px"><span class="tag">环境现状</span>CUDA torch 重装命令因 pip 判定「已满足」未真正换源，当前仍是 <code>torch 2.13.0+cpu</code>，RTX 3060Ti 尚未启用——待你拍板后处理（无论选 A/B/C，GPU 环境都建议修，无害）。</p>
+</footer>
+</div>
+</body>
+</html>

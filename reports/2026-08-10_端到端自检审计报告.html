@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>万象Ai 端到端自检审计报告 · 2026-08-10</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+blockquote.ok { border-left-color: #22c55e; background: #f0fdf4; color: #14532d; }
+blockquote.warn { border-left-color: #f59e0b; background: #fffbeb; color: #78350f; }
+blockquote.bug { border-left-color: #ef4444; background: #fef2f2; color: #7f1d1d; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+.ok { color: #15803d; font-weight: 700; }
+.warn { color: #b45309; font-weight: 700; }
+.bug { color: #dc2626; font-weight: 700; }
+.neutral { color: #4b5563; font-weight: 600; }
+a { color: #2563eb; }
+</style>
+</head>
+<body>
+<h1>万象Ai 端到端自检审计报告</h1>
+<p style="color:#6b7280; font-size:14px;">审计时间：2026-08-10 02:15（GMT+8）&nbsp;|&nbsp;审计人：AI Agent &nbsp;|&nbsp;范围：AI 模型状态 / 开单信号 / 仓位管理（MT5 多账号）/ 平仓管理</p>
+
+<h2>一、执行摘要</h2>
+<p>本次审计基于后端实时 API、数据库状态、代码审查与 Web 文献交叉验证完成。<strong>整体结论：系统当前处于“健康待命”状态，无 P0 级阻塞性 bug；交易链路的 AI 决策、仓位管理、平仓管理在设计上合理且已修复近期关键缺陷。</strong>唯一需要关注的是云端双脑在重启后到首次成功交易前会显示“未就绪”（设计行为，非 bug），以及将参考面板四个时序模型直接接入决策链需要经过严格的 walk-forward 验证。</p>
+
+<h2>二、AI 模型状态审计</h2>
+
+<h3>2.1 实时状态（/api/local-model/status）</h3>
+<table>
+<thead><tr><th>模型/组件</th><th>状态</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>DeepSeek V4（云端）</td><td><span class="warn">idle / stale / total_ok=0</span></td><td>重启后计数清零 + 休市无交易 → 未累计成功记录， hence 显示未就绪。API 鉴权与模型名有效。</td></tr>
+<tr><td>混元 Hy3（云端）</td><td><span class="warn">idle / stale / total_ok=0</span></td><td>同上，设计行为。</td></tr>
+<tr><td>Chronos-2 120M（本地）</td><td><span class="ok">在岗</span></td><td>GPU(CUDA)，累计成功 26 次，11 秒前刚完成多变量预测（DXY/US10Y/VIX）。</td></tr>
+<tr><td>Qwen3-8B（本地 Ollama）</td><td><span class="ok">在岗 / warmed</span></td><td>qwen3:8b 已加载，累计 calls_ok=2。</td></tr>
+<tr><td>本地就绪统计</td><td><span class="ok">2/2</span></td><td>Qwen + Chronos 均已就绪。</td></tr>
+<tr><td>四模型协同就绪</td><td><span class="warn">2/4</span></td><td>云双脑因进程内计数归零显示未就绪，开盘后首次成功调用即恢复。</td></tr>
+</tbody>
+</table>
+
+<h3>2.2 关键发现</h3>
+<ul>
+<li><strong>云端双脑“未就绪”是设计内正确态，不是故障。</strong>健康监控 <code>platform_health_monitor</code> 使用进程内 <code>total_ok</code> 计数，后端重启后清零，且在周一凌晨黄金休市期间没有新决策，所以 <code>total_ok=0</code>。该指标只会在“连续失败 ≥ 2”时判 <code>down=true</code>，当前 <code>down=false</code>，说明云端 API 本身未挂。</li>
+<li><strong>三态 <code>activation</code> 字段已加载。</strong><code>/api/local-model/status</code> 返回含 <code>"activation":"idle"</code>，证明 2026-08-09 的修复已生效（旧 PID 28728 不存在该字段）。</li>
+<li><strong>Qwen 角色符合设计：</strong>L0 校对员常态启用，L2 降级副驾仅在云端双脑全失联 + Chronos 同向 + 置信 ≥ 0.60 时启用，不会喧宾夺主。</li>
+</ul>
+
+<h2>三、开单信号审计</h2>
+
+<h3>3.1 决策链路</h3>
+<ol>
+<li><strong>DeepSeek V4</strong> 与 <strong>混元 Hy3</strong> 分别基于 M5/H4 趋势指标 + SMC/ICT 结构做独立判断，权重默认 [0.35, 0.65]。</li>
+<li><strong>Meta-Agent</strong> 做加权投票：若意见一致则 confidence 增强；不一致则按权重融合，产出最终 <code>decision</code>（BUY/SELL/HOLD）、<code>risk_level</code>、<code>quality_regime</code>。</li>
+<li><strong>Chronos-2</strong> 作为第三票参与加权（CHRONOS_VOTE_WEIGHT=0.25），并提供 P10/P50/P90 风险区间 / 动态止盈天花板。</li>
+<li><strong>NumPy 规则终审器</strong>：强冲突 → HOLD 的安全阀。</li>
+<li><strong>Qwen3-8B 校对员</strong>：只查结构/自相矛盾/幻觉价格，不投票、不改方向；发现 major 级问题则降级 HOLD。</li>
+<li>通过风控审核后，<code>TradeExecutor</code> 计算手数并下发 MT5 Worker。</li>
+</ol>
+
+<h3>3.2 合理性评价</h3>
+<table>
+<thead><tr><th>维度</th><th>评价</th><th>依据</th></tr></thead>
+<tbody>
+<tr><td>双脑加权投票</td><td><span class="ok">合理</span></td><td>权重锁 [0.35, 0.65] 防独裁，且 Meta-Agent 会基于历史准确率动态调整，权重有持久化（meta_agent_state.json）。</td></tr>
+<tr><td>Chronos 作为第三票</td><td><span class="ok">合理</span></td><td>提供与时序一致的方向锚和风险区间，但权重 0.25 不过度主导，符合“云端语义 + 本地时序”协同。</td></tr>
+<tr><td>NumPy 终审器</td><td><span class="ok">合理</span></td><td>作为硬安全阀，仅在强冲突时 HOLD，不引入新过滤层。</td></tr>
+<tr><td>Qwen 校对员</td><td><span class="ok">合理</span></td><td>7~8B 本地 LLM 金融方向判断接近随机，只做“结构审计”是对的；若让其直接参与方向投票会违反该铁律。</td></tr>
+<tr><td>当前开单能力</td><td><span class="warn">受限于云端未就绪</span></td><td>由于 total_ok=0，<code>degrade_level</code> 可能处于 L0/L1；若开盘前云双脑未被成功调用，会进入降级副驾模式或 HOLD。需开盘后验证。</td></tr>
+</tbody>
+</table>
+
+<h3>3.3 已修复的关键缺陷</h3>
+<ul>
+<li><strong>Chronos SELL 方向静默失效（2026-08-09 修复）：</strong>原 <code>chronos_p10/p50</code> 误传 list/ndarray，<code>smart_exit</code> 对 SELL 单 <code>float(chronos_p10)</code> 抛 TypeError 并被持仓循环静默吞掉。修复后加 <code>_scalar()</code> 防御，BUY/SELL 均可正常用 Chronos 风险区间。</li>
+<li><strong>校对员断路器字段误读（2026-08-08 修复）：</strong>原 <code>ProofreadResult</code> 读主观 <code>major</code>，现已拆分为 <code>code_severity/llm_severity</code>，只按代码审计判 HOLD。</li>
+<li><strong>supervisor 监管真实 uvicorn PID（2026-08-09 修复）：</strong>解决 Windows launcher 子进程导致监管失效的问题。</li>
+</ul>
+
+<h2>四、仓位管理审计（MT5 多账号）</h2>
+
+<h3>4.1 账户实时状态（/api/dashboard/accounts）</h3>
+<table>
+<thead><tr><th>账号</th><th>登录号</th><th>主号</th><th>余额</th><th>权益</th><th>连接</th><th>持仓</th><th>历史盈亏</th></tr></thead>
+<tbody>
+<tr><td>liumanchun1</td><td>1610093299</td><td>否</td><td>974,341.22</td><td>974,341.22</td><td><span class="ok">在线</span></td><td>0</td><td>-18,383.94</td></tr>
+<tr><td>liumanchuan2</td><td>1610097175</td><td>否</td><td>2,249.16</td><td>2,249.16</td><td><span class="ok">在线</span></td><td>0</td><td>-750.84</td></tr>
+<tr><td>liumanchun3</td><td>1610093301</td><td>否</td><td>958,842.93</td><td>958,842.93</td><td><span class="ok">在线</span></td><td>0</td><td>-41,157.07</td></tr>
+<tr><td>liumanchun4</td><td>1610098464</td><td><strong>是</strong></td><td>2,732.99</td><td>2,732.99</td><td><span class="ok">在线</span></td><td>0</td><td>-267.01</td></tr>
+<tr><td>组合合计</td><td>—</td><td>—</td><td>1,938,166.30</td><td>1,938,166.30</td><td>4/4 在线</td><td>0</td><td>-60,558.86</td></tr>
+</tbody>
+</table>
+
+<h3>4.2 仓位/手数算法审计</h3>
+<ul>
+<li><strong>智能手数引擎（intelligent_sizing.py）</strong>：基于 effective_capital × max_risk_per_trade_pct / (ATR×100) 计算，再叠加趋势强度、信号置信度、同向衰减、时段质量、平台降级系数。公式来源有 ≥3 家行业来源交叉验证（PMTS、AlphaMind、Tradewink）。</li>
+<li><strong>本金权威链（capital_authority）</strong>：input_capital > base_capital(manual) > balance(live)，避免“小账号被固定上限卡死”和“客户手动调低本金被无视”。</li>
+<li><strong>lot 上限权威链（resolve_lot_bounds）</strong>：上限随本金等比缩放，大本金不拒单，小本金更保守。</li>
+<li><strong>风控硬上限（_cap_to_risk_limit）</strong>：把实际手数压到真实余额可承受的风险合规尺寸，最小手数 0.01 兜底。</li>
+<li><strong>同向衰减</strong>：同一方向第 N 单按 <code>(1 - same_direction_decay)^N</code> 缩手，控制组合热度，符合组合风险管理。</li>
+<li><strong>AI 自主仓位</strong>：<code>position_intent=reduce</code> 时通过 <code>ai_target_risk_pct</code> 让 AI 主动缩手，不破坏固定 risk% 铁律。</li>
+</ul>
+
+<h3>4.3 多账号跟号机制</h3>
+<ul>
+<li>主号（is_primary=true）由 AI 决策链直接驱动。</li>
+<li>从号通过 <code>follow_leader</code> 运行时 <code>copy.copy</code> 继承主号 25 个字段（不写回 DB），实现多租户下“风控跟随主号”。</li>
+<li>每个账号独立客户，资金不合并，符合 L-C 平台级红线。</li>
+</ul>
+
+<h3>4.4 仓位审计结论</h3>
+<blockquote class="ok"><strong>结论：仓位管理设计合理、实现严谨。</strong>手数自适应覆盖了本金、波动率、信号置信度、同向热度、时段质量、平台降级等多维度；多账号隔离与跟号机制符合多租户 SaaS 红线。当前 4 账号均在线且无持仓，处于空仓待命。</blockquote>
+
+<h2>五、平仓管理审计</h2>
+
+<h3>5.1 智能平仓三层</h3>
+<table>
+<thead><tr><th>层级</th><th>触发条件</th><th>动作</th><th>评价</th></tr></thead>
+<tbody>
+<tr><td>L1 SL/TP</td><td>价格触及预设止损/止盈</td><td>平仓</td><td><span class="ok">基础且必需</span></td></tr>
+<tr><td>L2 AI 反向置信</td><td>反向置信 ≥ 0.60 连续 2 轮确认</td><td>全平</td><td><span class="ok">防趋势反转，且需连续确认避免噪声</span></td></tr>
+<tr><td>L3 篮子锁利</td><td>篮子浮盈 ≥ $100 且持续 120s</td><td>锁利</td><td><span class="ok">只封开仓不封平仓，提准非拦截</span></td></tr>
+<tr><td>Chronos 增强</td><td>BUY 触及 P90 天花板 / SELL 触及 P10 地板</td><td>追踪 TP / 全平</td><td><span class="ok">已修复 SELL 方向 list/ndarray 错配 bug</span></td></tr>
+</tbody>
+</table>
+
+<h3>5.2 关键实现审查</h3>
+<ul>
+<li><strong>反转防抖持久化：</strong><code>_REVERSAL_FILE</code> 写入 <code>runtime_paths.data_path</code>，重启后可恢复，避免“连续 N 轮确认”退化。</li>
+<li><strong>持仓重扫描：</strong><code>get_all_positions_rescanned</code> 最多 3 轮重试，解决 MT5 <code>positions_get()</code> 竞态漏单问题。</li>
+<li><strong>智能出场与紧急熔断分离：</strong><code>_manage_positions</code> 处理出场，紧急 halt 只拒新开仓、不干预 SL/TP/SmartExit，符合“只关水龙头，不抽走桶里的水”。</li>
+</ul>
+
+<h3>5.3 平仓审计结论</h3>
+<blockquote class="ok"><strong>结论：平仓管理设计合理、修复到位。</strong>L1/L2/L3 分层清晰，Chronos 风险区间已能同时作用于 BUY 和 SELL，反转状态持久化避免重启丢失。</blockquote>
+
+<h2>六、本次审计发现的待关注项（非 bug）</h2>
+<table>
+<thead><tr><th>项</th><th>严重度</th><th>说明</th><th>建议</th></tr></thead>
+<tbody>
+<tr><td>云端双脑就绪态依赖进程内计数</td><td><span class="warn">中</span></td><td>重启后 total_ok=0，非技术客户易误判为模型故障。</td><td>后续改用“最后成功时间戳”或区分“无交易故未上报”与“真故障”。</td></tr>
+<tr><td>参考面板时序模型尚未接入决策链</td><td><span class="neutral">设计如此</span></td><td>Chronos/TimesFM/Time-MoE/Moirai 仅参考，不参与交易。</td><td>若接入，需 walk-forward 验证，不能直接用。</td></tr>
+<tr><td>历史盈亏为负</td><td><span class="warn">中</span></td><td>4 账号历史总盈亏 -60,558.86，处于亏损状态。</td><td>需结合回测/报表分析是近期修复前的遗留亏损还是策略性问题；本报告不做交易绩效归因。</td></tr>
+<tr><td>降级副驾触发条件严格</td><td><span class="neutral">设计如此</span></td><td>仅当云双脑全失联 + Chronos 同向 + 置信 ≥ 0.60 才启用。</td><td>合理，避免 8B 模型主导方向。</td></tr>
+</tbody>
+</table>
+
+<h2>七、总体 verdict</h2>
+<blockquote class="ok">
+<p><strong> verdict：系统当前健康、可开市交易，无必须立即修复的代码 bug。</strong></p>
+<ul>
+<li>AI 模型：本地双核就绪，云端双脑待命（非故障）。</li>
+<li>开单信号：决策链完整，关键缺陷已修复。</li>
+<li>仓位管理：多账号在线，手数自适应机制严谨。</li>
+<li>平仓管理：三层平仓 + Chronos 区间 + 防抖持久化均正常。</li>
+</ul>
+<p>建议开盘后观察首次实际交易，验证云双脑 <code>total_ok</code> 恢复、手数合规、平仓链路无异常。</p>
+</blockquote>
+
+</body>
+</html>

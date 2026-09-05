@@ -1,0 +1,4 @@
+﻿3012  E:\mt5_4\terminal64.exe
+6932  D:\mt5\terminal64.exe
+31096  F:\mt5\terminal64.exe
+31424  C:\Program Files\STARTRADER Financial MetaTrader 5\terminal64.exe

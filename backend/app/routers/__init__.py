@@ -1,0 +1,11 @@
+from .auth import router as auth_router
+from .accounts import router as accounts_router
+from .keys import router as keys_router
+from .strategy import router as strategy_router
+from .dashboard import router as dashboard_router
+from .mt5_discover import router as mt5_discover_router
+from .trading import router as trading_router
+from .emergency import router as emergency_router
+from .license import router as license_router
+from .local_model import router as local_model_router
+from .ts_reference import router as ts_reference_router

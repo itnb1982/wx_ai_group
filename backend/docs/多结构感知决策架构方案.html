@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai · 多结构感知决策架构方案</h1>
+<blockquote>目标：让 AI 大脑自主从 MT5 多周期趋势数据做<strong>多结构感知</strong>，据此产出正确的开单信号、仓位管理、平仓时机。&lt;br&gt;设计铁律（沿用）：<strong>提准非拦截</strong>——结构感知只作增强上下文（加法），绝不做成 GO/NO-GO 闸门；守住「交易笔数不腰斩 / 净利不降 / PF&gt;1」及格线。</blockquote>
+<blockquote>⚠️ <strong>2026-08-13 实施修正（重要）</strong>：落地的第一步代码探查发现——本方案第三节设想的「新增 <code>MarketStructureAnalyzer</code>」<strong>与既有代码严重重复</strong>。系统早已实装并接入决策链的结构感知层：&lt;br&gt;- <code>services/smc_features.py</code>（OB/FVG/BOS/流动性扫荡/溢价折扣区，原 <code>compute_smc</code>）&lt;br&gt;- <code>services/regime_detect.py</code>（三周期体制/方向偏置/延伸度/末端风险，原 <code>detect_regime</code>）&lt;br&gt;- 二者由 <code>core/market_analyzer.py</code> 每周期计算并注入 <code>snapshot.smc_features</code> / <code>snapshot.regime</code>，且<strong>开单决策已消费</strong>：<code>meta_agent.adjudicate</code> 用 regime 调权 + SMC 订单流锚翻逆势单、LLM 提示词含 smc_features、<code>trade_executor</code> 用 global_bias 做平仓「不利结构」门控。&lt;br&gt;&lt;br&gt;因此 Phase 1 <strong>不再新建重复模块</strong>，改为在既有 <code>smc_features</code> 上做<strong>结构锚定闭环（已落地，见下）</strong>：&lt;br&gt;1. <code>smc_features.derive_structure_anchors()</code>：从 H1/M15 摆动点推 <code>sl_anchor</code>（结构失效位）/ <code>tp_anchor</code>（下一结构目标），存 <code>snapshot.structure_anchors</code>（market_analyzer 注入）。&lt;br&gt;2. <code>smart_exit.compute_initial_sl_tp()</code>：消费结构锚——SL 挂在结构失效位（跌破=结构破=止损，不扛假突破），TP 延伸到下一结构目标；<strong>ATR 兜底 + MIN_SL_DIST 下限 + max_sl_atr_mult(默认6×ATR) 上限</strong>，无结构时零行为变化。&lt;br&gt;3. <code>trade_executor</code> 开仓调用处传入结构锚。&lt;br&gt;&lt;br&gt;实测（合成 K 线）：结构锚推导正确、结构 SL 生效、ATR 兜底/方向校验/过远 clamp 全部按预期。剩余缺口见 Phase 2/3（仓位引擎消费结构止损距、平仓时机结构锚增强），均为加法非拦截。</blockquote>
+<h2>一、核心洞察（来自你那两张 H4 图）</h2>
+<p>同样的"突破前高"形态：</p>
+<ul><li><strong>图1（趋势体制）</strong>= 真突破、延续 → 该跟。</li><li><strong>图2（震荡/派发体制）</strong>= 假突破、多头陷阱 → 该躲。</li></ul>
+<p>结论：大脑缺的不是"识别突破"的能力，而是<strong>识别这个突破发生在什么结构、什么体制里</strong>的能力。这正是多结构感知要补的环。</p>
+<h2>二、架构总览（七层闭环，见架构图）</h2>
+<ol><li><strong>MT5 多周期数据接入</strong> — H4/H1/M15/M5 的 OHLCV + 指标(MA/RSI/ATR/布林) + 量能；由 <code>ts_reference_service</code> 单例只读聚合，零额外开销。</li><li><strong>结构感知层（双通道·加法增强）</strong> — 规则特征 + 视觉 VLM 双路融合。</li><li><strong>体制感知 Regime</strong> — 趋势/震荡/派发 + 价格延伸度 Z-score。</li><li><strong>AI 大脑融合裁决（开单信号）</strong> — 方向投票 + 结构上下文 → 开单 + 校准置信。</li><li><strong>仓位管理</strong> — Chronos 风险区间 + ATR 止损距 + 结构位置 → 自适应手数。</li><li><strong>平仓时机</strong> — 结构失效 CHoCH + 流动性池 TP + 三层智能平仓。</li><li><strong>闭环归因与在线进化</strong> — <code>brain_audit</code> 按结构标签归因，反馈回感知/体制/决策。</li></ol>
+<h2>三、结构感知层（最高杠杆，先落地）</h2>
+<p>新增 <code>MarketStructureAnalyzer</code>，每根 K 线收盘后跑一次（H4 低频，成本可忽略）：</p>
+<h3>3.1 规则特征通道（确定性、可回测）</h3>
+<ul><li><strong>摆动点</strong>：swing high/low（N 根窗口），构成结构骨架。</li><li><strong>BOS / CHoCH</strong>（ICT）：结构突破 / 特征转变，判定趋势方向切换点。</li><li><strong>订单块 Order Block / FVG 公允价值缺口</strong>：机构留下的足迹。</li><li><strong>流动性池 Liquidity Pool</strong>：相等高低点（Equal Highs/Lows），是 TP 的自然目标、也是扫损陷阱。</li><li><strong>价格延伸度</strong>：<code>Z = (price - MA)/ATR</code>，区分"健康贴均线" vs "趋势末端飞离"。</li><li><strong>RSI 极值 + 量能背离</strong>：识别超买超卖与动能衰竭。</li><li>输出 <code>StructureContext</code>：<code>{regime, structure_type, location(突破/回踩/衰竭), liquidity_pools[], sl_anchor, tp_anchor, extension_z, rsi_extreme}</code>。</li></ul>
+<h3>3.2 视觉通道（VLM 直接读图，你 7·28 定的主路径）</h3>
+<ul><li>渲染 H4/H1 蜡烛图（叠加 MA/结构线/流动性池标注）为图片。</li><li>视觉模型在独立模型服务内直接识别："这是趋势中的回踩买入，还是震荡区的假突破？"</li><li><strong>关键约束</strong>：视觉结论只作<strong>增强信号</strong>融合进方向投票提准确率，<strong>绝不做成闸门</strong>（拦截=砍交易=利润腰斩，等同旧铁律"提准非拦截"）。</li><li>验证：历史图表渲染→视觉标注→与当前大脑对比回测，评判仍为净利/交易数/PF&gt;1。</li></ul>
+<h2>四、三个核心决策的改造点</h2>
+<h3>4.1 开单信号（接 meta_agent.adjudicate）</h3>
+<ul><li>现有：deepseek + hunyuan + 融合票 + Chronos 出 <code>final_decision</code> / <code>final_confidence</code>。</li><li>改造：<code>StructureContext</code> 作为<strong>上下文</strong>注入裁决——</li><li>结构确认方向（趋势中回踩订单块 + CHoCH 向上）→ 置信<strong>提权</strong>（加法）。</li><li>结构矛盾（震荡区突破进流动性池）→ 置信<strong>降权</strong>（非拦截，仅降权，守交易笔数）。</li><li>复用现有 <code>DebateDecision</code> 结构，新增 <code>structure_tag</code> 字段，不破坏现有闸门。</li></ul>
+<h3>4.2 仓位管理（接 Chronos + 手数引擎）</h3>
+<ul><li>现有：Chronos-2 出风险区间；手数引擎按风险%。</li><li>改造：止损距离<strong>不再用固定 ATR 倍数</strong>，改用 <code>StructureContext.sl_anchor</code>（结构失效位，如跌破 swing low / CHoCH 翻转）算真实止损距 → 手数 = 风险金额 / 止损距。</li><li>结构末端延伸(Z 大)时自动<strong>缩小手数</strong>（风险相同但距离远→单子小），避免"接飞刀"重仓。</li><li><code>CONFIDENCE_CALIBRATION_AFFECTS_SIZING</code> 维持默认关，待 walk-forward 验证净盈利提升后再开。</li></ul>
+<h3>4.3 平仓时机（接三层智能平仓 + 结构）</h3>
+<ul><li>现有 L1 SL/TP、L2 反向置信、L3 篮子锁利。</li><li>改造：</li><li><strong>SL 锚定结构失效位</strong>（<code>sl_anchor</code>），不是拍脑袋点数。</li><li><strong>TP 锚定下一个流动性池</strong>（<code>tp_anchor</code>），吃机构扫流动性那段。</li><li>趋势中：价格贴结构上行→移动 SL 到最近结构位<strong>追踪锁利</strong>（不提前离场，让利润奔跑）。</li><li>震荡中：到流动性池即平，不贪突破。</li></ul>
+<h2>五、闭环进化（接 brain_audit）</h2>
+<ul><li>每笔成交在 <code>brain_audit</code> 归因时带上 <code>structure_tag</code> + <code>regime</code>。</li><li>统计"趋势体制下单" vs "震荡体制假突破单"的胜率/净利，让大脑<strong>知道自己在哪种结构挣钱、哪种亏钱</strong>，在线调整结构权重。</li><li>这正是你定的"提准非拦截"的闭环验证：只加对净盈利有帮助的结构增强。</li></ul>
+<h2>六、分阶段实施计划</h2>
+<ul><li><strong>Phase 1（地基·已落地 2026-08-13）</strong>：在既有 <code>smc_features</code> 上加 <code>derive_structure_anchors</code> + <code>market_analyzer</code> 注入 <code>snapshot.structure_anchors</code> + <code>compute_initial_sl_tp</code> 消费结构锚（SL 锚结构失效位/TP 锚结构目标，ATR 兜底零行为变化）。<strong>不新建重复模块</strong>。✅</li><li><strong>Phase 2（开单增强）</strong>：<code>StructureContext</code> 注入 <code>meta_agent.adjudicate</code> 作提权/降权上下文（非闸门）；视觉 VLM 通道并行跑、只记录不干预。</li><li><strong>Phase 3（仓位/平仓）</strong>：SL/TP 锚定结构位；手数按结构止损距；趋势追踪锁利。</li><li><strong>Phase 4（闭环）</strong>：<code>brain_audit</code> 按结构标签归因，在线调权。</li></ul>
+<h2>七、验收标准（不可妥协）</h2>
+<ul><li>交易笔数不腰斩、净利润不下降、PF 保持 &gt;1（任一不满足即回退）。</li><li>结构感知全程零闸门化：任何"拦截"改动须 walk-forward 验证净盈利提升。</li><li>视觉通道延迟/成本可控（H4 低频，预算内）。</li></ul></body></html>

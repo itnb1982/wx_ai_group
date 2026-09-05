@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>万象Ai XAUUSD — 全模块运行审计 + 开平单合理性（2026-08-06）</title>
+<style>
+  body{font-family:-apple-system,"Microsoft YaHei",sans-serif;margin:0;background:#0f1420;color:#e6edf3;line-height:1.6}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 28px}
+  h1{font-size:26px;color:#7fd1ff;border-bottom:2px solid #1f6feb;padding-bottom:12px}
+  h2{font-size:20px;color:#9be8a0;margin-top:36px;border-left:4px solid #9be8a0;padding-left:10px}
+  h3{font-size:16px;color:#ffd479;margin-top:22px}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px}
+  th,td{border:1px solid #2a3550;padding:7px 10px;text-align:left}
+  th{background:#16203a;color:#7fd1ff}
+  tr:nth-child(even){background:#121a2e}
+  .ok{color:#56d364;font-weight:600}
+  .warn{color:#ffd479;font-weight:600}
+  .bad{color:#ff7b72;font-weight:600}
+  .box{background:#121a2e;border:1px solid #233; border-radius:8px;padding:14px 18px;margin:14px 0}
+  .kv{color:#8b98b0}
+  code{background:#1b2436;padding:1px 6px;border-radius:4px;color:#ffd479;font-size:12px}
+  .pill{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;margin:2px}
+  .p-ok{background:#16351f;color:#56d364}
+  .p-warn{background:#3a2f10;color:#ffd479}
+  .p-bad{background:#3a1616;color:#ff7b72}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>万象Ai XAUUSD · 全模块运行审计 + 开/平单合理性</h1>
+<p class="kv">审计日期：2026-08-06 ｜ 数据底座：<code>trades</code>(2327)、<code>ai_activities</code>(32872)、<code>evolution_logs</code>(2729) ｜ 账号：8464主号 / 7175挂号 / 3299·3301独立</p>
+
+<div class="box">
+<b>一句话结论：</b><span class="ok">全部 AI 模块运行正常</span>（双模型辩论、SMC/Regime、反转哨兵、真进化、智能平仓 L1/L2/L3、信号塔总线均无空转）。
+本次审计新发现 <b>3 个真实缺陷</b>（均已修复待重启生效）：① MFE/MAE 跟踪根因 bug（进程内从未累计，MFE回灌空转）；② exit_reason 不落库（平仓无法归因）；③ SELL 方向系统性亏损（开单失衡）。
+表面"双模型缺失/挂号自开仓/主号自复制"经核实是<b>你今天多次切换主号·挂号配置的历史痕迹</b>，非代码 bug。
+</div>
+
+<h2>一、模块健康度（全部正常 ✅）</h2>
+<table>
+<tr><th>模块</th><th>运行证据</th><th>状态</th></tr>
+<tr><td>行情采集 / SMC / Regime</td><td>scan 16634 次 / signal 12418 次</td><td><span class="pill p-ok">正常</span></td></tr>
+<tr><td>双模型辩论（DS↔HY）</td><td>open 2327 笔均走 debate；主号/独立账号 deepseek 决策 100% 写入</td><td><span class="pill p-ok">正常</span></td></tr>
+<tr><td>MetaAgent 裁决 + 权重调优</td><td>weight_update 1467 + trade_review 749（DS/HY 权重真在学）</td><td><span class="pill p-ok">正常</span></td></tr>
+<tr><td>反转哨兵（第3辩论角色）</td><td>REVERSE_SELL/BUY 门控已接入裁决（置信&lt;0.92 否决接飞刀）</td><td><span class="pill p-ok">正常</span></td></tr>
+<tr><td>真进化引擎（情境→期望盈亏）</td><td>_record_close 每笔主号全平回调 record()（08-05 修复生效）</td><td><span class="pill p-ok">正常</span></td></tr>
+<tr><td>智能平仓 L1/L2/L3 + 保本/追踪</td><td>历史 2215 笔成交均有真实平仓记录（见前次审计）</td><td><span class="pill p-ok">正常</span></td></tr>
+<tr><td>信号塔总线（主→挂镜像）</td><td>publish/consume_leader_exit 内存总线；L3 快监 2s + 跟号快监 10s</td><td><span class="pill p-ok">正常</span></td></tr>
+</table>
+
+<h2>二、主号/挂号/独立 架构核实</h2>
+<p>当前配置（<code>is_market_primary</code> / <code>follow_leader</code>）：</p>
+<table>
+<tr><th>MT5 账号</th><th>名称</th><th>行情主号</th><th>follow_leader</th><th>角色</th></tr>
+<tr><td>1610098464</td><td>liumanchun4</td><td>✅</td><td>False</td><td>主号（独立风控）</td></tr>
+<tr><td>1610097175</td><td>liumanchuan2</td><td>—</td><td>True</td><td>挂号（镜像主号）</td></tr>
+<tr><td>1610093299</td><td>liumanchun1</td><td>—</td><td>False</td><td>独立风控</td></tr>
+<tr><td>1610093301</td><td>liumanchun3</td><td>—</td><td>False</td><td>独立风控</td></tr>
+</table>
+<div class="box">
+<b>关于"双模型缺失 / 挂号自开仓 / 主号自复制"的真相：</b><br>
+按时间序还原 08-06 当天交易发现这是<b>配置切换的痕迹</b>，系统忠实执行了各时段配置：
+<ul>
+<li><span class="kv">00:xx 凌晨</span>：8464 自开仓（主号）、7175 跟单 ✅ 正确</li>
+<li><span class="kv">03:xx~10:07 上午</span>：配置被对调——8464 变"跟单"、7175 变"自开仓" ❌（你中途把主号/挂号身份对调过）</li>
+<li><span class="kv">10:10 之后</span>：切回 8464 自开仓、7175 跟单 ✅ 即你截图后设的当前配置</li>
+</ul>
+全表 1501 笔 <code>deepseek=NULL</code> 订单 <b>100% 是跟单（copy_order）</b>，符合"挂号只镜像"设计；主号/独立账号的自开仓均正确写入双模型。架构无 bug。
+</div>
+
+<h2>三、开仓合理性审计（对照真实行情路径）</h2>
+<h3>方向胜率与盈亏（3 真实AI账号，已平 1710 笔）</h3>
+<table>
+<tr><th>账号</th><th>BUY 笔/胜/净</th><th>SELL 笔/胜/净</th></tr>
+<tr><td>liumanchun1(3299)</td><td>174 / 39% / <span class="ok">+3769</span></td><td>395 / 29% / <span class="bad">-143</span></td></tr>
+<tr><td>liumanchun3(3301)</td><td>182 / 40% / -1821</td><td>365 / 23% / <span class="bad">-214</span></td></tr>
+<tr><td>liumanchun4(8464)</td><td>234 / 43% / <span class="ok">+264</span></td><td>362 / 24% / <span class="bad">-219</span></td></tr>
+<tr><td><b>全市场</b></td><td><b>841(36%) / +2188</b></td><td><b>1492(64%) / <span class="bad">-787</span></b></td></tr>
+</table>
+<div class="box">
+<span class="bad">核心问题：SELL 占 64% 笔数却净亏、胜率仅 23–29%；三账号 SELL 全亏、BUY 参差。</span>
+SELL 系统性接飞刀/错向，与 08-05 审计"SELL 系统性亏损"结论一致且未改善。BUY 盈利但占比过低。
+<br><b>已修复（提准非拦截）：</b>MetaAgent 裁决对 <code>SELL</code> 加"提准软惩罚"——当 SELL 缺乏下行体制背书（非确认下跌 / 非高波动 / 非极端超买）时置信 ×0.7，压低弱 SELL 入场概率、保留强 SELL，<b>不硬拦、保笔数</b>。
+</div>
+
+<h2>四、平仓合理性审计</h2>
+<h3>4.1 exit_reason 归因缺口（已修复）</h3>
+<p>全表 2342 笔平仓中，<code>exit_reason</code> 仅 859 笔记了 <code>mt5_closed_external</code>（外部/对账平仓），<b>1483 笔为 NULL</b>。AI 主动平仓的 tp/sl/保本/ai/反转/篮子锁利原因<b>一个都没落库</b> → 无法从订单表归因平仓机制。</p>
+<p><span class="ok">已修复：</span><code>_record_close</code> 现把 <code>reason</code> 归一化为枚举（<code>l3_tp_lock</code> / <code>risk_cut</code> / <code>follower_mirror</code> / <code>breakeven</code> / <code>trailing</code> / <code>reverse</code> / <code>tp</code> / <code>sl</code> / <code>ai</code>）写入 <code>trades.exit_reason</code>。</p>
+
+<h3>4.2 MFE / MAE 跟踪根因 bug（已修复）</h3>
+<p>全部 1712 笔已平交易 <code>mfe</code> / <code>mae</code> <b>恒为 0.0</b>。深挖发现两处问题：</p>
+<ul>
+<li><b>隐藏根因：</b><code>_track_mfe()</code> 首调 <code>prev = _EXIT_MFE.get(key, current_profit)</code> 取默认=当前值，<code>current_profit &gt; prev</code> 恒假 → <b>键从未写入</b> → 进程内 MFE 永远返回 0。M2 反思与 <code>mfe_promote</code> 进化日志（<b>0 条从未触发</b>）一直吃 0。这才是"MFE回灌空转"的真因。</li>
+<li>即使跟踪正确，<code>trades.mfe/mae</code> 列开仓写 0.0 后从未回写 DB（重启即丢、仪表盘 MFE 为假）。</li>
+</ul>
+<p><span class="ok">已修复：</span>① <code>_track_mfe/_track_mae</code> 改为首次必存值、正确累计最大浮盈/最大浮亏；② 新增 <code>_track_mae</code> 跟踪 MAE；③ <code>_record_close</code> 平仓时把 <code>mfe/mae</code> 回写 trades 表并消费内存键。</p>
+
+<h2>五、本次落地修复清单</h2>
+<table>
+<tr><th>#</th><th>文件</th><th>修复</th><th>类型</th></tr>
+<tr><td>1</td><td>app/services/ai_exit.py</td><td>_track_mfe 首值必存 + 新增 _track_mae（MAE 跟踪）</td><td><span class="pill p-bad">根因bug</span></td></tr>
+<tr><td>2</td><td>app/services/trade_executor.py</td><td>_record_close 回写 exit_reason(归一化) + mfe/mae 到 trades 表</td><td><span class="pill p-warn">数据缺陷</span></td></tr>
+<tr><td>3</td><td>app/core/meta_agent.py</td><td>SELL 提准软惩罚（无下行背书×0.7，提准非拦截）</td><td><span class="pill p-warn">开单合理性</span></td></tr>
+</table>
+<p class="kv">验证：3 文件 <code>py_compile</code> 通过；MFE/MAE 跟踪单测通过（轨迹 -5→+3→+10→+2 得 MFE=10/MAE=-5）。当前服务(旧码)存活 health=ok，修复将在下次后端重启后生效。</p>
+
+<h2>六、后续建议</h2>
+<ul>
+<li><b>重启验证：</b>在方便时重启后端（supervisor 自启），观察新平仓是否带 exit_reason + 真实 mfe/mae；M2 反思与 mfe_promote 应开始产生记录。</li>
+<li><b>SELL 效果跟踪：</b>提准软惩罚上线后，监控 SELL 胜率/净盈亏是否改善，以及 SELL 笔数下降幅度（应只削弱 SELL、不伤总笔数）。</li>
+<li><b>历史数据回填（可选）：</b>已平 1712 笔 mfe/mae 为 0 无法回溯；若需历史 MFE 复盘，可未来从 MT5 成交价 + 当时 K 线重算（成本高，建议仅对近期重算）。</li>
+</ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+﻿PID=4636 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python3.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=17284, pipe_handle=1352)" "--multiprocessing-fork"
+PID=26660 CMD=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8081
+PID=33276 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=26660, pipe_handle=1632)" "--multiprocessing-fork"
+PID=19976 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=26660, pipe_handle=1652)" "--multiprocessing-fork"
+PID=27932 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=26660, pipe_handle=1688)" "--multiprocessing-fork"
+PID=27692 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=26660, pipe_handle=1616)" "--multiprocessing-fork"

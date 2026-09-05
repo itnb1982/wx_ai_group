@@ -1,0 +1,1 @@
+{"tag": "bad", "ts": 1786204659.1131315, "seq": 0, "args": [], "kwargs": {"o": {"__repr__": "<test_parity_smart_exit.test_recorder_never_raises_on_bad_payload.<locals>.Weird object at 0x000001DC1828E580>"}}, "result": {"ok": 1}, "meta": {}}

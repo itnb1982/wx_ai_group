@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meta-Labeling·LSTM/TCN 融合 DeepSeek 方案 v3</title>
+<style>
+:root {
+  --bg: #0b0f17;
+  --panel: #121926;
+  --panel2: #1a2332;
+  --text: #e6edf7;
+  --text2: #9fb1c7;
+  --accent: #00d4ff;
+  --accent2: #7c3aed;
+  --buy: #ff4d4f;
+  --sell: #52c41a;
+  --warn: #faad14;
+  --border: #1f2d3d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.7;
+  padding: 40px 0;
+}
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: var(--text2);
+  font-size: 16px;
+  margin-bottom: 28px;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+.panel h2 {
+  margin-top: 0;
+  color: var(--accent);
+  font-size: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+.panel h3 {
+  color: var(--text);
+  font-size: 17px;
+  margin-top: 22px;
+  margin-bottom: 10px;
+}
+.panel p { margin: 10px 0; color: var(--text2); }
+.highlight {
+  background: rgba(0, 212, 255, 0.08);
+  border-left: 4px solid var(--accent);
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+.warnbox {
+  background: rgba(250, 173, 20, 0.08);
+  border-left: 4px solid var(--warn);
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+.dangerbox {
+  background: rgba(255, 77, 79, 0.08);
+  border-left: 4px solid var(--buy);
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 6px;
+  background: var(--panel2);
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+.tag.buy { color: var(--buy); }
+.tag.sell { color: var(--sell); }
+.tag.warn { color: var(--warn); }
+ul { color: var(--text2); padding-left: 20px; }
+li { margin: 8px 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  text-align: left;
+}
+th {
+  background: var(--panel2);
+  color: var(--accent);
+  font-weight: 600;
+}
+.arch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0;
+}
+.arch-box {
+  flex: 1;
+  min-width: 220px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+.arch-box h4 {
+  margin: 0 0 8px 0;
+  color: var(--accent);
+  font-size: 15px;
+}
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.flow-box {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text2);
+}
+.flow-arrow {
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: bold;
+}
+.option {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 14px 0;
+}
+.option h4 { margin: 0 0 8px 0; color: var(--accent); }
+.quote {
+  color: #a0aec0;
+  font-style: italic;
+  border-left: 3px solid var(--accent2);
+  padding-left: 14px;
+  margin: 12px 0;
+}
+.footer {
+  text-align: center;
+  color: var(--text2);
+  font-size: 13px;
+  margin-top: 40px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="title">Meta-Labeling·LSTM/TCN 融合 DeepSeek 方案 v3</div>
+  <div class="subtitle">基于你截图的实锤：本地信号质量层约束语义大脑，防止"山顶固执买多"</div>
+
+  <div class="panel">
+    <h2>一、截图告诉我们什么</h2>
+    <p>你发来的图是一个非常有价值的<strong>反事实证据</strong>：</p>
+    <ul>
+      <li><span class="tag sell">MT5 端</span> 8月6日 18:15:26，XAUUSD M15，系统在 <strong>4263.72</strong> 开 BUY 0.01 手，SL 4243.69 / TP 4293.20，<strong>浮亏 -14.15</strong>。</li>
+      <li><span class="tag buy">Meta-Labeling·LSTM/TCN</span> 给出 <strong>76% SHORT(SELL)</strong>，"强信号：建议优先执行"，14 个内部维度一致看空、0 个反对。</li>
+      <li><span class="tag warn">结果</span> 本地模型识别出"高位末端/反转"，DeepSeek 语义大脑却固执买多，立刻亏钱。</li>
+    </ul>
+    <div class="highlight">
+      <strong>核心结论</strong>：DeepSeek 作为"叙事/语义大脑"会在价格延伸高位产生<strong>追涨幻觉</strong>；本地序列模型（LSTM/TCN）作为"模式识别陪审团"，能捕捉这种统计上显著的反转节点。两者必须融合，而不是互相替代。
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>二、海外调研核心结论（≥3源交叉验证）</h2>
+    <p>我重新去海外拉了 Meta-Labeling、LLM+本地模型融合、XAU 序列建模的最新实证，关键发现如下：</p>
+    <table>
+      <tr><th>来源/类型</th><th>关键结论</th><th>对我们的意义</th></tr>
+      <tr><td>López de Prado《Advances in Financial ML》+ paperswithbacktest</td><td>Meta-Labeling 的核心不是"预测方向"，而是<strong>"预测主模型的信号会不会赚钱"</strong>；通过仓位缩放（Kelly/线性/Sigmoid）而非硬拦截，可以在不腰斩交易数的前提下提升 PF。</td><td>我们要做的不是"本地模型说 SELL 就禁 BUY"，而是让本地模型输出"DeepSeek 这次 BUY 的质量分"。</td></tr>
+      <tr><td>mental-momentum.ai / mizar.com</td><td>主模型要高 recall（不放过机会），次模型要高 precision（识别假阳性）；<strong>分离"方向"与"仓位"</strong>是避免过拟合的关键。</td><td>LSTM/TCN 主模型允许高 recall，Meta-Labeling 次模型只负责给 DeepSeek 信号"打质量分"。</td></tr>
+      <tr><td>Springer INFUS 2025 / MDPI 2025</td><td>XAUUSD 预测上，<strong>LSTM-Transformer 混合架构</strong>可达 R²=0.96、MAPE≈3.18%；TCN/CNN-LSTM 也能到 MAPE 3.65%-4.78%。</td><td>用我们自己的 MT5 历史数据训练本地小模型，方向/质量信号足够可用。</td></tr>
+      <tr><td>arXiv 2511.18578 / 2412.09394 / Jonathan Kinlay</td><td>通用时序基础模型（Chronos）零样本直接当信号，<strong>扣费后经济价值为负</strong>；必须做金融原生预训练/因子增强才有意义。</td><td>Chronos 不能 100% 替代 DeepSeek，但可作为本地集成成员之一。</td></tr>
+      <tr><td>TrustTrade / mosaicmeshai / quantoptimus</td><td>LLM 交易失败最常见根因是<strong>提示词内矛盾信号未对齐</strong>；多智能体分歧应作为风险信号，而非简单投票。</td><td>当 DeepSeek 方向与本地强信号相反时，必须触发"强制解释"机制。</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>三、方案核心思想：Meta-Labeling 2.0 + 强制解释机制</h2>
+    <p>传统 Meta-Labeling 是"主模型定方向 + 次模型二值过滤"，容易做成硬过滤、砍交易数。<br>
+    我们升级为 <strong>Meta-Labeling 2.0</strong>：</p>
+    <div class="arch">
+      <div class="arch-box">
+        <h4>1. 方向层（DeepSeek）</h4>
+        输出 BUY/SELL/HOLD + 置信度 + 叙事理由（SMC/Regime/新闻/情绪）。<br>
+        <span class="tag">角色：原告 / 叙事大脑</span>
+      </div>
+      <div class="arch-box">
+        <h4>2. 本地模式层（LSTM/TCN/Chronos）</h4>
+        输出方向 + 质量分 Q（0~1），判断"当前这个方向信号在统计上是否靠谱"。<br>
+        <span class="tag">角色：技术陪审团</span>
+      </div>
+      <div class="arch-box">
+        <h4>3. 合成层（Meta-Agent）</h4>
+        不硬拦截，而是做<strong>仓位缩放 + 强制解释 + 分歧可视化</strong>。<br>
+        <span class="tag">角色：法官</span>
+      </div>
+    </div>
+
+    <h3>3.1 仓位缩放规则（不硬拦截）</h3>
+    <table>
+      <tr><th>本地质量分 Q</th><th>处理方式</th><th>目的</th></tr>
+      <tr><td>Q ≥ 0.70</td><td>正常仓位执行 DeepSeek 方向</td><td>本地模型认同，放心做</td></tr>
+      <tr><td>0.40 ≤ Q < 0.70</td><td>仓位减半（或按 Kelly 缩放）</td><td>有分歧但有机会，减小风险敞口</td></tr>
+      <tr><td>Q < 0.40 且本地方向与 DeepSeek 相反</td><td>触发<strong>强制解释</strong>：DeepSeek 必须在叙事中解释"为什么无视本地强信号"</td><td>防止固执买错</td></tr>
+      <tr><td>解释不充分 / 解释自相矛盾</td><td>观望（HOLD）</td><td>最后防线，但只用于极端分歧</td></tr>
+    </table>
+
+    <h3>3.2 强制解释机制（防固执）</h3>
+    <p>当 DeepSeek 方向与本地强信号（Q>0.7）相反时，系统自动追加一条提示：</p>
+    <div class="quote">
+      "本地 LSTM/TCN 陪审团以 76% 置信度判断当前为 SHORT 机会。请在你的分析中明确说明：你为何认为这个本地信号在当前 regime 下无效？"
+    </div>
+    <p>DeepSeek 必须给出<strong>可验证</strong>的理由（例如："价格刚突破 H1 关键需求区"、"基本面事件驱动"）。如果它给出的理由只是"我觉得会涨"或无法解释，则降级为 HOLD。</p>
+
+    <h3>3.3 为什么这样不会腰斩交易数</h3>
+    <ul>
+      <li>只有 <strong>Q<0.4 + 强反向</strong> 才触发解释；多数正常趋势行情 Q≥0.7，不影响。</li>
+      <li>0.4~0.7 区间是<strong>减仓</strong>而非观望，仍然在场。</li>
+      <li>DeepSeek 有"自我解释"通道，只要它能给出合理叙事，仍可执行。</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>四、本地模型设计：LSTM/TCN + Chronos 混合</h2>
+    <p>不追求 100% 替代 DeepSeek，而是构建一个<strong>本地信号质量陪审团</strong>。</p>
+
+    <h3>4.1 主模型：LSTM/TCN（方向预测，高 recall）</h3>
+    <ul>
+      <li><strong>输入</strong>：XAUUSD M15/H1 多周期 OHLCV + 技术指标（RSI、MACD、布林带、ATR、价格距 MA 的 Z-score）+ SMC 特征（OB、FVG、流动性扫损）+ Regime 标签。</li>
+      <li><strong>输出</strong>：三分类概率 [P_down, P_neutral, P_up]。</li>
+      <li><strong>目标</strong>：高 recall，不轻易错过机会；precision 由 Meta-Labeling 次模型补。</li>
+      <li><strong>模型规模</strong>：LSTM 2层128单元 / TCN 64通道×8层，参数量 < 1M，RTX 3060 Ti 毫秒级推理。</li>
+    </ul>
+
+    <h3>4.2 次模型：Meta-Labeling（质量分 Q）</h3>
+    <ul>
+      <li><strong>目标变量</strong>：主模型/DeepSeek 信号在接下来 N 根 K 线内是否盈利（Triple-Barrier 标签）。</li>
+      <li><strong>输入</strong>：主模型输出概率 + 原始特征 + 当前 Regime + 最近 20 笔该方向信号胜率 + SMC 结构。</li>
+      <li><strong>模型</strong>：XGBoost 或小 MLP（可解释、快、不易过拟合）。</li>
+      <li><strong>输出</strong>：质量分 Q ∈ [0,1]，经 Platt/Isotonic 校准后等于真实胜率。</li>
+    </ul>
+
+    <h3>4.3 Chronos-Bolt-base 的角色</h3>
+    <div class="warnbox">
+      海外实证已确认：通用 Chronos 零样本直接当交易信号，扣费后经济价值为负。我们不把它当主信号源。
+    </div>
+    <ul>
+      <li>作为<strong>零样本 baseline</strong>，与 LSTM/TCN 做集成：若三者方向一致，提升 Q；若严重分歧，触发解释。</li>
+      <li>提供未来多步分位数预测（P10/P50/P90），用于前端"AI 预报动画"可视化。</li>
+      <li>离线可用、零 token 费，增强"高端 AI"叙事。</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>五、数据与训练：用我们自己的 MT5 历史数据</h2>
+    <p>别人的系统之所以有效，是因为用了大量 XAU 历史数据训练。我们也要这样做。</p>
+    <table>
+      <tr><th>项目</th><th>方案</th></tr>
+      <tr><td>数据来源</td><td>从我们测 EA 的 MT5 客户端导出 XAUUSD M15/H1 历史数据，存 <code>F:/WanxiangAI/data/xau_history/</code></td></tr>
+      <tr><td>数据量</td><td>建议至少 2-3 年 M15 数据（约 10 万+ 条），越多越好。</td></tr>
+      <tr><td>标签方法</td><td><strong>Triple-Barrier</strong>：给定方向、止损宽度、止盈宽度、时间窗口，判断信号是否盈利退出。</td></tr>
+      <tr><td>训练频率</td><td>离线训练一次 baseline；每天晚上收盘后增量更新（在线学习）。</td></tr>
+      <tr><td>验证方法</td><td>Purged K-Fold / Combinatorial Purged Cross-Validation，防止金融数据泄漏。</td></tr>
+      <tr><td>特征工程</td><td>归一化价格、对数收益率、多周期技术指标、SMC/Regime 特征、价格延伸度 Z-score。</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>六、与现有系统接入：新增第 4 辩论角色</h2>
+    <p>现有 debate_engine 已有三层辩论角色。我们新增第四层：</p>
+    <div class="flow">
+      <div class="flow-box">Step 0.6<br><strong>本地信号陪审员</strong><br>LSTM/TCN + Chronos<br>输出方向 + Q</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Step 0.75<br><strong>进化引擎</strong><br>情境→期望盈亏</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Step 0.8<br><strong>反转哨兵</strong><br>SMC/Regime</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Step 1.0<br><strong>DeepSeek 主辩论</strong><br>叙事大脑</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Step 1.5<br><strong>Meta-Agent 合成</strong><br>仓位缩放 + 强制解释</div>
+    </div>
+    <p>本地模型推理<strong>一次</strong>，所有账号共享同一个信号质量分 Q；各账号独立的风控/仓位在此基础上缩放。</p>
+  </div>
+
+  <div class="panel">
+    <h2>七、多账号设计：一次推理，N 账号共享</h2>
+    <ul>
+      <li>本地 LSTM/TCN/Chronos 只基于行情主号的数据推理一次，输出全局 Q。</li>
+      <li>每个账号的仓位按自身本金比例 × Q 缩放。</li>
+      <li>当 Q<0.4 触发观望时，所有账号同步观望（因为这是对行情本身的判断，不是账号级别的）。</li>
+      <li>不增加 MT5 API 调用频次：本地模型每 1-5 分钟推理一次，与现有行情循环对齐。</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>八、前端可视化：让 AI 工作被看见</h2>
+    <p>新增"AI 信号共识面板"，把分歧变成可视化资产：</p>
+    <ul>
+      <li><strong>方向罗盘</strong>：DeepSeek 方向 vs 本地模型方向，同向绿色、反向红色。</li>
+      <li><strong>质量分仪表盘</strong>：0-100% 圆环，和截图里别人的面板类似。</li>
+      <li><strong>分歧解释卡</strong>：当 DeepSeek 与本地模型反向时，显示 DeepSeek 的"自我解释"。</li>
+      <li><strong>Chronos 预报动画</strong>：未来 N 步 P10/P50/P90 价格带动画。</li>
+      <li><strong>历史校准曲线</strong>：显示 Q 值与实际胜率是否一致（防止过自信）。</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>九、落地步骤与验证口径</h2>
+    <table>
+      <tr><th>阶段</th><th>动作</th><th>验收标准</th></tr>
+      <tr><td>P0：数据</td><td>从 MT5 导出 XAUUSD M15/H1 历史数据；生成 Triple-Barrier 标签。</td><td>数据文件落地，标签分布合理（不过度不平衡）。</td></tr>
+      <tr><td>P1：主模型</td><td>训练 LSTM/TCN 方向模型，达到 recall>0.65。</td><td>测试集方向 recall 达标，不追求高精度。</td></tr>
+      <tr><td>P2：次模型</td><td>训练 Meta-Labeling 质量模型，校准后 Q 与实际胜率对齐。</td><td>高 Q 区间（>0.7）实际胜率显著高于低 Q 区间。</td></tr>
+      <tr><td>P3：集成</td><td>接入 debate_engine 作为第 4 角色；实现仓位缩放 + 强制解释。</td><td>系统能正常跑完一次决策循环，日志可见 Q 值。</td></tr>
+      <tr><td>P4：回测</td><td>用近 3 个月 XAU 数据做 walk-forward 回测，扣点差/滑点。</td><td>交易笔数不腰斩、净利润不下降、PF>1（对比当前云版本）。</td></tr>
+      <tr><td>P5：上线</td><td>先在一个 demo 账号跑 1-2 周，确认无异常后全账号铺开。</td><td>demo 账号无爆仓、PF>1、叮咚不增加。</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>十、风险与红线保护</h2>
+    <div class="dangerbox">
+      <strong>唯一红线：赚钱不亏本。</strong>任何改动若导致交易笔数腰斩、净利润下降、PF<1，立即回退。
+    </div>
+    <ul>
+      <li><strong>过拟合风险</strong>：用 Purged CV + 滚动测试；Meta-Labeling 次模型用简单模型（XGBoost/小 MLP）。</li>
+      <li><strong>过度过滤风险</strong>：Q<0.4 才触发观望；0.4-0.7 只减仓，不观望。</li>
+      <li><strong>DeepSeek 抵触风险</strong>：强制解释机制允许 DeepSeek"自证清白"，不是无脑服从本地模型。</li>
+      <li><strong>数据不足风险</strong>：若 MT5 可导出数据少于 1 年，先不训练 LSTM，改用 Chronos 零样本 + SMC/Regime 作为临时陪审团。</li>
+      <li><strong>MT5 API 频次风险</strong>：本地模型推理与现有行情循环对齐（1-5 分钟），不新增终端连接。</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>十一、拍板选项</h2>
+    <div class="option">
+      <h4>选项 A：维持现状，不搞本地模型</h4>
+      <p>继续用云 DeepSeek，接受偶尔"山顶固执买多"的亏损。风险：你截图里的问题会重复出现。</p>
+    </div>
+    <div class="option">
+      <h4>选项 B：先跑最小可行实证（MVP），再决定是否扩大</h4>
+      <p><strong>推荐。</strong>只做三步：①导出 MT5 历史数据；②用 Chronos 零样本 + 现有 SMC/Regime 快速搭建一个"信号质量陪审员"；③接入 debate_engine 做<strong>只记录、不干预</strong>的 shadow 模式跑 1-2 周。观察：如果本地强反向信号确实能预测 DeepSeek 亏损，再升级 LSTM/TCN 训练 + 仓位缩放。</p>
+    </div>
+    <div class="option">
+      <h4>选项 C：直接落地完整方案</h4>
+      <p>按 P0-P5 完整执行 LSTM/TCN + Meta-Labeling + 强制解释 + 仓位缩放。风险：训练和数据准备需要 1-2 周，若数据质量不好可能效果打折。</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>十二、我的建议</h2>
+    <div class="highlight">
+      选 <strong>选项 B</strong>：先用 Chronos 零样本 + SMC/Regime 搭一个 shadow 陪审员，不干预交易，只记录"如果听了本地模型，这笔会不会少亏"。<br><br>
+      理由：①不需要等 LSTM 训练，几天内就能跑起来；②用真实数据验证你截图观察到的现象是否持续成立；③验证通过后再决定要不要训练 LSTM/TCN，避免大投入打水漂。
+    </div>
+  </div>
+
+  <div class="footer">
+    文档生成时间：2026-08-06 | 基于海外 5+ 独立来源交叉验证 + 用户截图实证
+  </div>
+</div>
+</body>
+</html>

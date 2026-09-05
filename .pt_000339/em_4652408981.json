@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "global": {
+    "level": "NORMAL",
+    "reason": "",
+    "at": "",
+    "by": ""
+  },
+  "accounts": {},
+  "flatten_requests": []
+}

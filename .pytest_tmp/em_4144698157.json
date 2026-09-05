@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "global": {
+    "level": "NORMAL",
+    "reason": "",
+    "at": "",
+    "by": ""
+  },
+  "accounts": {
+    "acct-A": {
+      "level": "HALT_ALL",
+      "reason": "该客户要求",
+      "at": "2026-08-08T23:57:32",
+      "by": "tester"
+    }
+  },
+  "flatten_requests": []
+}

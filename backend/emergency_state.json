@@ -1,0 +1,662 @@
+{
+  "version": 1,
+  "global": {
+    "level": "NORMAL",
+    "reason": "",
+    "at": "2026-08-07T20:33:40",
+    "by": "smoke"
+  },
+  "accounts": {},
+  "flatten_requests": [
+    {
+      "id": "446182184bfe",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-15T20:04:31",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "08e7fca71a28",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-15T20:21:56",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "5555e49a0d5f",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-15T20:36:03",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "9569dfec7576",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-15T20:53:42",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "1896e910a190",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-15T22:47:25",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "9d210f3ba0ed",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-15T22:59:29",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "5c0550b104c2",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-15T23:09:20",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "d12c54ae18d0",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-15T23:34:38",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "50d6995113f9",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-16T00:18:47",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "810ba47b0f35",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-16T00:27:50",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "2896e4fb6643",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-16T00:46:30",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "624646e33278",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-16T13:58:33",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "6174ac402c70",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-16T17:01:47",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "dcfcb42da48c",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-16T17:11:35",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "15840d572585",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-16T18:31:56",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "9a17ce349cfb",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T09:57:02",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "24c7bd1c2ef1",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T09:59:56",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "09909a1a4335",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T10:06:26",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "8087e59222bc",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T11:07:09",
+      "result": {
+        "accounts": 6,
+        "closed": 4,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "1bb897b43c58",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T12:01:43",
+      "result": {
+        "accounts": 6,
+        "closed": 2,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "2e53333778e1",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T12:23:04",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "99b2c19de00b",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T12:51:32",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "a4ccb8cfec51",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T13:05:18",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "318b4f567e7f",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T13:18:31",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "8685a9e009e6",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T13:40:32",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "6fbfcc4987bd",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T13:45:30",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "8ace75939e94",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T14:09:11",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "0e57b7eb9350",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T14:43:22",
+      "result": {
+        "accounts": 6,
+        "closed": 10,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "10440ba59dc7",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T14:49:13",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "9f956ca0ef86",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T15:02:21",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "b997bd1b52da",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T15:53:10",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "808e72572d14",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T16:00:57",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "e448fb0f8fb1",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T16:32:02",
+      "result": {
+        "accounts": 6,
+        "closed": 6,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "4afc941ac869",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T16:52:44",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "c3d3296cc965",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T17:08:09",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "eede40c73bcb",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T17:14:37",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "e2928531862a",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T17:46:50",
+      "result": {
+        "accounts": 6,
+        "closed": 8,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "3c7b07af0f18",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T17:58:04",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "2d43e7e74c83",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T18:03:10",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "c35adcc7aabc",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T18:54:06",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "bf35c474f937",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T19:01:38",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "262d91218153",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T19:11:43",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "b42aac32847a",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T20:05:30",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "3c898a67dea7",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T20:12:34",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "10e6a9109719",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T20:23:54",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "f670688140db",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T20:51:17",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "605d3a03139f",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T22:23:12",
+      "result": {
+        "accounts": 6,
+        "closed": 1,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "88775d11283b",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T22:31:12",
+      "result": {
+        "accounts": 6,
+        "closed": 0,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "ded695b09163",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T22:45:53",
+      "result": {
+        "accounts": 6,
+        "closed": 3,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    },
+    {
+      "id": "151a028e1d88",
+      "scope": "global",
+      "reason": "重启前主动平仓锁利",
+      "by": "itnb",
+      "at": "2026-08-17T23:11:26",
+      "result": {
+        "accounts": 6,
+        "closed": 5,
+        "remaining": 0,
+        "fully_flat": true
+      }
+    }
+  ]
+}

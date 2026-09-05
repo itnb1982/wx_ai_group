@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账户网格升级预览 · 万象Ai</title>
+<style>
+  :root{
+    --bg:#0a0e17; --panel:#121829; --panel2:#0f1524; --line:#1f2a44;
+    --cyan:#22d3ee; --purple:#a78bfa; --gold:#fbbf24; --green:#34d399; --red:#f87171;
+    --blue:#4d9bff; --txt:#e6edf6; --sub:#8aa0c0; --dim:#6e7e9b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%,#13203b 0%,var(--bg) 60%);
+    color:var(--txt);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    min-height:100vh;padding:24px 18px;
+  }
+  .wrap{max-width:1280px;margin:0 auto}
+  h1{font-size:22px;margin-bottom:6px;
+    background:linear-gradient(90deg,var(--cyan),var(--purple),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:1px}
+  .sub{color:var(--sub);font-size:12px;margin-bottom:20px}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:14px;padding:18px 20px 20px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.3)}
+  .h{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .live{margin-left:8px;font-size:10px;padding:2px 8px;border-radius:10px;
+    background:rgba(46,230,160,.16);color:var(--green);border:1px solid rgba(46,230,160,.4);font-weight:700}
+  .panel-h-sub{font-size:11px;color:var(--dim);margin-left:10px;font-weight:500;letter-spacing:.5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+  .acct{background:linear-gradient(180deg,#131c30,#0d1322);border:1px solid var(--line);border-radius:14px;
+    padding:14px;position:relative;overflow:hidden;transition:all .25s}
+  .acct:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.5);
+    border-color:hsla(var(--a,200),70%,60%,.6)}
+  .acct.primary{border-color:rgba(255,207,77,.55);
+    box-shadow:0 0 0 1px rgba(255,207,77,.25),0 6px 22px rgba(255,207,77,.08)}
+  .acct-bar{position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,hsl(var(--a,200),80%,60%),hsl(calc(var(--a,200)+60),80%,55%))}
+  .acct-crown{position:absolute;top:6px;right:10px;font-size:14px;color:var(--gold);
+    text-shadow:0 0 8px rgba(255,207,77,.6)}
+  .hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .acct-avt{width:40px;height:40px;border-radius:50%;flex-shrink:0;
+    background:conic-gradient(from 90deg,hsl(var(--a,200),75%,55%),hsl(calc(var(--a,200)+80),75%,60%),hsl(calc(var(--a,200)+160),75%,55%),hsl(var(--a,200),75%,55%));
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;
+    box-shadow:0 0 14px hsla(var(--a,200),70%,60%,.5);position:relative}
+  .acct-avt::before{content:'';position:absolute;inset:2px;border-radius:50%;
+    background:linear-gradient(160deg,#131c30,#0d1322)}
+  .acct-avt span{position:relative;z-index:1;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .acct-info{flex:1;min-width:0}
+  .acct-name-row{display:flex;align-items:center;gap:6px}
+  .nm{font-weight:800;font-size:15px}
+  .acct-meta{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:11px;color:var(--dim);min-width:0}
+  .mt5-tag{font-size:9px;padding:1px 5px;border-radius:4px;
+    background:rgba(77,155,255,.18);color:var(--blue);border:1px solid rgba(77,155,255,.35);font-weight:800;letter-spacing:.5px}
+  .login{font-family:"SFMono-Regular",Consolas,monospace;color:var(--txt);font-weight:700;
+    font-variant-numeric:tabular-nums;letter-spacing:.5px;font-size:11px}
+  .srv-dot{color:var(--dim);opacity:.5}
+  .srv{color:var(--sub);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .acct-flags{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+  .badge{font-size:9px;padding:1px 6px;border-radius:6px;font-weight:700}
+  .badge.b-on{background:rgba(46,230,160,.18);color:var(--green);display:inline-flex;align-items:center;gap:4px}
+  .badge.b-off{background:rgba(91,110,145,.2);color:var(--dim);display:inline-flex;align-items:center;gap:4px}
+  .badge.b-pri{background:rgba(255,207,77,.2);color:var(--gold)}
+  .badge.b-tr{background:rgba(77,155,255,.18);color:var(--blue)}
+  .dot{width:5px;height:5px;border-radius:50%;display:inline-block}
+  .dot.on{background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 1.6s infinite}
+  .dot.off{background:var(--dim)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .bal{font-size:22px;font-weight:800;margin:4px 0 8px;font-variant-numeric:tabular-nums;
+    background:linear-gradient(90deg,#fff 20%,#c2d4f0 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:.5px}
+
+  .acct-share{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .share-bar{flex:1;height:5px;background:#0d1322;border-radius:3px;overflow:hidden;border:1px solid var(--line)}
+  .share-fill{height:100%;background:linear-gradient(90deg,hsl(var(--a,200),80%,60%),hsl(calc(var(--a,200)+60),80%,55%));
+    border-radius:3px;box-shadow:0 0 8px hsla(var(--a,200),80%,60%,.5)}
+  .share-label{font-size:10px;color:var(--sub);font-variant-numeric:tabular-nums;min-width:70px;text-align:right;font-weight:600}
+
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
+  .mt{background:#0e1525;border:1px solid var(--line);border-radius:9px;padding:7px 4px;text-align:center}
+  .mt .v{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+  .mt .k{font-size:9px;color:var(--dim);margin-top:2px}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+  .poslist{max-height:120px;overflow:auto;border-top:1px solid var(--line);padding-top:8px}
+  .empty{font-size:11px;color:var(--dim);padding:6px 0}
+
+  .acct-footer{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px -20px -20px;padding:10px 20px;
+    border-top:1px solid var(--line);background:linear-gradient(180deg,transparent,rgba(0,0,0,.18));border-radius:0 0 14px 14px;
+    font-size:11px;color:var(--dim)}
+  .aft-stat b{color:var(--txt);font-weight:700;margin-left:4px;font-variant-numeric:tabular-nums}
+  .aft-stat .pos{color:var(--green)}
+  .aft-stat .hi{color:var(--gold);font-size:12px}
+  .aft-sep{width:1px;height:12px;background:var(--line)}
+
+  /* 设计说明 */
+  .specs{margin-top:20px;background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .specs h2{font-size:14px;color:var(--cyan);margin-bottom:10px}
+  .specs ul{font-size:12px;color:var(--sub);line-height:1.85}
+  .specs li::marker{color:var(--cyan)}
+  .specs b{color:var(--txt)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>XAU/USD 万象Ai · 账户网格升级预览</h1>
+  <div class="sub">实时 MT5 账户拓扑 · 1~N 弹性网格 · 每账号独特色相 · MT5 数字账号显著可见</div>
+
+  <div class="panel">
+    <div class="h">
+      实时 MT5 账户拓扑
+      <span class="live">实时</span>
+      <span class="panel-h-sub">1~N 弹性网格 · 头像+MT5账号固定标识 · 每账户独特色相</span>
+    </div>
+
+    <div class="grid">
+      <!-- 账户 1 主号 liumanchun1 -->
+      <div class="acct primary" style="--a:42">
+        <div class="acct-bar"></div>
+        <div class="acct-crown" title="主号">⚜</div>
+        <div class="hd">
+          <div class="acct-avt" title="MT5 #1610093299"><span>99</span></div>
+          <div class="acct-info">
+            <div class="acct-name-row">
+              <span class="nm">liumanchun1</span>
+              <span class="badge b-pri">主号</span>
+            </div>
+            <div class="acct-meta">
+              <span class="mt5-tag">MT5</span>
+              <span class="login">#161 009 3299</span>
+              <span class="srv-dot">·</span>
+              <span class="srv">STARTRADERFinancial</span>
+            </div>
+          </div>
+          <div class="acct-flags">
+            <span class="badge b-on"><span class="dot on"></span>在线</span>
+            <span class="badge b-tr">交易✓</span>
+          </div>
+        </div>
+        <div class="bal">992,725.16</div>
+        <div class="acct-share">
+          <div class="share-bar"><div class="share-fill" style="width:49.59%"></div></div>
+          <div class="share-label">占组合 49.59%</div>
+        </div>
+        <div class="metrics">
+          <div class="mt"><div class="v pos">+$0.00</div><div class="k">今日盈利</div></div>
+          <div class="mt"><div class="v pos">+$0.00</div><div class="k">历史盈利</div></div>
+          <div class="mt"><div class="v">0</div><div class="k">今日订单</div></div>
+          <div class="mt"><div class="v">0</div><div class="k">历史订单</div></div>
+        </div>
+        <div class="poslist"><div class="empty">当前无持仓</div></div>
+      </div>
+
+      <!-- 账户 2 liumanchuan2 -->
+      <div class="acct" style="--a:120">
+        <div class="acct-bar"></div>
+        <div class="hd">
+          <div class="acct-avt" title="MT5 #1610097175"><span>75</span></div>
+          <div class="acct-info">
+            <div class="acct-name-row">
+              <span class="nm">liumanchuan2</span>
+            </div>
+            <div class="acct-meta">
+              <span class="mt5-tag">MT5</span>
+              <span class="login">#161 009 7175</span>
+              <span class="srv-dot">·</span>
+              <span class="srv">STARTRADERFinancial</span>
+            </div>
+          </div>
+          <div class="acct-flags">
+            <span class="badge b-on"><span class="dot on"></span>在线</span>
+            <span class="badge b-tr">交易✓</span>
+          </div>
+        </div>
+        <div class="bal">2,613.97</div>
+        <div class="acct-share">
+          <div class="share-bar"><div class="share-fill" style="width:0.13%"></div></div>
+          <div class="share-label">占组合 0.13%</div>
+        </div>
+        <div class="metrics">
+          <div class="mt"><div class="v pos">+$0.00</div><div class="k">今日盈利</div></div>
+          <div class="mt"><div class="v pos">+$0.00</div><div class="k">历史盈利</div></div>
+          <div class="mt"><div class="v">0</div><div class="k">今日订单</div></div>
+          <div class="mt"><div class="v">0</div><div class="k">历史订单</div></div>
+        </div>
+        <div class="poslist"><div class="empty">当前无持仓</div></div>
+      </div>
+
+      <!-- 账户 3 liumanchun3 -->
+      <div class="acct" style="--a:210">
+        <div class="acct-bar"></div>
+        <div class="hd">
+          <div class="acct-avt" title="MT5 #1610093301"><span>01</span></div>
+          <div class="acct-info">
+            <div class="acct-name-row">
+              <span class="nm">liumanchun3</span>
+            </div>
+            <div class="acct-meta">
+              <span class="mt5-tag">MT5</span>
+              <span class="login">#161 009 3301</span>
+              <span class="srv-dot">·</span>
+              <span class="srv">STARTRADERFinancial</span>
+            </div>
+          </div>
+          <div class="acct-flags">
+            <span class="badge b-on"><span class="dot on"></span>在线</span>
+            <span class="badge b-tr">交易✓</span>
+          </div>
+        </div>
+        <div class="bal">1,006,178.52</div>
+        <div class="acct-share">
+          <div class="share-bar"><div class="share-fill" style="width:50.27%"></div></div>
+          <div class="share-label">占组合 50.27%</div>
+        </div>
+        <div class="metrics">
+          <div class="mt"><div class="v pos">+$0.00</div><div class="k">今日盈利</div></div>
+          <div class="mt"><div class="v pos">+$0.00</div><div class="k">历史盈利</div></div>
+          <div class="mt"><div class="v">0</div><div class="k">今日订单</div></div>
+          <div class="mt"><div class="v">0</div><div class="k">历史订单</div></div>
+        </div>
+        <div class="poslist"><div class="empty">当前无持仓</div></div>
+      </div>
+
+      <!-- 账户 4 liumanchun4 -->
+      <div class="acct" style="--a:300">
+        <div class="acct-bar"></div>
+        <div class="hd">
+          <div class="acct-avt" title="MT5 #1610098464"><span>64</span></div>
+          <div class="acct-info">
+            <div class="acct-name-row">
+              <span class="nm">liumanchun4</span>
+            </div>
+            <div class="acct-meta">
+              <span class="mt5-tag">MT5</span>
+              <span class="login">#161 009 8464</span>
+              <span class="srv-dot">·</span>
+              <span class="srv">STARTRADERFinancial</span>
+            </div>
+          </div>
+          <div class="acct-flags">
+            <span class="badge b-on"><span class="dot on"></span>在线</span>
+            <span class="badge b-tr">交易✓</span>
+          </div>
+        </div>
+        <div class="bal">3,000.00</div>
+        <div class="acct-share">
+          <div class="share-bar"><div class="share-fill" style="width:0.15%"></div></div>
+          <div class="share-label">占组合 0.15%</div>
+        </div>
+        <div class="metrics">
+          <div class="mt"><div class="v pos">+$0.00</div><div class="k">今日盈利</div></div>
+          <div class="mt"><div class="v pos">+$0.00</div><div class="k">历史盈利</div></div>
+          <div class="mt"><div class="v">0</div><div class="k">今日订单</div></div>
+          <div class="mt"><div class="v">0</div><div class="k">历史订单</div></div>
+        </div>
+        <div class="poslist"><div class="empty">当前无持仓</div></div>
+      </div>
+    </div>
+
+    <div class="acct-footer">
+      <div class="aft-stat">账号数 <b>4</b></div>
+      <div class="aft-sep"></div>
+      <div class="aft-stat">在线 <b class="pos">4</b></div>
+      <div class="aft-sep"></div>
+      <div class="aft-stat">交易中 <b class="pos">4</b></div>
+      <div class="aft-sep"></div>
+      <div class="aft-stat">总持仓 <b>0</b></div>
+      <div class="aft-sep"></div>
+      <div class="aft-stat">组合权益 <b class="hi">$2,001,517.65</b></div>
+    </div>
+  </div>
+
+  <div class="specs">
+    <h2>本次升级亮点</h2>
+    <ul>
+      <li><b>MT5 数字账号显著可见</b>：圆形头像（conic-gradient 渐变环 + 中心最后 2 位）下显示 `#161 009 3299` 风格 monospace + 服务器名；4 个 liumanchun1/2/3/4 一眼可区分。</li>
+      <li><b>每账户独特色相</b>：哈希 MT5 login → 0~360 色相，账户顶部彩条 + 头像 + 占组合比例条三处同色；天然不混淆，扫一眼即知哪个账户是哪张卡。</li>
+      <li><b>主号徽标升级</b>：⚜ 角标 + 金色边框 + 顶部明亮金光晕，客户视角一眼锁定主号卡。</li>
+      <li><b>在线状态脉冲</b>：状态徽章前 5px 绿点 + 1.6s 呼吸光晕，离线变灰，离/在线区隔明显。</li>
+      <li><b>占组合比例可视化</b>：余额下方 5px 渐变彩条 + 右侧百分比（49.59% / 50.27% 等），一眼看穿资金分布——避免误把 3000 块和 100 万账户同等对待。</li>
+      <li><b>余额渐变文字</b>：白→浅蓝渐变 tab 数字，大气粗体。</li>
+      <li><b>悬停动效</b>：hover 抬升 2px + 边框换主色 hash，触感热烈但不喧宾夺主。</li>
+      <li><b>底部状态栏</b>：5 项 stat 卡片（账号数/在线/交易中/总持仓/组合权益），金色高亮总权益。</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai 前端「高端可视化 · 客户视角」体检报告</h1>
+<blockquote>对照铁律：<strong>纯AI系统定位 + 设计哲学</strong>（用户 2026-08-03 确立，与"多账号优先"并列最高优先级）&lt;br&gt;体检三维度：① 客户视角是否成立 ② AI 工作是否"被看见" ③ 视觉是否高端&lt;br&gt;体检对象：账户网格 / 行情作战图 / AI 工作剧场 / 顶栏 KPI / 全局布局&lt;br&gt;代码基线：<code>frontend/src/components/</code> 全量通读（AccountGrid / MarketChart / AITheater / Dashboard / LiveStatusBar / IndicatorsPanel / KpiBar / MarketClock）</blockquote>
+<hr>
+<h2>一、结论先行</h2>
+<p>现有前端<strong>已经脱离了"传统 EA 后台"的朴素感</strong>：账户网格有渐变头像环、独特色相、主号⚜徽章；作战图有 MT5 主号信息带；AI 剧场有辩论气泡+进化时间线+跑马灯——这些方向都对。</p>
+<p>但对照新铁律，<strong>有三处核心缺口</strong>，直接命中铁律要害：</p>
+<table><thead><tr><th>#</th><th>缺口</th><th>命中铁律哪条</th><th>严重度</th></tr></thead><tbody><tr><td>1</td><td><strong>作战图上完全没有 AI 层</strong>——K线只是裸市场数据，没有 AI 方向预测、入场区、SL/TP、判读</td><td>纯AI系统身份 / AI工作可视化</td><td>🔴 P0</td></tr><tr><td>2</td><td><strong>全站没有任何"组合盈利曲线"</strong>——"持续盈利"是宗旨，却只有数字、没有 equity/累计盈利曲线</td><td>持续盈利宗旨</td><td>🔴 P0</td></tr><tr><td>3</td><td><strong>没有"系统身份"传达区</strong>——客户打开看不出"这是前沿纯AI、不是传统EA"</td><td>纯AI系统身份</td><td>🔴 P0</td></tr></tbody></table>
+<p>其次是"一看就懂"和高端感的打磨（P1/P2）。</p>
+<hr>
+<h2>二、逐项体检</h2>
+<h3>模块 A · 账户网格（AccountGrid.jsx）</h3>
+<p><strong>现状（已健康的部分）</strong></p>
+<ul><li>conic-gradient 头像环 + 末两位数字、按 login 哈希的账户独特色相</li><li>⚜ 主号角标 + 金色边框 + 呼吸光晕</li><li>在线脉冲绿点、交易✓/暂停徽章</li><li>占组合比例彩条 + 百分比</li><li>5 字段指标（今日盈利/历史盈利/当前浮盈/今日订单/历史订单）</li><li>卡片内联持仓列表（方向/手数/票号/持仓时长/盈亏）</li><li>底部组合统计条</li></ul>
+<p><strong>体检（对照三维度）</strong></p>
+<table><thead><tr><th>维度</th><th>评判</th><th>说明</th></tr></thead><tbody><tr><td>客户视角</td><td>⚠️ 偏弱</td><td>网格沉在<strong>页面最底部</strong>（图表→剧场→账户）。客户第一眼看不到"我在赚钱吗"。应以盈利/净值为视觉锚。</td></tr><tr><td>AI工作可视化</td><td>⚠️ 缺失</td><td>持仓列表只显示方向/手数/盈亏，<strong>没有 AI 给这笔单的信心度、入场理由、AI 设的止损目标</strong>。客户看不到"AI 为什么开这单"。</td></tr><tr><td>视觉高端</td><td>✅ 达标</td><td>渐变/色相/徽章体系完整，是本系统视觉完成度最高的模块之一。</td></tr></tbody></table>
+<p><strong>小缺陷</strong>：<code>占组合%</code> 用 <code>balance</code> 而非 <code>equity</code>（小误差，净值占比才准确）。</p>
+<hr>
+<h3>模块 B · 行情作战图（MarketChart.jsx + IndicatorsPanel.jsx）</h3>
+<p><strong>现状（已健康的部分）</strong></p>
+<ul><li>Canvas 蜡烛（红涨绿跌，符合中式习惯）+ 成交量柱</li><li>EMA20 + 布林带上下轨叠加</li><li>网格 + 价格刻度</li><li>MT5 主号信息带（conic 头像 + 金→紫光带 + ⚜心跳）</li><li>IndicatorsPanel 多周期 ATR/RSI/ADX 数值表</li></ul>
+<p><strong>体检（对照三维度）—— 本模块是最大短板</strong></p>
+<table><thead><tr><th>维度</th><th>评判</th><th>说明</th></tr></thead><tbody><tr><td>客户视角</td><td>⚠️ 偏弱</td><td>IndicatorsPanel 是<strong>密集数字墙</strong>（5周期×ATR/RSI/ADX），非交易客户看不懂。缺"AI 一句话判读"。</td></tr><tr><td>AI工作可视化</td><td>🔴 重缺失</td><td><strong>K线图上零 AI 层</strong>。这是"纯AI交易系统"的核心矛盾：图是裸市场数据，<strong>没有 AI 预测方向箭头、没有 AI 入场区、没有 AI 设的 SL/TP 线、没有 AI 趋势标记、没有最后价标记线</strong>。客户完全看不出"AI 在图上看到了什么、准备怎么干"。</td></tr><tr><td>视觉高端</td><td>⚠️ 朴素</td><td>2D canvas 偏朴素，无渐变网格、无 AI 信号光晕、无当前价横线。对比"高端酷炫"差距明显。</td></tr></tbody></table>
+<p><strong>这是整份体检最该优先补的模块</strong>——它是客户眼里"交易系统"的脸面，却最不像"AI 系统"。</p>
+<hr>
+<h3>模块 C · AI 工作剧场（AITheater.jsx）</h3>
+<p><strong>现状（已健康的部分）</strong></p>
+<ul><li>辩论擂台：DeepSeek 激进派 / 混元 稳健派 / Meta 裁决，三色气泡</li><li>进化时间线：AI 自调整权重事件流（彩色 evo-tag）</li><li>交易执行流：真实开/平/止损/分批</li><li>顶部扫描快讯跑马灯</li><li>Meta 裁决带"💡 人话解读"</li></ul>
+<p><strong>体检（对照三维度）—— 本模块最贴合铁律</strong></p>
+<table><thead><tr><th>维度</th><th>评判</th><th>说明</th></tr></thead><tbody><tr><td>客户视角</td><td>⚠️ 偏弱</td><td>辩论气泡是 <strong>200 字原始推理文本</strong>，密集；只有 Meta 有"人话解读"，DS/HY 没有。客户要啃大段字。</td></tr><tr><td>AI工作可视化</td><td>✅ 达标但有增强空间</td><td>辩论/进化/执行流三流齐备，是核心 AI 可视化。缺<strong>置信度仪表盘/决策强度条</strong>（55% vs 90% 该用视觉量化）、缺<strong>AI 学习曲线</strong>（进化只列事件，没有"越来越准"的曲线）。</td></tr><tr><td>视觉高端</td><td>✅ 达标</td><td>三栏结构清晰。</td></tr></tbody></table>
+<p><strong>额外缺口</strong>：后端已有 <code>model-workflow</code> 接口（3 模型协作原理），但只在"AI Key 管理"页展示，<strong>主仪表盘没有"AI 是怎么工作的"科普/可视化</strong>——这与"系统身份"传达直接相关。</p>
+<hr>
+<h3>顶栏 + 全局布局（Dashboard.jsx / KpiBar / MarketClock）</h3>
+<p><strong>现状</strong></p>
+<ul><li>顶部：资金总览 KPI（总权益/总净值/今日盈利/历史总盈利）+ 市场时钟（盘口时段/倒计时/故障报警）</li><li>顺序：顶栏 → 作战图 → 剧场 → 账户网格</li></ul>
+<p><strong>体检</strong></p>
+<table><thead><tr><th>维度</th><th>评判</th><th>说明</th></tr></thead><tbody><tr><td>客户视角</td><td>⚠️ 顺序问题</td><td>客户最关心的"赚没赚钱/净值曲线"应置顶，现在盈利只是 4 个数字躺在 KPI 里，账户网格沉底。</td></tr><tr><td>AI工作可视化</td><td>🔴 缺失</td><td><strong>无任何 equity / 累计盈利曲线</strong>——"持续盈利"宗旨没有可视化证据。</td></tr><tr><td>系统身份</td><td>🔴 缺失</td><td>首屏没有一处传达"我们是前沿纯AI、抛弃传统EA"。新铁律第一条即系统身份，此处空白。</td></tr></tbody></table>
+<p>MarketClock 本身做得很用心（时段色/倒计时/故障红点），可保留。</p>
+<hr>
+<h2>三、升级点清单（按优先级）</h2>
+<h3>🔴 P0 — 直接命中铁律核心，必须做</h3>
+<p><strong>P0-1 · 作战图叠加 AI 层（AI Overlay）</strong></p>
+<ul><li>在 K 线上叠加：① AI 预测方向箭头（看多▲/看空▼，挂在最新价旁）② AI 入场区（半透明色带）③ AI 为当前持仓设的 SL/TP 水平虚线（标注价格）④ 当前价横线 + 跳动标记。</li><li>后端需暴露：当前 AI <code>ai_bias</code>（方向/强度）、<code>ai_entry_zone</code>（价格区间）、各持仓 <code>sl</code>/<code>tp</code>（MarketChart 已有 positions，但没画到图上）。</li><li>命中：纯AI系统身份 / AI工作可视化。</li><li>这是"纯AI交易系统"最该有的一张图——让客户一眼看到"AI 在图上看到了机会，并已经布防"。</li></ul>
+<p><strong>P0-2 · 组合盈利 / 净值曲线 Hero</strong></p>
+<ul><li>首屏增加一条漂亮的 equity curve：X 轴时间、Y 轴累计盈利（或净值），渐变填充 + 发光描边，标注"今日 +658 / 历史 -824"锚点。</li><li>后端需暴露历史权益序列（可在 <code>/dashboard/summary</code> 增加按日聚合的 <code>equity_series</code>；或前端定时采样 <code>hist_profit</code> 累积成曲线，先粗后精）。</li><li>命中：持续盈利宗旨（用曲线兑现"持续盈利"，比数字有力 10 倍）。</li></ul>
+<p><strong>P0-3 · 系统身份区（AI 大脑 Hero）</strong></p>
+<ul><li>首屏顶部加一个"AI 大脑"品牌区：一句传达 <strong>「抛弃传统EA · 前沿AI纯驱动 · 持续盈利」</strong>，配神经网络/脉冲装饰，可点击展开"本系统如何工作"短科普。</li><li>命中：纯AI系统身份（铁律第一条，目前全站零传达）。</li></ul>
+<h3>🟡 P1 — 显著增强"一看就懂"与高端感</h3>
+<p><strong>P1-1 · 行情 AI 一句话判读卡</strong></p>
+<ul><li>IndicatorsPanel 顶部加 AI 结论卡：<code>「AI 看多 XAUUSD · 目标 4080 · 止损 4045 · 强度 ★★★」</code>，替代数字墙的第一眼冲击。</li><li>后端：<code>market-chart</code> 已带 <code>trend</code>，再补 AI <code>target</code>/<code>stop</code>/<code>strength</code>（可由 debate 终裁提取）。</li></ul>
+<p><strong>P1-2 · AI 信号多维雷达</strong></p>
+<ul><li>趋势 / 波动 / 情绪 / 风险 / 动量 五维雷达图，一眼看懂 AI 多维读盘。</li><li>后端：从 <code>market-chart</code> 指标 + <code>ai-flow</code> 风险分合成。</li></ul>
+<p><strong>P1-3 · 辩论"人话化" + 决策强度量化</strong></p>
+<ul><li>DS/HY 气泡也加 <code>plain_summary</code> 式一句话；决策置信度用进度条/环形仪表盘量化（55% vs 90% 视觉区分）。</li></ul>
+<p><strong>P1-4 · AI 工作说明可视化搬上首页</strong></p>
+<ul><li>把 <code>model-workflow</code> 的"3 模型协作流程图"做成首页常驻小卡（已有接口，仅位置问题）。</li></ul>
+<h3>🟢 P2 — 打磨细节</h3>
+<ul><li><strong>P2-1</strong> 账户网格持仓加 AI 标签：hover 显示该单 AI 信心度 / 入场理由。</li><li><strong>P2-2</strong> <code>占组合%</code> 改用 <code>equity</code> 而非 <code>balance</code>。</li><li><strong>P2-3</strong> 布局重排：盈利/净值曲线置顶，账户网格前置或加锚点导航。</li><li><strong>P2-4</strong> 作战图美化：渐变网格、最后价发光横线、AI 信号光晕。</li><li><strong>P2-5</strong> 进化"学习曲线"：把权重变化画成"AI 准确率提升"曲线，兑现"自进化"叙事。</li></ul>
+<hr>
+<h2>四、落地路线建议</h2>
+<ol><li><strong>第一批（P0）</strong>：AI Overlay + 净值曲线 + 系统身份区。这三件做完，"纯AI / 可视化 / 持续盈利"三条铁律在首屏就全部成立，客户打开即懂。</li><li><strong>第二批（P1）</strong>：一句话判读 + 信号雷达 + 辩论人话化 + 工作说明。把"AI 工作被看见"做到极致。</li><li><strong>第三批（P2）</strong>：细节打磨与布局优化。</li></ol>
+<p><strong>自检口径</strong>（每次交付照此过）：①客户第一眼看到的是什么、能否 3 秒懂 ②AI 在干什么是否被"看见" ③视觉是否高端酷炫 ④是否强化了"纯AI、非传统EA"身份 ⑤是否兑现"持续盈利"证据。</p>
+<hr>
+<p>*体检基线代码：2026-08-03 18:24 通读版本。后续任一模块改动后，回到本表三维度复检。*</p></body></html>

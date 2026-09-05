@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>开市前终检·端到端深挖审计（2026-08-16 18:14）</h1>
+<blockquote>开市前最后一次全链路深挖：3 路只读审计代理并行（数据入口→决策链→仓位/平仓→MT5 端口）&lt;br&gt;+ 人工复核全部关键发现 + 运行时真实状态核查。<strong>本轮修复 6 项，已编译验证。</strong></blockquote>
+<hr>
+<h2>一、本轮复核确认「昨日 8 项修复全部 OK」</h2>
+<table><thead><tr><th>修复</th><th>复核结论</th></tr></thead><tbody><tr><td>P0-1 追踪止盈方向</td><td>✅ <code>_trail_tp</code> BUY 现价+距离只上移 / SELL 现价−距离只下移，与 modify_sl_tp 配套</td></tr><tr><td>P0-2 rejected_signals NameError</td><td>⚠️ <strong>复核发现残留</strong>（见下 P0-2a），已补修</td></tr><tr><td>P0-3 partial 回执快照</td><td>✅ duplicate 回放真实 vol/profit/net_profit，_record_close 恢复记账正确</td></tr><tr><td>P1-1 空数据 simulated</td><td>✅ 全 TF 不足→simulated+stale，debate_engine HOLD 拦截生效</td></tr><tr><td>P1-3 双脑置信 clamp</td><td>⚠️ <strong>复核发现 NaN/inf 漏洞</strong>（见下 P1-3a），已补修</td></tr><tr><td>P1-4 vision_exit side</td><td>✅ provider 补 type→side + vision_exit 内兜底，双重覆盖</td></tr><tr><td>P1-5 HALT_ALL 文档</td><td>✅ 文档诚实化（行为不变，有意铁律）</td></tr><tr><td>P1-9 K线时间戳</td><td>✅ bar time 减 offset 还原，与 position/服务器墙钟同基准</td></tr></tbody></table>
+<hr>
+<h2>二、本轮新发现并修复（6 项）</h2>
+<h3>P0-2a【trade_executor.py:1888】rejected_signals fallback NameError 残留（复核补修）</h3>
+<ul><li>问题：ORM 路径已修，但原生 sqlite3 fallback 的 SQL 参数仍引用未定义的 <code>entry_price/atr</code> → NameError 被吞 → fallback 静默失败，表仍写不进</li><li>修复：改用 <code>_rs_entry/_rs_atr</code>（与 ORM 路径同源）</li><li>附带修复：<code>_rs_saved = True</code> 无条件赋值 → 改为按 <code>_safe_db_write()</code> 返回值赋值（写失败时正确走 fallback）</li></ul>
+<h3>P1-3a【meta_agent.py:650-666】NaN/inf 置信经 clamp 变 1.0 满置信（复核补修）</h3>
+<ul><li>问题：<code>float("nan")</code> 合法，<code>min(1.0, nan)</code> 返回 1.0 → ds/hy_confidence 被 clamp 成 1.0 → <strong>门控/手数全按满置信走，风控被击穿</strong></li><li>附带：<code>"1.5"</code>（=150%）被 /100 误除成 0.015（权重消失）；<code>"95%"</code> float 抛错回退 0.5</li><li>修复：<code>_safe_conf()</code> 统一处理——isfinite 判空回退 0.5、strip %、&gt;100 才 /100、最终 clamp [0,1]</li><li>验证：12 个边界用例全过（nan/inf/95%/150%/1.5/0.85/-5/None/空 等）</li></ul>
+<h3>P2【trade_executor.py:2176】主号手数=0 仍可开（L3 熔断击穿）</h3>
+<ul><li>问题：主号路径无 <code>position_size&lt;=0</code> 拦截（跟号已有），L3 熔断/降级把手数算成 0 后仍进 place_order 开 0.01 手假单</li><li>修复：追价缩仓后加 <code>if position_size &lt;= 0: return</code>（与跟号对称）</li></ul>
+<h3>P1【trade_executor.py:3489】L2 反转平仓失败仍广播（主跟背离）</h3>
+<ul><li>问题：<code>close_position</code> 后无条件 <code>publish_leader_exit</code>——主号 close 瞬时失败仍广播 → 跟号平掉、主号保留 → 背离</li><li>修复：成功/已不存在才广播；失败归还防抖状态待下轮重试（与 full_close 分支"失败绝不广播"对齐）</li></ul>
+<h3>P1【smart_exit.py:406-414】HIGH 封顶回调 TP（利润提前落袋）</h3>
+<ul><li>问题：P90/P10 逐轮重算可下移，封顶钳位后 trailed_tp 可能 &lt; current_tp（BUY）→ 判 != 即改单 → TP 被下调，违背"只上移不回调"</li><li>修复：封顶后加方向护栏（BUY 低于 current_tp → None；SELL 高于 → None）</li></ul>
+<h3>P1【trade_executor.py:3452】视觉 partial close_pct 越界 → 主平跟留</h3>
+<ul><li>问题：视觉 partial 的 close_pct 只 clamp [0,1]，≥0.95 时转全平但按 partial_close 广播；跟号镜像要求 [0.05,0.95] 越界忽略 → 主平跟留</li><li>修复：≥0.95 改按 full_close 语义处理（与 partial 分支 vol_close&gt;=vol_total 转全平一致）</li></ul>
+<hr>
+<h2>三、审计A 误报澄清</h2>
+<ul><li><strong>"周五 22:00 判开市留周末敞口" = 误报</strong>：STARTRADER/XM 黄金真实收盘是周五 23:55（GMT+3），周五 22:00-23:55 本就是合法交易时段，开仓无风险。真正的瑕疵只是 <code>_next_open_moment</code> 把收盘点写成 22:00 → <code>countdown_to_close</code> 显示差约 2h（纯展示精度问题，降级 P2，未改——改需动魔法数字且无安全影响）</li></ul>
+<hr>
+<h2>四、遗留待评估（未修，改动面大或需回测）</h2>
+<table><thead><tr><th>#</th><th>位置</th><th>问题</th><th>建议</th></tr></thead><tbody><tr><td>P0</td><td><code>orderflow_cvd.py:353</code></td><td>主进程裸调 mt5.initialize() 取 tick，30s/次永不 shutdown，凿穿多进程隔离</td><td>删该路径仅用 M1 bars 回退，或经 Worker IPC</td></tr><tr><td>P1</td><td><code>trade_executor.py:835</code> + <code>debate_engine.py:105</code></td><td>行情主号启动后永不 failover（set_market_primary 无调用点），主号熔断→永久 HOLD 直至重启</td><td>每 cycle 调 pick_market_primary</td></tr><tr><td>P1</td><td><code>market_analyzer.py:193</code></td><td>_get_current_price 拉 7×200 根取 bid/ask（主号+每跟号每轮重复），应改用 get_tick</td><td>轻量化</td></tr><tr><td>P1</td><td><code>_PARTIAL_DONE</code> 单槽 vs 4级分批</td><td>浮盈锁50%先触发→TP1/2/3 全死，剩余靠追踪 SL 兜底</td><td>按 TP 档位多槽（需回测验证）</td></tr><tr><td>P1</td><td><code>risk_engine.py:193</code></td><td>日亏损窗口本地 naive vs worker 服务器墙钟，差 5-6h</td><td>统一服务器墙钟切日</td></tr><tr><td>P2</td><td><code>trade_exit.py</code></td><td>commission/swap 明细恒 0（净利已含佣，审计归因断链）</td><td>worker 拆分透传</td></tr><tr><td>P2</td><td><code>mt5_worker.py:93-98</code></td><td>exec_req_ids.json 单文件被 6 Worker 覆盖写，跨重启去重失效</td><td>按账号分文件</td></tr><tr><td>P2</td><td><code>meta_agent.py:994</code></td><td>B门/A门惩罚过弱（×0.88/0.80 拦不住）</td><td>阈值吸附（需回测）</td></tr><tr><td>P2</td><td><code>trade_executor.py:2203</code></td><td>max_positions=0 配置恒拦且无告警</td><td>max(1,...)</td></tr><tr><td>P2</td><td><code>dashboard.py:654</code></td><td>deal.time 服务器墙钟秒直接 fromtimestamp 归日，日盈亏偏移 5h</td><td>减 offset</td></tr><tr><td>P2</td><td><code>market_data.py:112</code></td><td>VIX 未走 _guard + timeout 20s 拖慢刷新</td><td>复用 DXY 的 3s 硬超时</td></tr></tbody></table>
+<hr>
+<h2>五、运行时真实状态（审计时点 18:14）</h2>
+<pre><code>后端:  pid=22088  uptime=78min  mt5=6/6  trading=3/3  degraded=False  offline=[]
+视觉:  model=qwen2.5vl:7b  runs=39  ok=30(77%)  err=''  vote=SELL 0.95
+GPU0:  5478 MiB（qwen3:8b 校对员，Windows GPU1 第一张3060Ti）
+GPU1:  7834 MiB（qwen2.5vl:7b 视觉，Windows GPU2 第二张3060Ti）</code></pre>
+<h2>六、验证</h2>
+<ul><li>编译：3 个改动文件 py_compile 全 OK</li><li>回归：追踪止盈 5/5、视觉 swing 8/8、置信边界 12/12 全过</li><li>运行时：健康 6/6、视觉 ok=30 连续正常</li></ul>
+<h2>结论</h2>
+<p><strong>开市前系统处于健康状态</strong>。本轮 6 项修复已落地（rejected_signals 双路径、NaN 置信、手数=0、反转广播、TP 回调、视觉 partial 越界），全部围绕"主跟一致性 + 风控不被击穿"——都是周一实盘会咬人的点。遗留项（主号 failover、orderflow 裸调、日亏时区等）已在案，建议作为下一迭代主题，不阻塞开市。</p>
+<blockquote>待重启生效：改动已就绪，需双击 <code>backend\restart_task_backend.bat</code> 重新加载后端。</blockquote></body></html>

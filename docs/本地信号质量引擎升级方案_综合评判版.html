@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai · 本地信号质量引擎升级方案（综合评判版）</h1>
+<blockquote>两份参考文案（"LSTM/TCN + Meta-Labeling" 与 "Chronos 换 GBM"）仅作参考。本文基于我亲自海外调研核实的数据源，给出<strong>独立综合方案</strong>。&lt;br&gt;唯一红线：<strong>赚钱、不亏本</strong>。任何机制（含硬过滤）只要 walk-forward 验证能提升净盈利即可用；"过度过滤砍利润"作为设计警示，非禁令。</blockquote>
+<hr>
+<h2>0. 红线解读与验收判官</h2>
+<p>你的红线是"赚钱、不亏本，其他没有红线"。这改变了评判方式：</p>
+<ul><li><strong>唯一验收判官 = 净 P&amp;L &gt; 0、PF &gt; 1、单账户不爆仓</strong>。不以胜率 / 夏普 / 回撤美观度为指标。</li><li>此前"提准非拦截"的经验教训（2026-07-19 过度过滤曾砍掉利润）<strong>不再作为硬性禁令</strong>，但作为设计警示：任何过滤机制必须用 walk-forward 验证"确实提升净盈利"才能上架，否则就是变相砍单。</li><li>我拥有机制自由度：硬过滤、加权、仓位缩放都可以用——<strong>唯一判官是实盘/回测的净盈利</strong>。</li></ul>
+<hr>
+<h2>1. 参考文案 vs 我核实的事实（先校正，再综合）</h2>
+<table><thead><tr><th>文案说法</th><th>我海外核实的事实</th><th>判定</th></tr></thead><tbody><tr><td>本机"纯 CPU（核显）"</td><td>实测 <strong>RTX 3060 Ti 8GB</strong>（空闲 6914 MiB，驱动 560.94）</td><td><strong>误判</strong>，丢了独显</td></tr><tr><td>"Chronos-2 / 120M 参数"</td><td>HuggingFace 官方<strong>无此命名/尺寸</strong>：chronos-bolt 仅 tiny 9M / mini 21M / <strong>small 48M</strong> / <strong>base 205M</strong></td><td><strong>规格有误</strong>，需纠正</td></tr><tr><td>"屏幕 Meta 85% 实为 GBM AUC 0.64"</td><td>证实系统已有 GBM 质检引擎（名为 LSTM/TCN 实为 GBM），meta-labeling 流程已落地</td><td>正确，换引擎风险低</td></tr><tr><td>——</td><td><strong>Fin-Bias（ACL 2026）</strong>：18 个 LLM 含 GPT-5、Claude 在金融方向判断上贴 <strong>33% 随机</strong>浮动</td><td>我的补充：方向预测非 LLM 强项</td></tr><tr><td>——</td><td>海外 XAU 项目（JonusNattapong / VN-Noxa / soloshun）验证"集成 + 时段 + session"路线 PF 1.1~2.16</td><td>我的补充：路线可行</td></tr><tr><td>——</td><td><strong>TensorFlow 2.11+ 不支持 Windows 原生 GPU</strong>（需 WSL2）；PyTorch 在 Win GPU 开箱即用</td><td>我的补充：框架选型依据</td></tr><tr><td>——</td><td>Chronos：T5 架构、近 <strong>1000 亿</strong> TS 观测预训练、zero-shot <strong>分位数概率预测</strong>、<strong>Apache-2.0</strong> 可商用、<code>device_map="cuda"</code> 支持</td><td>我 WebFetch 核实：文案主体正确</td></tr></tbody></table>
+<p><strong>结论</strong>：文案方向对（meta-labeling 分工 + 换强引擎），但两处硬事实错了（CPU 误判、Chronos 尺寸）。综合时以核实事实为准。</p>
+<hr>
+<h2>2. 现有系统真实起点</h2>
+<ul><li><strong>双模型对抗</strong>：云 DeepSeek V4 + 混元 Hy3 → 辩论 → Meta 加权合并。</li><li><strong>硬特征护城河</strong>：<code>compute_smc</code> / <code>detect_regime</code> 已落地（SMC 机构订单流 + 多周期体制 + 反转哨兵）——这是我们的核心优势，必须保留。</li><li><strong>质检引擎已存在</strong>：GBM（标称"LSTM/TCN 85%"，实际 AUC 0.64 封顶），meta-labeling 流程已跑通。</li><li><strong>风控护盾</strong>：L3 篮子浮盈锁利 + 反转哨兵已落地。</li><li><strong>近期事故</strong>：BUY-only 巨亏（290 笔全 BUY、胜率 28.3%、净亏 -$6,743）。根因是 <strong>regime 特征偏置把下跌判上涨</strong>，不是模型弱。</li></ul>
+<blockquote><strong>关键认知</strong>：质量引擎升级是<strong>锦上添花</strong>，前提是<strong>先把核心信号（SMC/Regime）的偏置修稳</strong>。否则在歪的方向上做"质量过滤"只会过滤得更精确地向亏钱方向收敛。</blockquote>
+<hr>
+<h2>3. 我的核心判断：该做 / 不该做</h2>
+<p><strong>该做</strong></p>
+<ul><li>升级质检引擎 <strong>GBM → Chronos</strong>（提信号质量，守"提准"）。</li><li>把"方向预测负担"从 LLM 转移到"价格分布 + 硬特征"，绕开 LLM 方向随机（33%）死局。</li><li>保留云 DeepSeek 作质量锚点（8GB 跑不了大模型，云 LLM 不可丢）。</li><li>用 <strong>walk-forward 盈利闸门</strong> 作客观验收，直接落实"不亏本"红线。</li></ul>
+<p><strong>不该做</strong></p>
+<ul><li>不盲目全切本地（8GB 物理限制 + 小模型方向更弱）。</li><li><strong>不把自训 LSTM/TCN 作为第一步</strong>（数据抽取 + 训练 + 过拟合风险高，且无必要——Chronos 白送）。</li><li>不把 Chronos 配成硬门控却不经验证（可能砍利润，违背红线初衷）。</li></ul>
+<hr>
+<h2>4. 目标架构（信号质量层升级）</h2>
+<pre><code>行情(MT5) → SMC/Regime 硬特征(主模型 primary, 高 recall 出候选方向)
+           → 双 AI 辩论(云 DeepSeek 锚点 + 本地混元)
+           → 信号质量层(Chronos 质检打分)   ← 本次升级点
+           → 执行器(仓位缩放 + L3 护盾锁利)</code></pre>
+<p><strong>Chronos 插入位置</strong>：在"候选信号生成后、下单前"。输入我们的价格序列（可叠加 SMC/Regime 特征）→ 输出<strong>未来价格分位数分布</strong> → 提取"上行 vs 下行概率差"作为<strong>信号质量分</strong> → 乘进 AI 决策置信 / 仓位系数。</p>
+<p><strong>为何不替代 LLM 辩论</strong>：Chronos 是通用时间序列模型，不擅长"多模型对抗推理"；它只补"价格分布 sanity-check"这一块，主决策仍由 DeepSeek 锚点 + 硬特征主导。</p>
+<hr>
+<h2>5. 为什么选 Chronos 而非自训 LSTM/TCN（及何时自训）</h2>
+<p><strong>选 Chronos 的理由</strong></p>
+<ul><li><strong>零训练成本、零数据抽取依赖</strong>：即下即用，不像自训要先抽 MT5 历史、做特征、训 walk-forward。</li><li><strong>额外送价格分布预测</strong>：GBM / 自训 TCN 都只给单点打分，Chronos 给完整分位数分布（"未来 60 根 80% 概率在 X~Y 之间"），可作"该信号质量好不好"的直接依据。</li><li><strong>Apache-2.0 可商用</strong>，本机 3060Ti 跑 small 48M（fp16 ~100MB）/ base 205M（~400MB）都绰绰有余。</li></ul>
+<p><strong>自训 TCN 作为兜底路线（不优先）</strong></p>
+<ul><li>触发条件：Chronos 在 XAU walk-forward 上 PF 不超 GBM 0.64，或分布外严重（黄金高波动/跳空/三时段动力学不匹配）。</li><li>届时启动：MT5 抽 D1/H4/H1/M15 → 特征工程（复用 compute_smc/regime）→ <strong>TCN 优先</strong>（因果卷积防未来泄漏、GPU/CPU 都快）→ <code>seq_len=60</code>（H1 约 2.5 天）→ Triple-Barrier 标签（基于 ATR）。</li></ul>
+<hr>
+<h2>6. 部署架构（3060Ti 8GB 现实约束）</h2>
+<ul><li><strong>Chronos 作独立本地推理服务</strong>：单独 Python 进程，模型常驻 GPU（~400MB fp16），后端经 <strong>localhost HTTP</strong> 调用。GPU 内存隔离，N 账号复用同一服务，不重复加载。</li><li><strong>不同时在本地跑 7B LLM</strong>：8GB 不够"Chronos + 7B LLM + 系统 + MT5 + 浏览器"共存。云 DeepSeek 承担重 LLM 推理。</li><li><strong>框架 = PyTorch（Windows GPU 版）</strong>，非 TensorFlow（Win 原生 GPU 不支持，需 WSL2 徒增复杂度）。</li><li><strong>版本路径</strong>：先 <strong>small 48M</strong> 验证，base 205M 若延迟/显存 OK 再上。</li></ul>
+<hr>
+<h2>7. 赚钱 / 不亏本的硬性验证闸门（守红线）</h2>
+<p><strong>任何模型上架前必须过这道闸</strong>：</p>
+<ol><li><strong>walk-forward 5 折</strong>，强制覆盖 <strong>2020 新冠暴涨 / 2022 加息熊 / 2023 横盘 / 2024 牛市</strong> 四态（否则过拟合，实盘必翻车）。</li><li><strong>硬门槛指标</strong>：PF &gt; 1.0（一票否决）、净 P&amp;L &gt; 0、单账户最大回撤 &lt; 本金阈值、夏普 &gt; 0。</li><li><strong>标签规范</strong>：Triple-Barrier 的 barrier = <strong>k×ATR(14)</strong>（k≈1.5~2.5，<strong>绝不写死 pip</strong>）；timeout ≈ 20~30 根；embargo ≥ 信号持有期防泄漏。</li><li><strong>实时机制（守红线同时保 volume）</strong>：Chronos 评分低时<strong>缩放仓位</strong>（非全 block），保留交易笔数保利润；仅当"评分极低 + regime 逆向确认"才硬 block——且此硬 block 须先验证"不伤净盈利"。</li><li><strong>影子运行（A/B）</strong>：Chronos 先与 GBM 并行影子跑，确认 PF 真实超越 0.64 再切换为主。</li></ol>
+<hr>
+<h2>8. 分阶段落地计划（含工时）</h2>
+<table><thead><tr><th>阶段</th><th>内容</th><th>工时</th><th>风险</th></tr></thead><tbody><tr><td><strong>P0</strong></td><td>装 PyTorch(GPU) + chronos-forecasting；写 Chronos 质检原型（序列→分位数→质量分）</td><td>0.5~1 天</td><td>零（不影响现有系统）</td></tr><tr><td><strong>P1</strong></td><td>MT5 历史抽取（D1/H4/H1/M15 落地 Parquet）+ walk-forward 验证 Chronos 在 XAU 真实 PF/AUC vs GBM 0.64</td><td>2~3 天</td><td>低（需测 EA 的 MT5 在线）</td></tr><tr><td><strong>P2</strong></td><td>接入 <code>debate_engine</code> 信号质量层；A/B（GBM vs Chronos）影子运行</td><td>3~5 天</td><td>中</td></tr><tr><td><strong>P3</strong></td><td>验证过关→正式上架；不过关→启动自训 TCN 兜底</td><td>1 周</td><td>中</td></tr><tr><td><strong>P4（可选）</strong></td><td>本地 7B（VN-Noxa）替换混元降本/隐私</td><td>低优先级</td><td>低</td></tr></tbody></table>
+<p><strong>端到端约 3~4 周，P0/P1 为纯验证前置，可立即开干。</strong></p>
+<hr>
+<h2>9. 风险与回退</h2>
+<ul><li><strong>Chronos 分布外</strong>（XAU 高波动不匹配）：回退 GBM，或启动自训 TCN 兜底。</li><li><strong>延迟扛不住 N=10+ 账号</strong>：推理服务批处理 / 降频调用 / 升 base 前先压测并发。</li><li><strong>任何阶段净 P&amp;L 不达标</strong>：回退上一稳定版，绝不带病上架。</li><li><strong>核心信号偏置复发</strong>：L3 护盾 + regime 校验持续监控，回归 BUY-only 单边即停。</li></ul>
+<hr>
+<h2>10. 我现在就动手的第一步（零风险）</h2>
+<p>按你"全权授权"铁律，我直接开干 <strong>P0</strong>：</p>
+<ol><li>装 <strong>PyTorch（Windows GPU 版）+ chronos-forecasting</strong> 到 managed venv（后台）。</li><li>写 <strong>Chronos 质检原型脚本</strong>：输入我们的序列特征 → 输出分位数 → 质量打分，先在小样本上跑通。</li></ol>
+<p>P0 跑通、原型验证能出合理质量分后，再进 P1 抽数据做 walk-forward，用<strong>真实 PF 数字</strong>向你汇报是否值得继续。全程守"不亏本"红线——验证不过关就停，不强行上架。</p>
+<hr>
+<p>*本文档为独立综合方案，基于 2026-08-06 海外调研核实数据源（HuggingFace Chronos 官方模型卡、Fin-Bias ACL 2026、JonusNattapong/VN-Noxa/soloshun 海外 XAU 项目、RTX 3060Ti 实测）。参考文案仅用于方向启发，硬事实以核实为准。*</p></body></html>

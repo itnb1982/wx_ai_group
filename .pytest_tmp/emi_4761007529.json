@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "global": {
+    "level": "HALT_NEW",
+    "reason": "盘面异常",
+    "at": "2026-08-08T23:57:32",
+    "by": "tester"
+  },
+  "accounts": {},
+  "flatten_requests": []
+}

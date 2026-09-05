@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "global": {
+    "level": "HALT_NEW",
+    "reason": "含中文原因与特殊字符 \" \\ /",
+    "at": "2026-08-09T00:03:44",
+    "by": "测试员"
+  },
+  "accounts": {},
+  "flatten_requests": []
+}

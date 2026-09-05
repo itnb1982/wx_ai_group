@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象 AI 交易系统 · 质量提升方案（修订 v2 · AI 原生驱动）</h1>
+<blockquote>状态：方案文档（先出方案，未动交易逻辑代码）&lt;br&gt;修订日期：2026-08-04&lt;br&gt;修订动机：用户指出 v1 方案（调 ATR 倍数、分批比例、保本距离）本质是<strong>传统 EA 参数调优</strong>，与"抛弃传统 EA、纯 AI 驱动"的产品铁律相悖。本版彻底重构为<strong>AI 原生</strong>方案。</blockquote>
+<hr>
+<h2>〇、先认错：v1 方案为什么错</h2>
+<p>v1 把问题归结为"SL/TP 倍数写死、分批切碎、保本太紧"，开出的药方是<strong>调这几个写死的数</strong>。这有三个致命问题：</p>
+<ol><li><strong>方向错</strong>：这恰恰是用 EA 思维在给一个号称 AI 的系统开药方。调 ATR 倍数 = 传统 EA 写死指标，根子没动。</li><li><strong>没体现 AI</strong>：客户买的是"AI 智能交易"，不是"一个会改参数的 EA"。v1 方案交付后，客户看见的仍是写死的规则，AI 只是个开仓按钮。</li><li><strong>引用源错</strong>：v1 引用的 WikiFX / FXPremiere / VTMarkets 是<strong>零售外汇教育商</strong>，不是 AI 研究，等于拿 EA 经验指导 AI 系统。</li></ol>
+<p><strong>根因诊断（才是真问题）</strong>：</p>
+<p>我们现在的 AI 只干了<strong>一件事</strong>——开仓方向（Meta Agent 双模型辩论只输出 BUY/SELL/HOLD）。</p>
+<p>而真正决定盈亏的<strong>出场、风控、仓位</strong>全在 <code>smart_exit.py</code> 里写死成传统 EA 规则。</p>
+<p>等于：<strong>AI 只管了 30% 的活（开仓），亏钱赚钱的身子（出场/风控）是传统 EA</strong>。</p>
+<p>这恰恰就是"看不出 AI 智能"的根源，也正好是质量崩盘（PF=0.382）的结构性原因——AI 开了好方向，EA 的出场规则把盈利切碎、把亏损整吞。</p>
+<hr>
+<h2>一、重新定位：真正的"AI 驱动"应该是什么样</h2>
+<table><thead><tr><th>维度</th><th>传统 EA（我们 v1 之前的身子）</th><th>真正的 AI 驱动（本方案目标）</th></tr></thead><tbody><tr><td>开仓</td><td>if/else 指标堆</td><td>多模型辩论 + 终裁（<strong>已落地</strong>）</td></tr><tr><td>出场</td><td>写死 TP 倍数、分批比例、保本距离</td><td><strong>AI Exit Agent 每周期推理"此刻最优出场动作"</strong></td></tr><tr><td>仓位</td><td>固定手数公式</td><td><strong>AI Risk Agent 按置信度/波动/regime 动态给仓位</strong></td></tr><tr><td>方向偏见</td><td>写死方向门/过滤</td><td><strong>AI 自我反思纠偏（无写死门）</strong></td></tr><tr><td>进化</td><td>无（规则写死后不变）</td><td><strong>分层记忆 + 周期性反思，自己复盘变强</strong></td></tr><tr><td>安全底线</td><td>写死 SL 硬锁</td><td><strong>AI 软决策 + 确定性硬护栏（不可逾越）</strong></td></tr></tbody></table>
+<p>核心区别一句话：<strong>v1 是"让 AI 去适应 EA 规则"，本方案是"让 AI 接管 EA 干的所有活，只保留一层确定性硬护栏当安全网"</strong>。</p>
+<hr>
+<h2>二、海外调研（定向到 AI/Agent 研究，非 EA）</h2>
+<blockquote>调研口径：找"AI 智能体如何做出场/风控/进化"，而非"EA 怎么调参数"。≥5 个独立出处交叉验证。</blockquote>
+<ol><li><strong>Tradewink《AI Day Trading Bots 8-Stage Pipeline》</strong>（产业实践）</li></ol>
+<ul><li>动态出场管理层用<strong>并行的多种机制</strong>：Trailing Stop + <strong>MFE/MAE 追踪</strong> + <strong>ML 驱动的出场引擎</strong>（模型对每周期评估 6 个动作：Hold / Tighten Stop / Partial Take / Exit Full / Extend Target / Reverse）+ Regime-Shift 辩论出场 + 时间止损。</li><li>要点：出场不是写死 TP，是<strong>模型每周期给动作</strong>；Regime 翻转时触发 AI 辩论决定去留。</li></ul>
+<ol><li><strong>QuantInsti《Guardrailed LLM Trading Risk-Manager Agent》</strong>（工程实践，DeepSeek）</li></ol>
+<ul><li>LLM 输出"风险信号→仓位暴露（0.5/0.8/1.0 三档）"；再叠 <strong>Hard Guardrails（确定性代码）</strong>：波动率熔断、回撤熔断、冷却期。</li><li>要点：<strong>AI 做软决策，确定性代码做最后安全线</strong>——这是"纯 AI 系统不爆仓"的标准做法，值得直接采用。</li></ul>
+<ol><li><strong>Raven-Agent / alphaXiv《Belief-to-Trade Layer》</strong>（学术研究）</li></ol>
+<ul><li>关键结论：同一组 AI 预测，交易层逻辑不同，结果可从 <strong>-55% 到 +15.9%</strong>。证明<strong>"预测准"不等于"赚钱"，交易/出场/仓位层才是利润来源</strong>。</li><li>采用：① 硬约束（Notional Cap、Aggregate Exposure、Stop-Loss、Drawdown Halt）确定性代码；② 分数 Kelly 仓位；③ 交易层与预测层解耦、可组合。</li></ul>
+<ol><li><strong>FinRS（风险感知 LLM 交易框架，论文评述）</strong>（学术研究）</li></ol>
+<ul><li>明确把"预测"升级为"决策"：方向决策智能体 + <strong>数量与风险智能体</strong>（position sizing 建模风险敞口）。</li><li>分层记忆：稳定信号存深层、易变信号存浅层，<strong>盈利/保护性信号提升层级、误导性信号削弱</strong>。</li></ul>
+<ol><li><strong>TradingGPT / FinMem（多智能体 + 分层记忆 + 反思，arXiv 2309.03736 + 综述 2408.06361）</strong>（学术标杆）</li></ol>
+<ul><li><strong>分层记忆</strong>（短期/中期/长期，带衰减）+ <strong>即时反思（每日）/扩展反思（每周）</strong> + <strong>跨智能体辩论</strong>。</li><li>反思会被存入记忆并影响后续决策——这是"AI 会进化"的学术原型，也是客户最能直观感知"AI 在学"的载体。</li></ul>
+<ol><li><strong>WebCryptoAgent / ARL（自适应强化学习，arXiv + ScienceDirect）</strong>（学术）</li></ol>
+<ul><li>风险子系统：position sizing 基于 ATR 波动、stop 距离<strong>随 regime 自适应</strong>（RISK-ON 仓位大止损紧、RISK-OFF 减仓放宽）；分数 Kelly 链接 LLM 置信度与统计优势；成本门（预期 edge &gt; 摩擦成本才交易）；Contextual Reflection 经验回放。</li></ul>
+<p><strong>调研结论（共识）</strong>：前沿 AI 交易系统的共同骨架 =</p>
+<ul><li>AI 软决策覆盖<strong>开仓 + 出场 + 仓位 + 反思进化</strong>四件事；</li><li>确定性<strong>硬护栏</strong>独立存在，AI 不可越过（防爆仓）；</li><li>出场/仓位<strong>随市场状态（regime/波动）自适应</strong>，而非写死；</li><li><strong>记忆+反思</strong>让系统持续变强，这是"AI"相对 EA 的本质差异点。</li></ul>
+<hr>
+<h2>三、本系统的 AI 原生重构方案（四层）</h2>
+<h3>层 1 · AI 出场决策层（替换 smart_exit 硬规则）【核心修复 PF】</h3>
+<ul><li><strong>新增 <code>AI Exit Agent</code></strong>：对<strong>每个持仓、每个监控周期（沿用 180s）</strong>调用轻量模型（混元 Hy3-fast / Lite，低成本高频），输入：该持仓开仓理由 + 当前价格结构（距 MA 偏离、MFE/MAE、ATR、regime、近 24h 新闻情绪），输出 6 选 1 动作：<code>Hold / Tighten Stop / Partial Take / Exit Full / Extend Target / Reverse</code>。</li><li><strong>废除</strong> <code>smart_exit.py</code> 里写死的"TP1 平40% / TP2 平30% / TP3 平20% / 保本0.3ATR"硬逻辑，改为 AI 推理驱动。AI 默认让盈利单"跑"（Extend Target），只在结构转弱时 Partial Take，避免把盈利切碎。</li><li>延迟/成本可控：黄金持仓以小时计，180s 周期 + 多账号并发调用轻量模型，足够；Meta 开仓用重度模型，Exit 用轻量模型（沿用 Tradewink 的模型路由思路）。</li></ul>
+<h3>层 2 · AI 仓位与风险层（AI Risk Agent + 硬护栏）</h3>
+<ul><li><strong>AI Risk Agent</strong> 按：模型置信度 × 当前 regime × ATR 波动，算每笔仓位（分数 Kelly / ATR-volatility sizing，RISK-OFF 自动减仓）。替换旧"固定手数公式"。</li><li><strong>确定性硬护栏（独立代码，AI 不可改）</strong>：单笔最大风险%、单日最大亏损熔断、账户回撤熔断、单账号最大并发持仓、总敞口上限。这是"不爆仓"铁律的落地，参照 QuantInsti / Raven-Agent。AI 软决策 + 硬护栏 = 既智能又安全。</li></ul>
+<h3>层 3 · 市场状态感知（Regime Detector）</h3>
+<ul><li>新增模块，先判 XAUUSD 当前处于：强多/多/震荡/空/强空/高波动/低波动（参照 Sovereign-Apex 的 6–7 类 regime + ADX/ATR/RSI/MACD 分类）。</li><li>不同 regime 下，层1/层2 的 AI 用不同策略（高波动→减仓放宽止损；趋势→让盈利跑）。比写死一个 TP 倍数合理得多。</li></ul>
+<h3>层 4 · 记忆 · 反思 · 进化层（"AI 在学"的差异化）</h3>
+<ul><li>采用 TradingGPT/FinMem <strong>分层记忆 + 反思</strong>：</li><li>每笔交易结束，AI 写一条交易记忆（为什么开/平、赚亏、哪步判断对/错），短期→中期→长期分层衰减。</li><li>周期性（日/周）<strong>反思</strong>：AI 复盘近期交易，提炼规律，注入下一轮决策（如"近期黄金美盘后常假突破，下次谨慎"）。</li><li>盈利/保护性记忆提升层级，误导性记忆削弱——系统<strong>自己变强</strong>。</li><li><strong>方向偏见自检</strong>：针对实测"SELL 515 vs BUY 201 严重偏空"，让 AI 在决策时显式反思"我是否系统性偏空？有无证据支撑？"——这是 AI 自我纠偏，<strong>不是写死方向门</strong>（符合铁律"不写死过滤"）。</li></ul>
+<hr>
+<h2>四、前端如何"体现 AI 智能"（客户一眼看懂）</h2>
+<p>现有已落地：AITheater 辩论/进化/执行流三栏。</p>
+<p>新增（让客户直观感到"这是 AI 在干活、在学"）：</p>
+<ol><li><strong>持仓沙盘 · AI 出场决策视图</strong>：每个持仓卡片显示 AI 当前给的出场动作（Hold/Partial/Exit…）+ 一句话理由。客户能看到"AI 在替我决定怎么收"。</li><li><strong>AI 记忆 / 进化流视图</strong>：把分层记忆 + 反思流做成时间线，客户能看见"AI 上周学到 X，这周据此调整了 Y"。</li><li><strong>市场状态感知徽章</strong>：实时显示 AI 判的当前 regime（如"高波动避险市"）。</li><li><strong>方向自检徽章</strong>：AI 自报"近期偏空，已自检修正"或"中性"，让偏见可视、可纠。</li></ol>
+<blockquote>设计哲学（用户铁律）：高端酷炫 + 客户一眼懂 + AI 工作被"看见"。以上四个视图正是把"纯 AI 接管出场/风控/进化"这件事<strong>可视化</strong>给客户。</blockquote>
+<hr>
+<h2>五、落地里程碑（先方案，待"开搞"再写代码）</h2>
+<table><thead><tr><th>里程碑</th><th>内容</th><th>预期效果</th><th>验证</th></tr></thead><tbody><tr><td><strong>M1</strong></td><td>AI Exit Agent 替换 smart_exit 硬规则（层1）</td><td>直接修复盈利被切碎、R:R 畸形</td><td>回测 PF 0.382→&gt;1.2，交易笔数不腰斩</td></tr><tr><td><strong>M2</strong></td><td>Regime Detector + AI Risk Agent 动态仓位（层2/3）</td><td>波动市少亏、趋势市多赚</td><td>回测 PF/净值再提升，回撤可控</td></tr><tr><td><strong>M3</strong></td><td>记忆/反思/进化层 + 前端进化流视图（层4）</td><td>系统自我变强，客户可见 AI 学习</td><td>复盘样例 + 前端视图验收</td></tr><tr><td><strong>M4</strong></td><td>确定性硬护栏硬编码（安全网）</td><td>任何情况不爆仓</td><td>极端行情压测</td></tr></tbody></table>
+<p>每个 M 提交前：<strong>先回测验证 PF&gt;1.2 且交易笔数不腰斩</strong>，再上模拟盘。严守用户铁律"多交易多赚钱、PF&gt;1、不爆仓"。</p>
+<hr>
+<h2>六、与旧方案的边界（说清什么不动、什么废）</h2>
+<ul><li><strong>废</strong>：v1 方案里所有"调 ATR 倍数 / 调分批比例 / 调保本距离"的 EA 式补丁——不再用写死数修写死数。</li><li><strong>接管</strong>：<code>smart_exit.py</code> 的硬出场逻辑由 AI Exit Agent 推理替代（代码层面是"换引擎"，不是"调参数"）。</li><li><strong>保留且强化</strong>：Meta Agent 辩论开仓（已落地，继续用）；新增的硬护栏是<strong>叠加</strong>一层确定性安全网，不是回到 EA。</li></ul>
+<hr>
+<h2>七、结论</h2>
+<p>质量崩盘（PF=0.382）的本质不是"参数没调好"，而是<strong>AI 只管开仓、身子是 EA</strong>。真正的修复是把出场、仓位、风控、进化<strong>全部交给 AI 推理</strong>，只在最底层留一道确定性硬护栏保命。这既符合"抛弃传统 EA、纯 AI 驱动"的铁律，也让客户前端直观看见 AI 在决策、在学——才是"高端可视化智能 AI 交易系统"该有的样子。</p>
+<p>待用户回"开搞"，从 M1（AI Exit Agent）落地，回测达标后再推进 M2–M4。</p></body></html>

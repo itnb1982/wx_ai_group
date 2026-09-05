@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "global": {
+    "level": "HALT_ALL",
+    "reason": "AI疯了",
+    "at": "2026-08-09T00:03:44",
+    "by": "tester"
+  },
+  "accounts": {},
+  "flatten_requests": []
+}

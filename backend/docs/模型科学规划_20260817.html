@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>模型科学规划 · 8 模型各司其职（2026-08-17）</h1>
+<blockquote>用户批评（成立）：8 个模型只用 5 个，TimesFM / Time-MoE / Moirai 三个本地模型"休息"，&lt;br&gt;审计从未系统审视模型利用率。本轮：先用 <strong>walk-forward 实测数据</strong>回答"为什么之前没启用"，&lt;br&gt;再按数据<strong>科学定岗</strong>——不是摆设，是之前岗位规划错了。</blockquote>
+<hr>
+<h2>一、先认账：审计盲区在哪</h2>
+<p>此前 4 轮审计（快监顺序/凭证回退/篮子方案/断连根治）全部聚焦<strong>决策链正确性与 bug</strong>，</p>
+<p>从没问过一个基础问题：<strong>"8 个模型里每个都在干什么？有没有装好没通电的？"</strong></p>
+<p>你的批评一针见血。本轮补上模型利用率审计 + 科学定岗。</p>
+<h2>二、walk-forward 复测：时序模型的真实能力（30 天 XAUUSD M15，172 测试点，预测未来 2h 方向）</h2>
+<table><thead><tr><th>模型</th><th>角色</th><th>方向准确率</th><th>净点数(2h持有)</th><th>结论</th></tr></thead><tbody><tr><td>numpy 规则（现役）</td><td>方向守卫</td><td>49.4%</td><td><strong>+17811</strong></td><td>唯一正收益（趋势惯性）</td></tr><tr><td>chronos-2（现役）</td><td>时序票/风险区间</td><td><strong>41.3%</strong></td><td>-45931</td><td>方向显著劣于随机！</td></tr><tr><td>timesfm-2.5（闲置）</td><td>—</td><td>50.0%</td><td>-10241</td><td>不优于随机</td></tr><tr><td>moirai（闲置）</td><td>—</td><td>50.6%</td><td>-2829</td><td>不优于随机</td></tr><tr><td>time-moe（闲置）</td><td>—</td><td><strong>SKIP</strong></td><td>—</td><td>transformers 5.14 接口 4 处不兼容</td></tr></tbody></table>
+<p><strong>残酷事实：时序基础模型做"方向预测"全部不优于随机（含现役 Chronos-2！）</strong></p>
+<p>这就是竞技场当年把它们停用的数据依据——<strong>不是摆设，是"方向票"这条路走不通</strong>。</p>
+<p>但旧规划的错在于：<strong>停用 = 全停</strong>。正确做法是让它们干自己真正擅长的事——</p>
+<p><strong>独立的风险区间估计（分位数）</strong>，与 Chronos-2 交叉验证。</p>
+<h2>三、科学定岗：8 模型 × 岗位矩阵（新规划）</h2>
+<table><thead><tr><th>模型</th><th>类型</th><th>岗位</th><th>开仓</th><th>持仓管理</th><th>平仓</th><th>状态</th></tr></thead><tbody><tr><td>DeepSeek</td><td>云</td><td>方向主脑+辩论</td><td>✅ 投票 w0.54</td><td>✅ position_action</td><td>✅ L2反转</td><td>在岗</td></tr><tr><td>混元 HY</td><td>云</td><td>方向主脑+辩论</td><td>✅ 投票 w0.46</td><td>✅ position_action</td><td>✅ L2反转</td><td>在岗</td></tr><tr><td>qwen2.5vl:7b</td><td>本地</td><td>视觉结构票+看护</td><td>✅ 投票 w0.30</td><td>✅ VisionExit</td><td>✅ VisionExit</td><td>在岗</td></tr><tr><td>qwen3:8b</td><td>本地</td><td>校对员/降级副驾</td><td>⚠️ 常态不改票</td><td>❌</td><td>❌</td><td>在岗</td></tr><tr><td>Chronos-2</td><td>本地</td><td><strong>风险区间主</strong></td><td>✅ 区间/弱方向</td><td>✅ 止盈目标</td><td>✅ smart_exit</td><td>在岗</td></tr><tr><td><strong>TimesFM-2.5</strong></td><td>本地</td><td><strong>风险区间交叉验证</strong></td><td><strong>✅ 区间分歧→q微调/止盈收紧</strong></td><td><strong>✅ 区间分歧</strong></td><td>—</td><td><strong>本轮启用</strong></td></tr><tr><td><strong>Moirai</strong></td><td>本地</td><td>时序竞技场参考</td><td>参考面板观测</td><td>—</td><td>—</td><td><strong>复测过关待接入</strong></td></tr><tr><td><strong>Time-MoE</strong></td><td>本地</td><td>—</td><td>❌ 接口不兼容</td><td>—</td><td>—</td><td><strong>待官方适配</strong></td></tr></tbody></table>
+<h2>四、本轮落地：TimesFM-2.5 风险区间交叉验证（新增 ts_cross_validate 服务）</h2>
+<p><strong>设计依据</strong>（不是拍脑袋）：</p>
+<ul><li>TimesFM 方向 acc 50.0%（无用），但它独立预测的分位数<strong>与 Chronos-2 是两把不同的尺子</strong></li><li>两把尺子一致 → 区间可信 → 信号质量 <strong>q+0.05</strong>（提准）</li><li>两把尺子显著分歧 → 不确定性高 → <strong>q-0.10 + 止盈天花板收紧到较保守端</strong>（降损）</li><li><strong>铁律：只调质量分和止盈，绝不做开仓拦截</strong>（提准非拦截红线）</li></ul>
+<p><strong>性能实测</strong>：常驻单例加载 3.2s（首轮）→ 纯推理 0.10s/次 → 缓存 120s</p>
+<p>（指纹=末16根价格+长度），决策循环 60-90s 完全放得下。</p>
+<p><strong>改动清单</strong>：</p>
+<ul><li>新增 <code>app/services/ts_cross_validate.py</code>（单例+缓存+超时静默降级）</li><li><code>app/services/meta_quality.py</code>：<code>_evaluate_core</code> 增加 cross 参数；同步/异步入口接入</li><li>单测 <code>tests/test_ts_cross_validate.py</code> 6 项全过（真实推理验证分歧度语义）</li></ul>
+<p><strong>端到端验证</strong>（真实行情 4391.72 收盘）：</p>
+<ul><li>Chronos 窄区间（乐观 0.2%）→ TimesFM 分歧 0.613 → mid（谨慎）</li><li>Chronos 宽区间（1%）→ 分歧 0.277 → high（区间可信）</li><li>语义正确：<strong>Chronos 越乐观、分歧越大，系统越谨慎</strong> ✓</li></ul>
+<h2>五、Moirai：复测通过，接入方式评估</h2>
+<ul><li>复测 acc 50.6% / pips -2829（方向无用，符合预期）</li><li>但可作<strong>第三把尺子</strong>：py312 venv 子进程推理（每轮 1-2s 延迟）</li><li>决策：<strong>保留参考面板观测 + 离线月度复测</strong>，不进实时决策链——</li></ul>
+<p>  两把尺子（Chronos+TimesFM）已覆盖区间交叉验证，第三把边际收益低、</p>
+<p>  每轮多 1-2s 延迟不值。等 TimesFM 交叉验证跑出 1-2 周真实数据再评估是否加第三尺。</p>
+<h2>六、Time-MoE：为什么"装好没通电"——接口不兼容（技术实锤）</h2>
+<ul><li>权重在 <code>models/timemoe-200m</code>（config + safetensors + 自写 modeling）</li><li>transformers 5.14 有 <strong>4 处 API 断点</strong>：<code>seen_tokens</code>（改名 get_seq_length）、</li></ul>
+<p>  <code>from_legacy_cache</code>（移除）、<code>get_usable_length</code>（移除）、</p>
+<p>  <code>_extract_past_from_model_output</code>（新增调用）→ 模型代码是 4.x 时代写的</p>
+<ul><li>逐层 monkey-patch 是在生产全局 DynamicCache 类上挂补丁 → <strong>有污染风险，拒绝</strong></li><li>正确解法：等官方 release 或建 transformers4 隔离 venv（约 10min，收益低暂缓）</li></ul>
+<h2>七、总结：对你的问题的直接回答</h2>
+<ol><li><strong>"怎么会让三个本地模型休息？"</strong> —— 方向预测实测全部不优于随机（数据为证），</li></ol>
+<p>   停用"方向票"是对的；<strong>但岗位规划错了</strong>，正确做法是让它们做<strong>区间交叉验证</strong>。</p>
+<ol><li><strong>"提准降损是摆设吗？"</strong> —— 现在不是了：TimesFM 交叉验证本轮启用，</li></ol>
+<p>   区间分歧直接影响 q 分（提准）和止盈天花板（降损），<strong>是加法不是摆设</strong>。</p>
+<ol><li><strong>"每次审计都没发现？"</strong> —— 认账。审计一直盯着"链路对不对"，没问"每个模型在不在岗"。</li></ol>
+<p>   本轮起，模型利用率 = 审计固定检查项。</p>
+<h2>八、待办</h2>
+<ul><li>[ ] 重启生效后观测 TimesFM 交叉验证真实分歧率（面板 meta_quality 新增 cross_ts 字段）</li><li>[ ] 1-2 周后评估：分歧度高时 q 降幅是否有效降低亏损单（walk-forward A/B）</li><li>[ ] Time-MoE 官方适配后复测启用</li><li>[ ] Moirai 第三尺评估（视 TimesFM 效果）</li></ul></body></html>

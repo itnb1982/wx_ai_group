@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai 实盘监控简报 — 2026-08-03 17:34</title>
+<style>
+:root {
+  --bg: #0f1216;
+  --panel: #181c23;
+  --panel2: #1f242d;
+  --border: #2a313c;
+  --text: #e6e9ef;
+  --text2: #9aa3b2;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --crit: #ef4444;
+  --info: #60a5fa;
+  --muted: #6b7280;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+       background: var(--bg); color: var(--text); line-height: 1.6; padding: 24px; }
+.container { max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 22px; margin-bottom: 4px; }
+.subtitle { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.badge-warn { background: rgba(251, 191, 36, 0.15); color: var(--warn); border: 1px solid rgba(251, 191, 36, 0.4); }
+.badge-crit { background: rgba(239, 68, 68, 0.15); color: var(--crit); border: 1px solid rgba(239, 68, 68, 0.4); }
+.badge-ok { background: rgba(74, 222, 128, 0.15); color: var(--ok); border: 1px solid rgba(74, 222, 128, 0.4); }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
+.panel-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.kv { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; font-size: 13px; }
+.kv dt { color: var(--text2); }
+.kv dd { color: var(--text); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--text2); font-weight: 500; background: var(--panel2); }
+td.num { text-align: right; font-family: 'SF Mono', Consolas, monospace; }
+.risk { color: var(--crit); font-weight: 600; }
+.muted { color: var(--muted); }
+.tldr { background: rgba(251, 191, 36, 0.08); border-left: 3px solid var(--warn); padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; }
+.decision { background: rgba(96, 165, 250, 0.08); border-left: 3px solid var(--info); padding: 12px 16px; border-radius: 4px; margin-top: 16px; font-size: 13px; }
+.timeline { border-left: 2px solid var(--border); padding-left: 16px; margin-top: 8px; }
+.tl-item { margin-bottom: 8px; font-size: 12px; color: var(--text2); }
+.tl-item strong { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>万象Ai 实盘监控简报</h1>
+<div class="subtitle">2026-08-03 17:34 值班轮次 · 自动化监控 (每 30 分钟)</div>
+
+<div class="tldr">
+<b>⚠ 总体状态:WARNING(复合异常,与 16:34 同源,未改善)</b> · 继承上一轮决策"不重启后端"<br>
+<b>核心事实:</b> AI 决策引擎已死 <span class="risk">8 小时</span>(最后 09:36),trade_executor 旁路失控开仓持续中(刚 17:35:51 又开 0.01 手 SELL),真实持仓 <span class="risk">110 笔 pending(监控脚本 BUG 报 0)</span>,liumanchun1 双向持仓 8.74 手为最大风险点。
+</div>
+
+<div class="panel">
+  <div class="panel-title">🖥️ 后端 / 进程</div>
+  <dl class="kv">
+    <dt>健康检查</dt><dd><span class="badge badge-ok">OK 200</span> 端口 8080 正常监听</dd>
+    <dt>主后端进程</dt><dd>PID <b>4572</b>(15:58 启动,内存 174 MB,持续运行)</dd>
+    <dt>MT5 Worker</dt><dd>PID 32960 / 12268 / 34916 / 30708 — 4 个全部存活,各 ~118 MB</dd>
+    <dt>monitor.py 自身</dt><dd>PID 11096(23 MB,本次任务)</dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <div class="panel-title">📡 4 个 MT5 账号状态</div>
+  <table>
+    <thead><tr><th>账号</th><th>连接</th><th>交易开</th><th class="num">真实持仓</th><th class="num">持仓手数</th><th>方向分布</th></tr></thead>
+    <tbody>
+      <tr><td>liumanchun1</td><td>✅ ON</td><td>✅ ON</td><td class="num">35</td><td class="num risk">8.74</td><td>buy 9笔/4.6手 + sell 26笔/4.14手 <b class="risk">(双向)</b></td></tr>
+      <tr><td>liumanchuan2</td><td>✅ ON</td><td>✅ ON</td><td class="num">29</td><td class="num">0.30</td><td>sell 29笔(单边 SELL 累积)</td></tr>
+      <tr><td>liumanchun3</td><td>✅ ON</td><td>✅ ON</td><td class="num">24</td><td class="num">1.23</td><td>buy + sell 混合</td></tr>
+      <tr><td>liumanchun4</td><td>✅ ON</td><td>✅ ON</td><td class="num">22</td><td class="num">0.22</td><td>buy + sell 混合</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:8px; font-size:12px; color:var(--text2)">
+    表中"真实持仓"按 <code>result='pending' AND close_time IS NULL</code> 真实查询,绕开 monitor.py BUG(monitor.py 仍用 <code>result IS NULL OR result=''</code> 误报为 0)
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">📈 交易概况(自上次监控至今)</div>
+  <dl class="kv">
+    <dt>总交易笔数</dt><dd>112 笔(<span class="muted">从 16:34 的 88 笔</span> → <b>+24 笔新增</b>)</dd>
+    <dt>累计已平仓</dt><dd><b>2 笔</b>(均来自 liumanchuan2 的 buy → AI 反向 SELL 全平)</dd>
+    <dt>累计已实现盈亏</dt><dd><span class="risk">profit -$20.50</span>(net_profit 0,因 commission/swap 字段未填)</dd>
+    <dt>当前真实持仓</dt><dd><span class="risk">110 笔 pending</span>(monitor.py 误报 0)</dd>
+    <dt>近 30 分钟新增开仓</dt><dd>持续(17:35:51 仍有 sell 0.01手 入场)</dd>
+    <dt>连续亏损 / 大额亏损</dt><dd>0 / None(已平仓 2 笔累计 -$20.5,无连续触发)</dd>
+    <dt>卡住持仓(超 48h 未平)</dt><dd>无(全部 pending 都在 5 小时内开)</dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <div class="panel-title">🧠 AI 决策引擎</div>
+  <dl class="kv">
+    <dt>主账号最后 scan</dt><dd>2026-08-03 09:36:28(已 <span class="risk">8 小时 0 分无新决策</span>)</dd>
+    <dt>ai_activities 24h 总数</dt><dd>5858 条(主账号 09:36 后即停;其它账号的辅助记录可能仍偶发写入)</dd>
+    <dt>ai_activities 30 min / 1h</dt><dd>241 / 474 条(其中 <b>非主账号</b> 持续堆积,主账号决策仍 8h 停滞)</dd>
+    <dt>DeepSeek / 混元 状态</dt><dd>API Key 各 1/1 有效,无降级事件</dd>
+    <dt>决策循环是否运行</dt><dd><span class="risk">否(主账号 8h 零决策)</span></dd>
+  </dl>
+  <div class="decision">
+    <b>📌 继承 16:34 铁律:不重启后端</b><br>
+    原因:trade_executor 旁路(无 AI 决策保护)正在失控开仓,每次重启都会:
+    ① 让未平仓的 110 笔失去任何平仓保护 ② 启动窗口期 trade_executor 再次狂开 ③ 修复代码前重启 = 扩大损失
+    真正的修复路径在 trade_executor.py:354 <code>name 'provider' is not defined</code> 根因,属代码缺陷,超出监控值班员权限。
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">📝 日志异常</div>
+  <ul style="font-size:13px; padding-left:20px; color:var(--text2)">
+    <li>错误 3 条 — 全是 <b>历史已记录</b> 的 <code>trade_executor.execute_cycle:354 name 'provider' is not defined</code>(13:59–14:00),本轮无新增</li>
+    <li>监控脚本 <b>BUG</b>: <code>open_positions</code> 与 <code>stuck_positions</code> SQL 写为 <code>WHERE result IS NULL OR result=''</code>,未识别 <code>result='pending'</code>,永远报 0。修复方案:改为 <code>WHERE close_time IS NULL</code></li>
+    <li>PID 4572 接管后 <b>未写 backend_run_v*.log</b>(最后 v16.log 14:05),审计能力丢失</li>
+  </ul>
+</div>
+
+<div class="panel">
+  <div class="panel-title">🔑 API Key 池</div>
+  <dl class="kv">
+    <dt>DeepSeek</dt><dd>总 1 / 活跃 1 / 有效 1 ✅</dd>
+    <dt>混元 Hunyuan</dt><dd>总 1 / 活跃 1 / 有效 1 ✅</dd>
+    <dt>结论</dt><dd>Key 池健康,非 AI 决策停滞的瓶颈</dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <div class="panel-title">🛠 本轮处理 / 决策</div>
+  <ol style="padding-left:20px; font-size:13px; line-height:1.8">
+    <li>继承 16:34 决策 — <b>不重启后端</b>(已说明根因)</li>
+    <li>绕过 monitor.py BUG,直接 SQL 查 wx_prod.dat 真实持仓(已列出 110 笔 / 4 账号)</li>
+    <li>未触碰任何策略/风控参数,严格保持监控值班员边界</li>
+    <li>已写本次 memory.md,持续累积证据链</li>
+  </ol>
+</div>
+
+<div class="panel">
+  <div class="panel-title">🚨 需要用户决策的开放问题(继承 16:34 列表)</div>
+  <ol style="padding-left:20px; font-size:13px; line-height:1.8">
+    <li><b>紧急</b>:是否人工干预 liumanchun1 的 8.74 手双向持仓(防止继续累积浮亏)</li>
+    <li><b>高优</b>:修复 trade_executor.py:354 <code>name 'provider' is not defined</code> 根因</li>
+    <li><b>高优</b>:修复后端 logging 让 PID 4572 进程可被审计</li>
+    <li><b>中优</b>:修复 monitor.py pending 状态识别 SQL(<code>WHERE close_time IS NULL</code>)</li>
+  </ol>
+</div>
+
+<div class="panel" style="background:var(--panel2)">
+  <div class="panel-title">⏱ 关键时间线(自 11:40 至今)</div>
+  <div class="timeline">
+    <div class="tl-item"><strong>11:40</strong> · OK,无异常</div>
+    <div class="tl-item"><strong>12:36</strong> · OK,5 笔交易已发生</div>
+    <div class="tl-item"><strong>13:32</strong> · OK,31 笔交易,DeepSeek 活跃</div>
+    <div class="tl-item"><strong>14:28</strong> · WARNING — 3 条 provider 错误首次出现</div>
+    <div class="tl-item"><strong>15:37</strong> · 重启后端(无效),发现 v16.log 停在 14:05</div>
+    <div class="tl-item"><strong>15:47</strong> · WARNING(monitor.py 误报,实际运行正常)</div>
+    <div class="tl-item"><strong>16:34</strong> · 🔴 WARNING 升级 — 实测 AI 决策已死 ~8h,trade_executor 失控,持 89 笔;决定 <b>不重启</b></div>
+    <div class="tl-item"><strong>17:34(本轮)</strong> · WARNING 持续 — 持仓 89 → 110 笔,liumanchun1 双向 8.74 手为最大风险,仍 <b>不重启</b></div>
+  </div>
+</div>
+
+<div style="text-align:center; color:var(--muted); font-size:11px; margin-top:24px;">
+  自动生成于 2026-08-03 17:34:26 · 监控脚本 monitor.py + 数据库直查
+</div>
+
+</div>
+</body>
+</html>

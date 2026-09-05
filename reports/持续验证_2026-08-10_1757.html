@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai XAUUSD 持续验证报告</h1>
+<p><strong>采集时间</strong>：2026-08-10 17:49 – 17:58（第 3 轮）</p>
+<p><strong>运行模式</strong>：只读观测，未修改任何交易代码 / 配置，未下单</p>
+<p><strong>P0 判定</strong>：四项硬指标全部通过，<strong>无 P0</strong>（详见文末判定表）</p>
+<p><strong>头号风险</strong>：后端重启风暴（今日 11 次，最近一次间隔仅 6.5 分钟）——已达"准 P0"级别</p>
+<hr>
+<h2>一、实时行情快照</h2>
+<table><thead><tr><th>项目</th><th>数值</th></tr></thead><tbody><tr><td>XAUUSD 现价</td><td><strong>4342.52</strong>（上轮 16:52 为 4349.03，1 小时下行 −6.5 美元）</td></tr><tr><td>后端进程</td><td>pid <strong>1620</strong>，uptime 仅 ~4 分钟</td></tr><tr><td>MT5 接入</td><td><strong>4/4</strong>（<code>accounts_degraded=false</code>）</td></tr><tr><td>交易循环</td><td><code>auto_loop_running=true</code>，<code>trade_stale=false</code></td></tr><tr><td>组合权益</td><td>1,942,478.05（今日 <strong>+2,060.82</strong>，历史累计 −59,055.31）</td></tr><tr><td>持仓总数</td><td>6 笔，<strong>全部 SELL</strong></td></tr><tr><td>最近裁决</td><td>17:50 MetaAgent → SELL 信心 0.72（权重 DS 0.49 / HY 0.51）</td></tr></tbody></table>
+<p>方向一致性良好：金价持续下行，6 笔持仓全为 SELL，与 MetaAgent 近 8 次裁决（SELL 5 次 / HOLD 3 次）方向吻合。</p>
+<hr>
+<h2>二、持仓明细</h2>
+<table><thead><tr><th>账号</th><th>订单号</th><th>方向</th><th>手数</th><th>开仓</th><th>现价</th><th>SL</th><th>浮盈</th><th>持有</th><th>SL 锁定</th></tr></thead><tbody><tr><td>liumanchun3</td><td>#377415351</td><td>sell</td><td>1.00</td><td>4354.45</td><td>4342.52</td><td>4349.00</td><td><strong>+1193.00</strong></td><td>173 分</td><td><strong>+5.45 点</strong></td></tr><tr><td>liumanchun1</td><td>#377467698</td><td>sell</td><td>0.50</td><td>4354.49</td><td>4342.50</td><td>4350.49</td><td><strong>+599.50</strong></td><td>110 分</td><td><strong>+4.00 点</strong></td></tr><tr><td>liumanchun4</td><td>#377535936</td><td>sell</td><td>0.02</td><td>4341.04</td><td>4342.52</td><td>4366.97</td><td>−2.96</td><td>6 分</td><td>−25.93 点</td></tr><tr><td>liumanchun4</td><td>#377537644</td><td>sell</td><td>0.02</td><td>4342.77</td><td>4342.52</td><td>4368.57</td><td>+0.50</td><td>0 分</td><td>−25.80 点</td></tr><tr><td>liumanchuan2</td><td>#377535966</td><td>sell</td><td>0.01</td><td>4341.02</td><td>4342.52</td><td>4366.97</td><td>−1.50</td><td>6 分</td><td>−25.95 点</td></tr><tr><td>liumanchuan2</td><td>#377537645</td><td>sell</td><td>0.01</td><td>4342.76</td><td>4342.52</td><td>4368.57</td><td>+0.24</td><td>0 分</td><td>−25.81 点</td></tr></tbody></table>
+<p><strong>关键观察</strong>：</p>
+<ol><li><strong>两笔大单已锁定正收益</strong>，SL 均移至开仓价下方（SELL 方向 SL 低于开仓价 = 无论如何不亏），动态利润锁定确实在工作。</li><li><strong>#377467698 发生了部分平仓</strong>：手数由 1.00 → 0.50，浮盈由 +1174 → +599.50，liumanchun1 今日盈亏同步由 −1239.20 改善至 −620.70（落袋约 +618）。</li><li>4 笔小单为 6 分钟内新开，仍处初始宽止损（−26 点）阶段，属正常建仓期。</li><li><strong>当前无任何浮亏超阈值持仓</strong>，最大浮亏仅 −2.96（占该账号权益 0.11%）。</li></ol>
+<hr>
+<h2>三、历史订单合理性</h2>
+<h3>3.1 今日绩效（剔除外部平仓零值单）</h3>
+<table><thead><tr><th>口径</th><th>笔数</th><th>胜率</th><th>净利</th><th>PF</th></tr></thead><tbody><tr><td>今日全量</td><td>56</td><td><strong>67.9%</strong></td><td><strong>+324.80</strong></td><td><strong>1.236</strong></td></tr><tr><td>liumanchun1</td><td>5</td><td>80.0%</td><td>+461.78</td><td>1.860</td></tr><tr><td>liumanchun4</td><td>23</td><td>69.6%</td><td>+30.06</td><td>1.635</td></tr><tr><td>liumanchuan2</td><td>22</td><td>68.2%</td><td>+16.10</td><td>1.628</td></tr><tr><td>liumanchun3</td><td>6</td><td>50.0%</td><td>−183.14</td><td>0.760</td></tr></tbody></table>
+<p>今日四账号中三个 PF &gt; 1.6，整体健康。</p>
+<h3>3.2 按日绩效</h3>
+<table><thead><tr><th>日期</th><th>笔数</th><th>胜率</th><th>净利</th><th>PF</th></tr></thead><tbody><tr><td>08-03</td><td>13</td><td>53.8%</td><td>+21.32</td><td>1.520</td></tr><tr><td>08-04</td><td>709</td><td>46.3%</td><td>−480.77</td><td>0.639</td></tr><tr><td>08-05</td><td>638</td><td>49.1%</td><td>+1,628.76</td><td>1.285</td></tr><tr><td>08-06</td><td>230</td><td>39.6%</td><td>+18,386.38</td><td>1.645</td></tr><tr><td><strong>08-07</strong></td><td>193</td><td>48.2%</td><td><strong>−55,873.54</strong></td><td><strong>0.361</strong></td></tr><tr><td>08-10</td><td>56</td><td>67.9%</td><td>+324.80</td><td>1.236</td></tr><tr><td>累计</td><td>1,839</td><td>47.3%</td><td>−35,993.05</td><td>0.711</td></tr></tbody></table>
+<p><strong>结论不变</strong>：全历史亏损几乎 100% 来自 08-07 单日。剔除该日后其余五日累计 <strong>+19,880</strong>，PF &gt; 1。08-07 是需要专项复盘的唯一真实黑天鹅。</p>
+<h3>3.3 出场原因归因（最近 300 单）— 本报告最重要的一张表</h3>
+<table><thead><tr><th>出场原因</th><th>笔数</th><th>胜率</th><th>净利</th><th>均单</th></tr></thead><tbody><tr><td><strong>l3_tp_lock</strong>（三级利润锁定）</td><td>28</td><td><strong>92.9%</strong></td><td><strong>+32,673.41</strong></td><td>+1,166.91</td></tr><tr><td><strong>tp</strong>（止盈）</td><td>7</td><td><strong>100%</strong></td><td><strong>+12,519.95</strong></td><td>+1,788.56</td></tr><tr><td>Chronos P90 天花板(4288)</td><td>32</td><td>71.9%</td><td>+4,007.43</td><td>+125.23</td></tr><tr><td>主副对账-清孤儿单</td><td>4</td><td>100%</td><td>+303.15</td><td>+75.79</td></tr><tr><td>breakeven</td><td>1</td><td>100%</td><td>+258.00</td><td>+258.00</td></tr><tr><td>follower_mirror</td><td>85</td><td>47.1%</td><td>−122.48</td><td>−1.44</td></tr><tr><td>Chronos P90 天花板(4256)</td><td>20</td><td>60.0%</td><td>−1,570.65</td><td>−78.53</td></tr><tr><td>ai</td><td>25</td><td>52.0%</td><td>−7,467.97</td><td>−298.72</td></tr><tr><td><strong>sl</strong>（止损）</td><td>19</td><td>10.5%</td><td><strong>−10,960.65</strong></td><td>−576.88</td></tr><tr><td><strong>risk_cut</strong>（风控砍仓）</td><td>14</td><td><strong>0.0%</strong></td><td><strong>−25,612.71</strong></td><td>−1,829.48</td></tr><tr><td><strong>reverse</strong>（反手砍仓）</td><td>65</td><td>24.6%</td><td><strong>−36,571.46</strong></td><td>−562.64</td></tr></tbody></table>
+<p><strong>归因结论（与上轮一致并进一步强化）</strong>：</p>
+<ul><li><strong>赚钱的全是"让盈利单自己走完"</strong>：<code>l3_tp_lock</code> + <code>tp</code> + <code>breakeven</code> + 对账清理 = <strong>+45,754</strong></li><li><strong>亏钱的全是"主动砍仓"</strong>：<code>reverse</code> + <code>risk_cut</code> + <code>sl</code> = <strong>−73,145</strong>，其中 <code>risk_cut</code> <strong>胜率 0%、均单亏 1,829</strong></li><li><strong>新增证据：Chronos 已直接参与出场决策</strong>。两组 P90 天花板出场合计 52 笔、净 <strong>+2,437</strong>，其中 4288 组胜率 71.9% 明显为正。这是本地时序模型首次在真实盈亏上跑出正贡献。</li></ul>
+<p>→ <strong>本地模型最高 ROI 的介入点仍然是"出场复核"，而不是入场过滤。</strong> 尤其应针对 <code>reverse</code> / <code>risk_cut</code> 这两类合计亏损 6.2 万的动作做二次否决。</p>
+<hr>
+<h2>四、各模型健康值</h2>
+<p>评分口径：Chronos = 成功率 × device 是否 GPU；Qwen = 成功率 × p95 是否 &lt; 20s；云端 = ready 且无空响应错误。</p>
+<table><thead><tr><th>模型</th><th>规则得分</th><th>实证修正</th><th>关键指标</th></tr></thead><tbody><tr><td><strong>Chronos-2</strong></td><td><strong>100</strong></td><td>100</td><td>calls_ok=1~6 / fail=<strong>0</strong>，device=<strong>GPU (CUDA)</strong>，last_ok 0.3s 前，多变量协变量 DXY/US10Y/VIX 生效</td></tr><tr><td><strong>Qwen3:8b</strong></td><td><strong>100</strong></td><td>100</td><td>available=true，fail=0，p95 <strong>6,202ms</strong>（远低于 20s 阈值），校对员实跑 <strong>154 次</strong></td></tr><tr><td><strong>DeepSeek</strong></td><td><strong>0</strong>（ready=false）</td><td><strong>60</strong></td><td>空响应错误 <strong>0 次</strong>；但日志级 ERROR 45 / WARNING 393 / <strong>截断自愈重试 74 次</strong></td></tr><tr><td><strong>混元</strong></td><td><strong>0</strong>（ready=false）</td><td><strong>70</strong></td><td>日志 726 条 INFO、<strong>0 错误</strong>；ready=false 纯属被重启牵连</td></tr></tbody></table>
+<p><strong>必须澄清的一点</strong>：云端双脑 <code>ready=false / total_ok=0 / stale=true</code> <strong>不是模型故障</strong>，而是<strong>进程计数器被重启清零</strong>——采集时进程仅存活 15~142 秒，尚无云端调用在该进程内完成。日志证明 DeepSeek 本轮实际完成 2,055 次调用、混元 726 次，MetaAgent 也正常按 DS 0.49 / HY 0.51 加权裁决。</p>
+<p><strong>但这本身就是问题</strong>：由于每 15~20 分钟就重启一次，云端双脑<strong>永远来不及热身</strong>，<code>quad_ready</code> 长期为 false，系统始终以"未完全就绪"状态运行。</p>
+<hr>
+<h2>五、本地模型如何提高盈利确定性</h2>
+<p>按 ROI 从高到低，全部基于本轮实测数据：</p>
+<h3>1️⃣ 先补训练数据断供（<strong>当前一切本地学习的硬阻塞</strong>）</h3>
+<table><thead><tr><th>特征</th><th>填充率</th><th>影响</th></tr></thead><tbody><tr><td><code>mfe</code>（最大有利偏移）</td><td><strong>0 / 2773 = 0.0%</strong></td><td>无法评估"最优出场点在哪"，锁利策略无法离线优化</td></tr><tr><td><code>mae</code>（最大不利偏移）</td><td><strong>0 / 2773 = 0.0%</strong></td><td>无法评估"止损是否设得过紧"</td></tr><tr><td><code>chronos_vote</code></td><td>43 / 2773 = <strong>1.6%</strong></td><td>Chronos 预测未与结果配对落库，无法验证其真实边际贡献</td></tr><tr><td><code>q_score</code></td><td>43 / 2773 = <strong>1.6%</strong></td><td>同上</td></tr><tr><td><code>meta_agent_confidence</code></td><td>2773 / 2773 = 100%</td><td>✅ 唯一完整的特征</td></tr></tbody></table>
+<p>没有 mfe/mae，任何本地 RL / 监督学习都缺少标签，<strong>这是通往"本地真进化层"的第一道门</strong>。好消息是 chronos_vote 填充率已从上轮 1.2% 升至 1.6%（43 条），说明新的 Chronos 出场链路开始写库。</p>
+<h3>2️⃣ 用 Chronos 分位数替代固定跟踪步长（可直接兑现利润）</h3>
+<p>实测大单锁利<strong>跟踪效率仅 37%</strong>：#377415351 价格从 4347.65 走到 4342.52（+5.13 点），SL 仅从 4350.89 移到 4349.00（1.89 点）。结果是浮盈 11.93 点，只锁住 5.45 点（46%）；#377467698 更低，浮盈 11.99 点只锁 4.00 点（<strong>33%</strong>）。</p>
+<p>当前逻辑是固定 <code>trigger=2.5</code> 点。<strong>Chronos 已经在输出 P10/P50/P90 分位</strong>，把跟踪步长改为"按 P10–P90 带宽自适应"（波动小 → 跟得紧，波动大 → 放宽），可在不减少交易笔数的前提下直接提高每笔锁定利润。这完全符合"提准非拦截"铁律——不拦任何单，只把已经赚到的钱多锁一点。</p>
+<h3>3️⃣ 让 Qwen 校对员去否决 reverse / risk_cut</h3>
+<p>Qwen 目前<strong>每 1–2 分钟跑一次校对</strong>，154 次中 142 次判定通过（<strong>92.2% 通过率</strong>），中位耗时 7.7s、p95 12.0s，累计已消耗 18.5 分钟算力。</p>
+<p>问题在于：<strong>它校对的是"入场决策"，而亏损全部发生在"出场动作"上</strong>。<code>risk_cut</code> 14 笔胜率 0%、均单亏 1,829，却没有任何二次复核。把校对员的岗位从"入场把关"平移到"砍仓复核"，是零成本、高杠杆的改动——算力已经在烧了，只是烧错了地方。</p>
+<h3>4️⃣ 扩大 Chronos P90 天花板出场的适用面</h3>
+<p>该机制是本轮唯一实证为正的 AI 主动出场（4288 组 32 笔 / 71.9% / +4,007）。建议把它作为 <code>reverse</code> 的替代候选：与其反手砍仓（胜率 24.6%），不如让 Chronos 判定"是否已触及分位天花板"再决定平仓。</p>
+<hr>
+<h2>六、不合理之处清单</h2>
+<table><thead><tr><th>#</th><th>级别</th><th>问题</th><th>证据</th></tr></thead><tbody><tr><td>1</td><td><strong>准 P0</strong></td><td><strong>后端重启风暴</strong>：今日 <strong>11 次</strong>重启，间隔持续收窄 —— 11:24 → 13:27 → 14:44 → 15:29 → 15:43 → 16:15 → 16:27 → 17:11 → 17:27 → 17:47 → <strong>17:53（仅隔 6.5 分钟）</strong></td><td>日志 <code>Started server process</code></td></tr><tr><td>2</td><td>P1</td><td>重启导致<strong>云端双脑永不热身</strong>，<code>quad_ready</code> 长期 false，模型就绪度指标失真</td><td>total_ok=0 / stale=true</td></tr><tr><td>3</td><td>P1</td><td><strong>持仓扫描硬失败 286 次 / 4h</strong>（上轮 62 次，<strong>激增 4.6 倍</strong>）。每次失败该账号本轮止损/锁利/熔断全部跳过。主号 3540bf33 占 144 次</td><td><code>get_all_positions_rescanned</code> WARNING 197 + ERROR 89</td></tr><tr><td>4</td><td>P1</td><td><strong>大单锁利跟踪滞后</strong>：浮盈扩大时保护比例反而从 46% 降到 33%，跟踪效率仅 37%</td><td>见第五节第 2 点</td></tr><tr><td>5</td><td>P1</td><td><strong>外部平仓零值单占 33.7%</strong>（934 / 2773），盈亏未回写，全历史统计被系统性稀释</td><td>DB 统计</td></tr><tr><td>6</td><td>P1</td><td><strong>训练特征几乎全空</strong>：mfe / mae = 0%，chronos_vote / q_score = 1.6%</td><td>DB 填充率</td></tr><tr><td>7</td><td>P1</td><td>单轮决策超时 180s 共 <strong>78 次</strong>；DeepSeek 截断自愈重试 <strong>74 次</strong>（16 时达 18 次峰值）</td><td>日志级别统计</td></tr><tr><td>8</td><td>P2</td><td><code>risk_cut</code> 累计 14 笔<strong>胜率 0%</strong>、净亏 25,613，仍在无复核执行</td><td>出场归因表</td></tr><tr><td>9</td><td>P2</td><td>Qwen 校对算力用在入场（92.2% 通过率，近乎放行），未覆盖真正亏钱的出场动作</td><td>154 次校对记录</td></tr><tr><td>10</td><td>P2</td><td><code>NoneType has no len</code> 预处理异常稳定每小时 2 次，共 12 次，未见处理</td><td>日志</td></tr></tbody></table>
+<h3>✅ 本轮修正的一处<strong>误报</strong>（工具自身缺陷）</h3>
+<p>上一轮报告中"<strong>行情为模拟数据 → 强制 HOLD 3,951 次</strong>"是<strong>假警报</strong>。分析脚本 <code>_verify_log.py</code> 用模块名 <code>debate_engine:decide</code> 做匹配，把 6,291 条 INFO 正常决策一并计入。按日志级别过滤后，辩论引擎真实异常仅 <strong>58 次</strong>（WARNING 37 + ERROR 21）。</p>
+<p>已修复该脚本：为按模块名匹配的事件加上 <code>LEVEL_FILTER</code> 级别过滤，并新增后端重启时间点自动追踪（本轮头号风险正是靠它发现的）。</p>
+<hr>
+<h2>附：P0 判定表</h2>
+<table><thead><tr><th>判据</th><th>阈值</th><th>实测</th><th>结论</th></tr></thead><tbody><tr><td>MT5 接入</td><td>&lt; 4 为 P0</td><td>4/4（启动 15s 时曾短暂为 2，30s 内恢复，属 bootstrap 瞬态）</td><td>✅ 通过</td></tr><tr><td>Chronos 失效</td><td>calls_fail 激增</td><td>calls_fail = <strong>0</strong>，GPU 在线，0.3s 前刚成功</td><td>✅ 通过</td></tr><tr><td>未平单浮亏</td><td>超硬损阈值</td><td>最大浮亏 <strong>−2.96</strong>（0.11% 权益），两笔大单均为浮盈</td><td>✅ 通过</td></tr><tr><td>AI 持仓评估</td><td>连续多轮未评估</td><td>smart_exit 末次 17:47:42，校对员 17:57:15，MetaAgent 17:50:29</td><td>✅ 通过</td></tr></tbody></table>
+<p><strong>综合结论：无 P0，静默归档。</strong> 但第 1 条重启风暴正在快速恶化（间隔从 123 分钟收窄到 6.5 分钟），若下一轮仍在加速，应升级为 P0 处理。</p></body></html>

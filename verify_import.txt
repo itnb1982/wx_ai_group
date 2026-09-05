@@ -1,0 +1,10 @@
+﻿python.exe : 2026-08-06 22:31:04.361 | INFO     | app.main:<module>:385 -   前端静
+态文件: F:\WanxiangAI\frontend\dist_v28
+所在位置 行:439 字符: 217
++ ... od.dat'; $r=& 'C:\Users\15588\.workbuddy\binaries\python\versions\3.1 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-08-06 22:3...ontend\dist_v28 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+IMPORT_OK

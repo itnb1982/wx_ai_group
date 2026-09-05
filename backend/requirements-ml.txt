@@ -1,0 +1,43 @@
+# ============================================================
+#  本地时序模型（重型可选依赖）
+# ------------------------------------------------------------
+#  为什么单独成文件：
+#    torch(CUDA) 解包后约 2.5~3GB，下载耗时长。核心交易链路
+#    （行情/风控/下单/云端双脑）**不依赖**本文件即可运行；
+#    缺失时 Chronos 自动降级为 SMC/Regime + NumPy 方向终审，
+#    系统照常交易，只是少了本地时序增强。
+#
+#  安装（在项目根目录，原生 cmd / PowerShell 下执行）：
+#    .venv\Scripts\python.exe -m pip install -r backend\requirements-ml.txt
+#
+#  ★★ 致命陷阱（2026-08-08 实测，务必写进部署手册）★★
+#    在 Git Bash / MSYS2 / Cygwin 终端里 `import torch` 会触发
+#    0xC0000005 ACCESS_VIOLATION 段错误（exit 139 / 3221225477），
+#    而同一个解释器在原生 cmd / PowerShell 下完全正常。
+#    → 因此**必须用 start_all.bat（原生 cmd）或 PowerShell 启动后端**。
+#    → 若用 Git Bash 启动，Chronos 探针会误判"永久降级"并写盘缓存，
+#      导致本地时序模型再也不加载。此时需删除
+#      backend/data/torch_probe_cache.json 后用原生终端重启。
+# ============================================================
+
+# --- 推理框架 ---
+# CUDA 12.4 轮子。纯 CPU 机器改用：
+#   pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+# Chronos-2 在 CPU 上单次预测约 300~800ms，可接受。
+torch==2.6.0
+transformers==5.14.1
+accelerate==1.14.0
+safetensors==0.8.0
+tokenizers==0.22.2
+einops==0.8.2
+
+# --- Chronos-2（Amazon，120M，支持多变量 + 协变量 DXY/US10Y/VIX）---
+# 权重随项目分发于 models/chronos-2/（离线可用，无需联网拉 HF）
+chronos-forecasting==2.3.1
+
+# --- 传递依赖锁版（避免 pip 自动升级引入不兼容）---
+# torch 2.6 硬性要求 sympy==1.13.1，勿随意升级
+sympy==1.13.1
+# chronos-forecasting 依赖 pandas；后端业务代码零处使用 pandas，
+# 故升到 3.x 无风险（已 grep 验证）
+pandas>=2.2,<4

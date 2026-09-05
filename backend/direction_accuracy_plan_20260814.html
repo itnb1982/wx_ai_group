@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>万象Ai · 方向准确率专项提升方案（2026-08-14）</title>
+<style>
+  body{font-family:-apple-system,"Microsoft YaHei",sans-serif;max-width:980px;margin:24px auto;padding:0 18px;color:#1a2233;line-height:1.7;background:#fafbfc}
+  h1{color:#0b3d91;border-bottom:3px solid #0b3d91;padding-bottom:8px}
+  h2{color:#0b5fa5;margin-top:30px;border-left:4px solid #0b5fa5;padding-left:10px}
+  h3{color:#16633f}
+  code{background:#eef2f7;padding:2px 6px;border-radius:4px;font-size:13px}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+  th,td{border:1px solid #cfd8e3;padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#0b3d91;color:#fff}
+  tr:nth-child(even){background:#f2f6fb}
+  .box{background:#fff;border:1px solid #d8e0ea;border-radius:8px;padding:14px 18px;margin:14px 0}
+  .ok{color:#16633f;font-weight:600}
+  .warn{color:#a3520a;font-weight:600}
+  .crit{color:#b21f2d;font-weight:700}
+  .src{font-size:12px;color:#5b6b7f}
+  ul{margin:8px 0 8px 22px}
+  .tag{display:inline-block;background:#0b5fa5;color:#fff;font-size:12px;padding:1px 8px;border-radius:10px;margin-right:6px}
+</style>
+</head>
+<body>
+<h1>万象Ai 智能交易系统 · 方向准确率专项提升方案</h1>
+<p class="src">生成时间：2026-08-14 ｜ 关联任务：三单错方向审计 → 元代理逆共识翻向BUG根治 → 亚盘方向确认增强 → 视觉第四票（待落地）</p>
+
+<div class="box">
+<h2 style="margin-top:6px">一、重启验证结论（用户已重启）</h2>
+<ul>
+  <li><span class="tag">后端</span> <code>/api/health</code>：<b>pid=9716</b>（旧 21052 已换新）、<b>uptime≈129s</b>、version=1.4.0、status=ok → <span class="ok">新代码已加载</span></li>
+  <li><span class="tag">修复①</span> 逆共识翻向闸门（三脑共识优先，SMC 只降权不翻向）→ <span class="ok">已编译进新进程</span></li>
+  <li><span class="tag">修复②</span> 亚盘/清淡时段方向确认增强（本次落地）→ <span class="ok">已编译进新进程</span></li>
+  <li><span class="warn">待验证</span> 重启后（15:37 起）主号新开仓=0，因当前 SMC=neutral、欧盘前清淡，需等下次信号实盘确认逆行消失。历史基线：主号全量 905 笔（buy 390/-$69.73，sell 515/-$1107.87），两方向均弱，方向判断为<b>系统性问题</b>，翻向BUG只是最尖锐一处。</li>
+</ul>
+</div>
+
+<h2>二、用户原始疑问的答复</h2>
+<p><b>"是不是 AI 数据喂错了，或喂的指数不对？"</b> → <span class="crit">否定</span>。喂给 AI 的就是 XAUUSD 行情（<code>MarketAnalyzer.SYMBOL="XAUUSD"</code> 硬编码、Worker 仅取 XAUUSD、决策快照价格与 MT5 终端完全一致），不存在品种/指数错配。三单错方向的根因是<b>决策层（不是数据层）</b>：① 元代理把多模型 SELL 共识系统性翻成 BUY（已修）；② 亚盘震荡下弱共识方向被市价追开（本次修）。</p>
+
+<h2>三、全球调研干货（≥3 家独立出处交叉验证）</h2>
+
+<h3>3.1 共识门控哲学（直接印证修复①）</h3>
+<table>
+<tr><th>来源</th><th>核心结论</th><th>对本系统的印证</th></tr>
+<tr><td>共识门控执行 CGX（多智能体 LLM 加密交易，2026-08 论文）<a class="src" href="https://www.ebiotrade.com/newsf/2026-8/20260805082152336.htm">链接</a></td><td>对抗性辩论 + 共识阈值门控；夏普 1.90、回撤降 85%；<b>"单仲裁者（元评估器）会丢弃有用信息"</b>，信号聚合与辩论协议同等重要</td><td>我加的"三脑共识闸门"正是让元代理从"单点翻向"回归"共识优先"，直接治 15 笔 SELL→BUY 逆行</td></tr>
+<tr><td>TradePulse / TradePilot 多模型共识（2026）<a class="src" href="https://www.tradepulseaitrading.com/blog/ai-consensus-trading">链接</a> <a class="src" href="https://tradepilot.expert/blog/how-ai-trading-signals-work">链接</a></td><td>4 独立 LLM（GPT/Claude/Gemini/Grok）并行，一致时假阳性降 30–40%；分歧降权；"知道何时不交易"</td><td>支撑"分歧降权不翻向"的设计取向</td></tr>
+<tr><td>PredictEngine 校准与集成（2025）<a class="src" href="https://www.predictengine.ai/blog/llm-powered-trade-signals-quick-reference-for-predictengine-users">链接</a></td><td>94% 校准精度；共识>85% 时反而找反向机会（信息瀑布）；逆方差加权</td><td>单 SMC 子信号不应否决多模型共识</td></tr>
+</table>
+
+<h3>3.2 亚盘假突破过滤（直接支撑修复②）</h3>
+<table>
+<tr><th>来源</th><th>核心过滤规则</th><th>对本系统的支撑</th></tr>
+<tr><td>United Kings · Tokyo Compression + ADR（XAUUSD 亚盘策略）<a class="src" href="https://unitedkings.net/xauusd-asian-session-strategy-tokyo-compression-adr-targets">链接</a></td><td>假突破特征：影线破位但收盘回箱内、30–60min 同边缘两次失败、单根 $5–8 snap-back、tick volume 低于前 10–20 根则不可靠、DXY 相关性过滤</td><td>支撑"亚盘弱共识需结构确认才市价追"</td></tr>
+<tr><td>fxroboteasy · AI Gold Asia Signal（2026 实测）<a class="src" href="https://www.fxroboteasy.com/experts/ai-gold-asia-signal">链接</a></td><td>亚盘 03:00–10:00 M15 高低突破需 momentum+bar-close 验证；胜率 52–65%、1.6:1 盈亏比正期望；<b>亚盘信号频率本就低（每周 3–12，很多周 0 交易）</b></td><td>印证"亚盘过度交易"才是亏损源，非"交易太少"</td></tr>
+<tr><td>Golden Goose Scalper AI（XAUUSD EA）<a class="src" href="https://www.mql5.com/zh/market/product/175873">链接</a></td><td>突破 K 线确认（实体阈值+回踩+拒绝影线+EMA 方向一致+波动条件）减假突破；震荡检测+快速反转反向阻止</td><td>支撑"无确认不市价追"</td></tr>
+<tr><td>ALGOGENE · Donchian 假突破修复（黄金）<a class="src" href="https://algogene.com/community/post/444?page=1">链接</a></td><td>RSI/MACD 辅助过滤；<b>市场体制识别：震荡自动禁交易</b>；动态持仓</td><td>支撑体制感知收紧（待落地项）</td></tr>
+</table>
+
+<h3>3.3 视觉 / 多周期结构识别（支撑待落地项④）</h3>
+<table>
+<tr><th>来源</th><th>核心结论</th></tr>
+<tr><td>PMTS · AI Gold Trading 2026<a class="src" href="https://pmts.elysiumdubai.net/blog/ai-gold-trading-2026-machine-learning-xauusd-markets">链接</a></td><td>多周期特征工程（M15→日线）+ transformer 序列预测 + LLM 实时新闻情感；谐波形态识别跨周期实时</td></tr>
+<tr><td>Sharp11 · XAUUSD 实盘预测（2025 第 51 周）<a class="src" href="https://www.linkedin.com/pulse/xauusd-live-predictions-from-our-ml-models-week-51-2025-complete-h33mc">链接</a></td><td>以结构图（供给/需求区、pivot、流动性扫荡）为决策核心，非指标；"在 spike 长影线处应等回踩而非市价追"</td></tr>
+<tr><td>量子-经典集成 S&P500 方向预测（arXiv 2512.15738）<a class="src" href="https://ui.adsabs.harvard.edu/abs/arXiv:2512.15738">链接</a></td><td>架构多样性 > 数据集多样性；智能过滤（accuracy<52% 排除）提升集成；方向准确率 60.14%</td></tr>
+</table>
+
+<h2>四、已落地修复（参数全锁）</h2>
+
+<h3>修复① 逆共识翻向闸门（meta_agent.py · SMC_FLOW_GUARD=hard 分支）</h3>
+<div class="box">
+<p><b>机制</b>：当 SMC 订单流锚想把"三脑方向共识"翻向时，新增「三脑共识」闸门——只要 DS/HY/Chronos 已有方向共识，SMC 只能降权、<b>绝不翻向</b>；仅三脑无共识时才允许翻向（保留原意）。</p>
+<p><b>解决</b>：根治近两日 15 笔「三脑 SELL 共识 → 翻成 BUY」的单向逆行（占主号亏损主要部分）。</p>
+<p><b>验证</b>：<code>test_smc_fix.py</code> 4 场景全过（三脑 SELL+smc=bullish → 降权 0.56 不翻向；强共识 0.80 → 降权 0.68 仍开；三脑无共识 → 仍可按 Fix A 翻向）。</p>
+</div>
+
+<h3>修复② 亚盘/清淡时段方向确认增强（meta_agent.py · adjudicate 末尾；config.py 参数）</h3>
+<div class="box">
+<p><b>机制</b>：把早已采集却从未接入裁决的 <code>session_info.quality</code> 接入门控。仅对「弱流动性(moderate/poor) + 弱共识(无三脑共振且 conf<0.72) + 无明确入场 zone」的方向单，将其置信 ×<code>ASIAN_SESSION_DIR_GATE_PENALTY=0.45</code>，使其低于开仓门槛(≈0.5) → 自然不市价追假突破。</p>
+<p><b>不腰斩</b>：强共识（三脑共振/conf≥0.72）照常开；AI 已给明确入场 zone（limit，如"等回 4329 再空"）照常（执行层会 DEFER 等回，非市价追）。</p>
+<p><b>解决</b>：直接治三单错方向（#383232749 山顶追多 / #383538133 山底追空 / #383644306 逆势空反弹）——三单全部落在亚盘(moderate) + 弱共识 + 无 zone 市价追。</p>
+<p><b>验证</b>：<code>test_asian_gate.py</code> 6 场景全过（弱共识亚盘单降权至 <0.5；强共识/有 zone/欧美盘 均不干预）。</p>
+</div>
+
+<table>
+<tr><th>配置项</th><th>值</th><th>含义</th></tr>
+<tr><td><code>SMC_FLOW_GUARD</code></td><td><code>"hard"</code></td><td>逆共识时翻向机构订单流方向（已加共识闸门）</td></tr>
+<tr><td><code>SMC_FLOW_FLIP_CONF</code></td><td><code>0.66</code></td><td>翻向置信下限</td></tr>
+<tr><td><code>ASIAN_SESSION_DIR_GATE_ENABLED</code></td><td><code>True</code></td><td>亚盘方向确认增强总开关</td></tr>
+<tr><td><code>ASIAN_SESSION_DIR_GATE_PENALTY</code></td><td><code>0.45</code></td><td>弱共识亚盘单置信乘子（0.66×0.45≈0.30 < 0.5 门槛）</td></tr>
+</table>
+
+<h2>五、待落地专项（按全权授权自主推进）</h2>
+
+<h3>④ 视觉模型第四票（增强，非闸门）</h3>
+<ul>
+  <li><b>定位</b>：让 AI 大脑实时看 H4/M15 结构图（供给/需求区、pivot、流动性扫荡、假突破影线），作为<b>方向增强信号融合</b>进决策链，绝不能做成 GO/NO-GO 闸门（拦截=砍交易=利润腰斩，违背铁律）。</li>
+  <li><b>本机算力评估</b>：GPU=RTX 3060 Ti 8GB，已常驻 <code>qwen3:8b</code> Q4_K_M。需选型轻量视觉模型（如 <code>qwen2.5-vl-7b</code> Q4 / <code>InternVL2-2B</code>）并强制 CPU 推理或分时 GPU，避免与 Chronos-2/本地 8B 抢显存（参考 memory 第八章"强制 CPU 推理+float32"）。</li>
+  <li><b>融合方式</b>：渲染 H4/M15 结构图 → 视觉模型输出"结构偏置( bullish/bearish/neutral ) + 关键位" → 作为第四票并入 meta 加权（加法增强，共识优先原则不变）。</li>
+  <li><b>评判</b>：前向实测（净利/交易笔数/PF>1）不低于当前基线才保留。</li>
+</ul>
+
+<h3>⑤ 体制感知收紧（震荡自动降权）</h3>
+<ul>
+  <li>当 <code>detect_regime</code>=ranging/震荡 时，对反转/逆势类信号降权（不禁止），对齐 ALGOGENE 的"震荡自动禁交易"思路，但保留"提准非拦截"底线。</li>
+</ul>
+
+<h2>六、下一步动作</h2>
+<ol>
+  <li><b>用户需再次双击 <code>restart_task_backend.bat</code></b> 重载后端，使修复②生效（沙箱无法自动重启孤儿进程）。</li>
+  <li>重启后盯盘验证：亚盘时段（北京时间 07:00–15:00）应不再出现"弱共识 + 市价追"的错方向单；强共识单照常开。</li>
+  <li>专项④视觉第四票进入调研落地阶段（本机算力可行性与模型选型确认后直接落地，不再回问）。</li>
+</ol>
+
+<p class="src">交付物：本报告 + <code>test_smc_fix.py</code>（修复①验证）+ <code>test_asian_gate.py</code>（修复②验证）+ 已写盘代码（meta_agent.py / config.py）。</p>
+</body>
+</html>

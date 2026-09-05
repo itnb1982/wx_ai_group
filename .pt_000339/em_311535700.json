@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "global": {
+    "level": "HALT_NEW",
+    "reason": "x",
+    "at": "2026-08-09T00:03:44",
+    "by": "t"
+  },
+  "accounts": {},
+  "flatten_requests": []
+}

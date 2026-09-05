@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>V6 Phase 2 验收单</title>
+<style>
+ body{font-family:-apple-system,"Segoe UI",sans-serif;background:#0D1424;color:#e6edf3;max-width:920px;margin:40px auto;padding:0 24px;line-height:1.7}
+ h1{color:#E8B04B;margin-bottom:4px}
+ h2{color:#4D9BFF;border-bottom:1px solid #2a3550;padding-bottom:6px;margin-top:32px}
+ .sub{color:#8aa0c0;font-size:13px;margin-top:0}
+ .ok{color:#3fd07f;font-weight:600}
+ .warn{color:#E8B04B;font-weight:600}
+ code{background:#161f33;padding:2px 6px;border-radius:4px;color:#B07BFF;font-size:13px}
+ pre{background:#161f33;padding:12px 14px;border-radius:8px;overflow:auto;font-size:13px;border-left:3px solid #4D9BFF}
+ table{width:100%;border-collapse:collapse;margin:12px 0}
+ td{padding:8px 10px;border-bottom:1px solid #1c2740}
+ td:first-child{color:#cdd9ee}
+ .bar{height:10px;background:#161f33;border-radius:5px;margin:10px 0 4px}
+ .bar i{display:block;height:100%;background:linear-gradient(90deg,#E8B04B,#4D9BFF);border-radius:5px}
+ .tag{display:inline-block;background:#161f33;color:#4D9BFF;border-radius:4px;padding:1px 8px;font-size:12px;margin-right:6px}
+</style>
+</head>
+<body>
+<h1>万象Ai · V6 Phase 2 验收单</h1>
+<p class="sub">生成于 2026-08-08 · commit <code>fcf8dee</code> · tag <code>phase-2</code> · 自主推进（用户授权"自己干直到 V6 上线 demo 实盘"）</p>
+
+<h2>一、V6 总体进度</h2>
+<div class="bar"><i style="width:30%"></i></div>
+<table>
+<tr><td>Phase -1 工程安全网（测试/迁移/比对台）</td><td class="ok">✅ 完成</td><td><span class="tag">phase-1-foundation</span></td></tr>
+<tr><td>Phase 0 / Phase 1</td><td class="ok">✅ 完成</td><td><span class="tag">phase-0 / phase-1</span></td></tr>
+<tr><td>Phase 2 SignalBus + 启动韧性</td><td class="ok">✅ 收口（本轮）</td><td><span class="tag">phase-2</span></td></tr>
+<tr><td>Phase 3 并发状态机 → Phase 8 授权激活</td><td class="warn">⬜ 未开始</td><td>下一阶段</td></tr>
+</table>
+
+<h2>二、本轮交付：Task #295 根治 torch 崩溃拖垮全系统</h2>
+<p><b>根因</b>：venv 的 Python 被<b>就地升级</b> 3.13.12 → 3.13.14，torch 2.6.0 的 <code>_C.cp313-win_amd64.pyd</code> 按旧版编译，ABI 不匹配 → <code>import torch</code> 触发<b>原生 access violation（0xC0000005 / 退出码 3221225477）</b>。原 <code>try/except</code> 包裹 import 是「虚假降级保护」，抓不住原生段错误 → 整进程消失 → supervisor 误判假死 → 无限重启死循环（每 5s 崩一次）。</p>
+<p><b>方案</b>：<b>子进程探针隔离</b>——主进程<b>永不裸 import torch</b>，先 fork 短命子进程探测，把「进程级崩溃」转为「可捕获的子进程退出码」，按 (解释器+torch 二进制) 指纹缓存磁盘，超时<b>不</b>写盘、确定失败写盘永久降级；探针失败 → <code>_ensure_loaded</code> 永久降级，决策回退 SMC/Regime，系统照常交易。<code>status</code> 属性同步去除裸 <code>__import__("torch")</code>。</p>
+
+<h2>三、验证铁证（三重）</h2>
+<ol>
+<li><b>原生崩溃被隔离</b>：venv 下真实 <code>import torch</code> 触发 0xC0000005，主进程存活（Exit 0）、<code>ensure_loaded=False</code>、优雅降级打印 <code>torch 探针子进程崩溃 rc=3221225477 0xC0000005 ACCESS_VIOLATION</code>。</li>
+<li><b>测试</b>：全量 <code>1126+</code> 通过无回归；新增 <code>tests/test_chronos_probe_isolation.py</code> 19 用例全过（含反向守卫：静态校验"探针在 import torch 之前"、模块顶层无 import torch、status 无 <code>__import__('torch')</code>）。</li>
+<li><b>端到端</b>：supervisor 拉起后 <code>/api/health</code> 返回：
+<pre>status=ok, mt5_connected=4, accounts_bootstrap="账号接入 4/4",
+db_ready=true, auto_loop_running=true, uptime_sec=49.2, last_cycle_sec=45.4</pre>
+<code>supervisor.log</code> 11:53:28 启动 → 11:53:34 进入健康 → <b>之后再无 code=3221225477 崩溃行</b>（对比 01:33 每 5s 崩一次的死循环）。决策链末行日志：
+<pre>[辩论引擎] Meta质量陪审团: regime=MID Q=0.5 Chronos方向=NEUTRAL(可用=False) TP天花板=None</pre>
+即 Chronos 降级后决策自动回退 SMC/Regime，系统照常交易。</li>
+</ol>
+
+<h2>四、现状</h2>
+<ul>
+<li class="ok">后端已稳定运行（留后台运行中，status=ok、4 模拟盘账号全连、自动交易循环正常），<b>不再无限重启</b>。</li>
+<li class="warn">代价：本地 Chronos-2 因 ABI 不匹配<b>暂降级（available=False）</b>，决策回退云端双脑 + SMC/Regime —— 不影响盈利，仅少本地增强。恢复需重装匹配 Python 3.13.14 的 torch。</li>
+</ul>
+
+<h2>五、下一步（按授权自主推进，无需你操作）</h2>
+<ol>
+<li>重装匹配版 torch，恢复本地 Chronos 增强（动态止盈天花板 / 不确定性输入）。</li>
+<li>启动 Phase 3 并发状态机 → … → Phase 8 授权激活 → V6 上线 demo 实盘。</li>
+</ol>
+<p class="sub">有任何调整随时说；否则我按上述继续往下推。</p>
+</body></html>

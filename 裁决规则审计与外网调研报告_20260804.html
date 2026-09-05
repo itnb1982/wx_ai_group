@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai 裁决规则审计与外网调研报告</title>
+<style>
+  :root{--bg:#0b0f17;--card:#141b29;--card2:#1b2436;--line:#26324a;--txt:#e6edf6;--sub:#9fb0c9;
+        --red:#ff5c6c;--green:#27d796;--amber:#ffb547;--blue:#4ea1ff;--violet:#b07cff;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.7;padding:32px 18px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:26px;font-weight:800;letter-spacing:.5px;margin-bottom:6px;
+     background:linear-gradient(90deg,#4ea1ff,#b07cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:18px}
+  .card h2{font-size:18px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:8px}
+  .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:700;margin-right:6px}
+  .t-red{background:rgba(255,92,108,.16);color:var(--red)}
+  .t-green{background:rgba(39,215,150,.16);color:var(--green)}
+  .t-amber{background:rgba(255,181,71,.16);color:var(--amber)}
+  .t-blue{background:rgba(78,161,255,.16);color:var(--blue)}
+  .t-violet{background:rgba(176,124,255,.16);color:var(--violet)}
+  p{color:var(--sub);font-size:14px;margin:8px 0}
+  .key{color:var(--txt);font-weight:700}
+  code{background:var(--card2);padding:2px 7px;border-radius:6px;color:#ffd479;font-size:12.5px}
+  pre{background:#0a0e16;border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto;font-size:12.5px;color:#cdd9ee;line-height:1.55}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+  th,td{border:1px solid var(--line);padding:9px 10px;text-align:left}
+  th{background:var(--card2);color:#fff;font-weight:700}
+  td b{color:var(--txt)}
+  .red{color:var(--red);font-weight:700}.green{color:var(--green);font-weight:700}.amber{color:var(--amber);font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
+  .stat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .stat .n{font-size:24px;font-weight:800}.stat .l{font-size:12px;color:var(--sub);margin-top:4px}
+  .verdict{border-left:4px solid var(--violet);padding:4px 14px;background:rgba(176,124,255,.07)}
+  .rule{border-left:4px solid var(--amber);padding:4px 14px;background:rgba(255,181,71,.06);margin:10px 0}
+  .fix{border-left:4px solid var(--green);padding:4px 14px;background:rgba(39,215,150,.06);margin:10px 0}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .node{padding:8px 12px;border-radius:8px;font-size:12.5px;font-weight:700;border:1px solid var(--line)}
+  .n-bug{background:rgba(255,92,108,.14);color:var(--red);border-color:rgba(255,92,108,.4)}
+  .n-ok{background:rgba(39,215,150,.14);color:var(--green);border-color:rgba(39,215,150,.4)}
+  .arrow{color:var(--sub);font-size:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>万象Ai · 裁决（MetaAgent）规则审计与外网调研报告</h1>
+<div class="sub">日期 2026-08-04 · 审计对象：主号 liumanchun1 实盘 186 笔 + adjudicate 源码 + 外网 ensemble/LLM-judge 最佳实践（≥3 源交叉验证）</div>
+
+<div class="card">
+  <h2><span class="tag t-violet">核心结论</span>裁决确实"乱来"，但病根是规则缺陷，不是"该不该上模型"</h2>
+  <div class="verdict">
+    <p>用户观察的两个现象——<span class="key">两模型结论相反仍开单</span>、<span class="key">一方观望也开单</span>——源码已确认是实打实的 Bug：<code>adjudicate()</code> 用 <code>max()</code> 取加权最高分，**没有共识门槛、没有分歧否决、没有 decision 字段规范化**。这导致"只要某个方向分最高就开"，哪怕两模型打架。</p>
+    <p>外网调研反而证明：<span class="key">不应让 LLM 当裁决（第三裁判）</span>——LLM 有过度自信、性格偏差、确认偏误（≥3 源实证）；正确方向是<span class="key">优化现有规则聚合：共识不足=不交易</span>（所有严肃 ensemble 系统的通用铁律）。</p>
+  </div>
+</div>
+
+<!-- 一、裁决规则现状 -->
+<div class="card">
+  <h2><span class="tag t-blue">一、裁决规矩现在怎么定的</span>源码逐行拆解（meta_agent.py:281-382）</h2>
+  <p>流程：双模型初判 → 互相反驳（rebuttal）→ 按近期准确率取动态权重 → 加权融合 → <code>max()</code> 取最高分 → 输出 final_decision。</p>
+  <pre>ds_conf = DS反驳后置信 ; hy_conf = HY反驳后置信
+ds_w, hy_w = get_weights(体制)            # 近期准确率动态权重
+decision_scores = {BUY:0, SELL:0, HOLD:0}
+if ds_final=="BUY": scores[BUY]+=ds_conf*ds_w; active_w+=ds_w
+elif ds_final=="SELL": scores[SELL]+=ds_conf*ds_w; active_w+=ds_w
+# HOLD 沉默不投票
+if hy_final=="BUY": scores[BUY]+=hy_conf*hy_w; active_w+=hy_w
+elif hy_final=="SELL": scores[SELL]+=hy_conf*hy_w; active_w+=hy_w
+
+# ★分歧惩罚太弱：
+elif 一方BUY一方SELL: scores[HOLD]=(ds+hy加权)*0.3   # 只加 0.3 倍，BUY/SELL桶仍留分
+final_decision = max(scores)                          # 直接取最高分 → 选了方向
+final_conf = final==HOLD?...: final_conf/active_w     # 归一化后可能只有 0.3~0.4</pre>
+  <div class="rule">
+    <p class="amber">三条致命缺陷（已对照源码确认）：</p>
+    <p><b>① 分歧硬开单</b>：DS=BUY(0.6,w0.5)→BUY桶0.30；HY=SELL(0.6,w0.5)→SELL桶0.30；HOLD仅 (0.30+0.30)×0.3=0.18。max 取到 0.30 → <span class="red">裁决以 BUY 或 SELL 开单，终裁置信仅 0.30</span>。截图里"置信40%"正是这种归一化产物。</p>
+    <p><b>② 单模型开单</b>：DS=BUY、HY=HOLD（观望）→ active_w=0.5，裁决直接以 BUY 开单（归一化后）。你看到的"一方观望也开单"多属此类。</p>
+    <p><b>③ 缺 decision 规范化</b>：<code>_safe_json_loads</code> 不规范化 decision，LLM 若返回 <code>"buy"</code> 小写或 <code>"观望"</code> 中文，<code>== "BUY"</code> 判断全部失效，会静默错判。</p>
+  </div>
+</div>
+
+<!-- 二、外网调研 -->
+<div class="card">
+  <h2><span class="tag t-amber">二、外网调研（≥3 源交叉验证）</span>两个核心问题</h2>
+  <p><b>问题A：模型意见分歧时该怎么裁决？</b></p>
+  <table>
+    <tr><th>来源</th><th>核心结论</th><th>对本案的启示</th></tr>
+    <tr><td><b>TradePulse</b><br>AI Consensus Trading</td><td>"only acting when they agree"——<span class="green">只在模型一致时才交易</span>；分歧时系统"自然变得更谨慎，在不确定性最高时减少暴露"</td><td>分歧=减仓信号，不是开仓信号</td></tr>
+    <tr><td><b>StrategyArena</b><br>Ensemble Meta</td><td>明确用 <span class="green">consensus &gt; 60% 同向</span> 才出信号（stacking + 动态权重）</td><td>需要"同向占比门槛"</td></tr>
+    <tr><td><b>romeo-v8</b><br>Super-Ensemble</td><td><code>confidence_threshold=0.60</code> <b>且</b> <code>consensus_threshold=0.7</code>（最小算法一致性 0.7）</td><td>双门槛：既要置信、又要共识</td></tr>
+    <tr><td><b>Quant Trader</b><br>Conviction-Weighted</td><td>分层：STRONG(3+策略+60%置信)立即；BUY/SELL(2+策略+50%)谨慎；WEAK(多数但弱)几乎不执行</td><td>弱共识降级而非硬开</td></tr>
+    <tr><td><b>TradingView</b><br>For-Loop Consensus</td><td>用 <span class="green">超多数≥70%</span> 而非简单多数，过滤"分裂投票"，否则灰色（中性/不交易）</td><td>分裂=不参与</td></tr>
+  </table>
+  <p><b>问题B：要不要让 LLM 当裁决（第三裁判）？</b> <span class="red">调研一致否定</span></p>
+  <table>
+    <tr><th>来源</th><th>LLM 当金融裁决的硬伤</th></tr>
+    <tr><td><b>marketmatrix</b><br>实盘竞赛实测</td><td>AI 自带"交易性格偏差"：Claude 偏单边做多、Gemini 无做空顾虑、通义敢重仓加杠杆；<span class="red">同一指令不同 AI 决策截然不同</span></td></tr>
+    <tr><td><b>themoonlight</b><br>论文评述</td><td>①目标偏差：LLM 优化"似然+人类偏好对齐"，与风控目标根本不匹配 ②<span class="red">过度自信</span>：被训练成"自信获高奖励、表达无知受罚"→ 会以高置信度猜测、隐藏无知 ③CoT 是事后合理化</td></tr>
+    <tr><td><b>alphaxiv</b><br>偏见研究</td><td>LLM 有固有偏见→<span class="red">确认偏误</span>，面对反证也顽固坚持初始判断</td></tr>
+    <tr><td><b>ownyourai</b><br>偏差实证</td><td>外推陷阱（追涨杀跌）、过度乐观（预测收益≈实际2倍）、尾部风险误判</td></tr>
+  </table>
+  <div class="rule">
+    <p class="amber">结论：让 LLM 当"终裁法官"，等于把系统命运交给一个会盲目自信+有性格偏差+确认偏误的裁判，还增加延迟/成本/不可解释性。你已有 DS+HY 双 LLM 辩论，再加第三个 LLM 只是叠加同样的毛病。<span class="key">正确做法=优化规则聚合（共识门槛+分歧否决）</span>。</p>
+  </div>
+</div>
+
+<!-- 三、优化方案 -->
+<div class="card">
+  <h2><span class="tag t-green">三、裁决规则优化方案（提准，不砍盈利单）</span>待你确认后落地</h2>
+  <p>原则：沿用"AI 出意图、规则守底线"双轨；共识强才开、分歧/弱共识不交易；保持可解释、可回测、可控。</p>
+  <div class="grid">
+    <div class="stat"><div class="n red">R1</div><div class="l">分歧强制 HOLD：DS/HY 一方 BUY 一方 SELL → 终裁直接 HOLD，不开单</div></div>
+    <div class="stat"><div class="n amber">R2</div><div class="l">单模型方向+另一 HOLD → 允许开但门槛提高至 0.70（仅一个模型支持=谨慎）</div></div>
+    <div class="stat"><div class="n green">R3</div><div class="l">双 HOLD → 强制 HOLD，加规范化保障 + 日志明示"双观望不交易"</div></div>
+    <div class="stat"><div class="n blue">R4</div><div class="l">decision 规范化：upper() + 中文/同义词映射（观望/hold→HOLD，做多→BUY 等）</div></div>
+  </div>
+  <div class="fix">
+    <p class="green">具体裁决新逻辑（伪码）：</p>
+    <pre>if ds_final==HY_final=="HOLD":           # 双观望
+    return HOLD
+if ds_final!=HY_final and 二者都有方向:     # 分歧（BUY vs SELL）
+    return HOLD                            # ★R1 不再硬选方向
+if 一方方向 + 另一方HOLD:                   # 单模型
+    门槛 = 0.70                            # ★R2 提高
+else:  # 同向共识
+    门槛 = 0.65                            # ★强共识可略低
+final = 同向方向 if 归一化置信>=门槛 else HOLD
+# 极端风险 / 风控护栏 一票否决（不变）</pre>
+  </div>
+  <p class="key">与之前审计的联动：本方案配合上一轮建议的"开仓门槛 0.5→0.65、反转平仓 0.6→0.75"形成完整提准链。但本次<span class="amber">只动裁决聚合规则</span>，不与持仓/出场改动混在一起，便于你逐个验收。</p>
+</div>
+
+<!-- 四、明确回答 -->
+<div class="card">
+  <h2><span class="tag t-violet">四、对你 4 个问题的直接回答</span></h2>
+  <table>
+    <tr><th>你的问题</th><th>回答</th></tr>
+    <tr><td>裁决是不是乱来开单？</td><td class="red">是。分歧硬开单 + 单模型开单 + 缺规范化，源码已确认</td></tr>
+    <tr><td>裁决规矩怎么定的？</td><td>双模型加权聚合 + max() 取最高分，无共识门槛/分歧否决</td></tr>
+    <tr><td>要不要给裁决上模型（LLM当裁判）？</td><td class="green">不要。外网≥3源证明 LLM 过度自信+性格偏差+确认偏误，加第三裁判只叠加毛病</td></tr>
+    <tr><td>要不要外网学？</td><td class="green">已学。结论：优化规则聚合（共识不足=不交易），符合所有严肃 ensemble 系统铁律</td></tr>
+  </table>
+  <p class="sub">下一步建议：你过一遍本报告，确认 R1-R4 方向后，我再动代码（仅改 adjudicate 聚合规则 + 加 decision 规范化），重启 v29 验证"分歧/双观望不再开单"。按你"一样一样来"的节奏，本次先不落代码。</p>
+</div>
+
+</div>
+</body>
+</html>

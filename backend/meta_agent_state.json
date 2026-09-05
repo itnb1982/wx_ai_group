@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "deepseek_perf": {
+    "total_signals": 196,
+    "correct_signals": 126,
+    "total_profit": 15238.589999999998,
+    "avg_confidence": 0.5500332042931032,
+    "recent_accuracy": 0.5131798785567312,
+    "weight": 0.5
+  },
+  "hunyuan_perf": {
+    "total_signals": 145,
+    "correct_signals": 96,
+    "total_profit": 17.189999999999998,
+    "avg_confidence": 0.5329228269460513,
+    "recent_accuracy": 0.44736652850153524,
+    "weight": 0.5
+  },
+  "saved_at": 1786982819.236823
+}

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai · 方向准确率专项④ 视觉模型第四票 · 落地与验证报告</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2430; --sub:#5b6472; --line:#e6e9ef;
+    --brand:#c8a24a; --brand2:#1b6ec2; --ok:#1f9d55; --warn:#d98324; --bad:#d64545;
+    --codebg:#f1f3f7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif;line-height:1.7;font-size:15px}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 22px 60px}
+  header{border-bottom:3px solid var(--brand);padding-bottom:16px;margin-bottom:22px}
+  h1{font-size:25px;margin:0 0 6px;letter-spacing:.5px}
+  h2{font-size:19px;margin:30px 0 12px;padding-left:11px;border-left:4px solid var(--brand);color:var(--ink)}
+  h3{font-size:16px;margin:18px 0 8px;color:var(--brand2)}
+  .tag{display:inline-block;background:var(--brand);color:#fff;font-size:12px;padding:2px 9px;border-radius:10px;margin-right:6px;vertical-align:middle}
+  .meta{color:var(--sub);font-size:13px;margin-top:6px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;box-shadow:0 1px 3px rgba(20,30,50,.04)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi .n{font-size:22px;font-weight:700;color:var(--brand2)}
+  .kpi .l{font-size:12px;color:var(--sub);margin-top:2px}
+  code,.pre{font-family:"SFMono-Regular",Consolas,Menlo,monospace;background:var(--codebg);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px;color:#243}
+  pre.pre{display:block;padding:12px 14px;overflow:auto;line-height:1.5;white-space:pre}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{background:#f0f2f6;color:var(--ink)}
+  tr:nth-child(even) td{background:#fafbfc}
+  .ok{color:var(--ok);font-weight:700}
+  .warn{color:var(--warn);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+  .pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:9px;border:1px solid var(--line)}
+  .pill.ok{background:#e9f7ef;color:var(--ok);border-color:#bfe6cf}
+  .pill.warn{background:#fdf3e7;color:var(--warn);border-color:#f3d9b0}
+  .pill.bad{background:#fdeaea;color:var(--bad);border-color:#f3c4c4}
+  .imgs{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}
+  .imgs figure{margin:0;flex:1 1 320px}
+  .imgs img{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .imgs figcaption{font-size:12px;color:var(--sub);margin-top:6px;text-align:center}
+  .note{background:#fff8ec;border:1px solid #f3e0b0;border-radius:10px;padding:12px 16px;font-size:13.5px;color:#6b531a}
+  .step{background:#eef4fb;border:1px solid #cfe0f3;border-radius:10px;padding:12px 16px;margin:10px 0;font-size:14px}
+  ol li{margin:7px 0}
+  footer{margin-top:34px;color:var(--sub);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .flow .box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px}
+  .flow .arr{color:var(--brand);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><span class="tag">方向准确率专项</span><span class="tag" style="background:var(--brand2)">④视觉第四票</span></div>
+  <h1>万象Ai · 视觉模型第四票 落地与验证报告</h1>
+  <div class="meta">F:\WanxiangAI · 2026-08-14 · 加法增强（提准非拦截）· 纯 AI 决策链</div>
+</header>
+
+<div class="card">
+  <h3 style="margin-top:4px">一句话结论</h3>
+  <p>视觉/多模态模型「实时看 H4/M15 蜡烛图识别市场结构」作为决策链<b>第 5 路信号</b>已完整落地并通过离线验证（编译、渲染、聚合 5 场景全过）。它<b>只做同向增强 / 反向微调，绝不做 GO/NO-GO 闸门</b>——不砍交易笔数、不新增 MT5 订单类型。真实视觉推理端到端验证待本机 Ollama 拉取 <code>qwen2.5vl:7b</code> 完成后自动补录。</p>
+</div>
+
+<h2>一、背景与根因</h2>
+<div class="card">
+  <p>此前审计发现：主号 905 笔两方向均弱（buy 390/−$69.73、sell 515/−$1107.87），且存在<strong>「三脑 SELL 共识被元代理翻成 BUY」的系统 bug</strong>（修复①已落）与<strong>亚盘弱共识市价追错方向</strong>（修复②已落）。三单错方向全部发生在<strong>亚盘震荡</strong>（流动性 moderate + 弱共识 + 无明确 zone 市价追）。</p>
+  <p>根因不是「数据喂错 / 指数错」，而是<strong>小周期方向判断在震荡市失效</strong>。专项④用视觉模型直接「看」价格行为结构（HH/HL、供给需求区、流动性扫荡），从另一个模态补充方向证据，专治此根因——且严格作为<strong>加法增强</strong>，符合铁律「提准非拦截」。</p>
+</div>
+
+<h2>二、架构设计</h2>
+<div class="card">
+  <div class="flow">
+    <span class="box">主号 MT5 行情<br><span style="color:var(--sub);font-size:11px">get_market_data</span></span>
+    <span class="arr">→</span>
+    <span class="box">vision_chart.py<br><span style="color:var(--sub);font-size:11px">Pillow 渲染 H4/M15 PNG</span></span>
+    <span class="arr">→</span>
+    <span class="box">Ollama 视觉模型<br><span style="color:var(--sub);font-size:11px">qwen2.5vl:7b · CPU</span></span>
+    <span class="arr">→</span>
+    <span class="box">VisionService 缓存<br><span style="color:var(--sub);font-size:11px">后台守护线程 150s</span></span>
+    <span class="arr">→</span>
+    <span class="box">meta_agent.adjudicate<br><span style="color:var(--sub);font-size:11px">加法加权融合</span></span>
+  </div>
+  <h3>关键设计决策</h3>
+  <ul>
+    <li><b>后台生产者线程（低频 150s）</b>渲染图表并送视觉模型，结果缓存；<code>adjudicate</code> <b>同步读缓存</b>——零延迟拖累主决策链（纯 AI 系统，视觉在独立模型服务内，不依赖 MT5 跑视觉）。</li>
+    <li><b>加法加权（非闸门）</b>：视觉方向权重并入 <code>decision_scores[dir] += weight*conf</code> 且并入 <code>active_weight</code> 归一化；<code>both_hold</code>（双云观望）强制 HOLD，视觉票<b>无法单边开仓</b>。</li>
+    <li><b>显存纪律</b>：本机 RTX 3060Ti 8GB，qwen3:8b(5.23G)+Chronos-2 常驻 GPU；视觉模型强制 <code>num_gpu=0</code>（CPU float32），零抢显存。</li>
+    <li><b>数据同源</b>：图表取自主号 <code>get_market_data</code> 的 H4/M15 bars，与喂给双脑的行情完全一致，避免两套数据错位。</li>
+    <li><b>动态主号</b>：<code>_primary_id()</code> 用 <code>pick_market_primary_id</code> 取主号 UUID，失败回退 3540bf33，不写死。</li>
+  </ul>
+</div>
+
+<h2>三、改动清单</h2>
+<div class="card">
+  <h3>新建</h3>
+  <table>
+    <tr><th>文件</th><th>作用</th></tr>
+    <tr><td><code>app/services/vision_chart.py</code></td><td>纯 Pillow K 线渲染（浅色+彩色蜡烛+MA20/MA50+量能+价线+坐标/时间轴）；<code>render_chart()</code> 数据不足返回 None 降级</td></tr>
+    <tr><td><code>app/services/vision_service.py</code></td><td><code>VisionVote</code> dataclass（对齐 FusionVote 契约）+ <code>VisionService</code> 后台生产者+同步缓存读取+CPU 推理+<code>_aggregate</code>(H4 0.6/M15 0.4)；<code>get_service()</code> 单例</td></tr>
+    <tr><td><code>test_vision_pipeline.py</code></td><td>离线渲染+聚合 5 场景验证；<code>--vision</code> 调真实模型</td></tr>
+  </table>
+  <h3>修改</h3>
+  <table>
+    <tr><th>文件</th><th>改动</th></tr>
+    <tr><td><code>app/config.py</code></td><td>新增 6 项 <code>VISION_*</code> 配置（ENABLED / MODEL / WEIGHT=0.20 / H4=0.60 / M15=0.40 / REFRESH=150 / STALE=900）</td></tr>
+    <tr><td><code>app/core/meta_agent.py</code></td><td><code>DebateDecision</code> 加 7 视觉字段；<code>adjudicate</code> fusion_v2 后读视觉票加法加权+归一化；summary/审计透出视觉票</td></tr>
+    <tr><td><code>app/main.py</code></td><td>lifespan 启动 VisionService 生产者线程（失败降级无视觉票）</td></tr>
+    <tr><td><code>app/services/decision_snapshot.py</code></td><td>votes 字典加 <code>vision</code> 第 4 票进 DB 审计</td></tr>
+  </table>
+</div>
+
+<h2>四、离线验证结果</h2>
+<div class="grid">
+  <div class="kpi"><div class="n ok">6/6</div><div class="l">改动文件 py_compile 全过</div></div>
+  <div class="kpi"><div class="n ok">5/5</div><div class="l">聚合场景全部符合预期</div></div>
+  <div class="kpi"><div class="n">14.0KB</div><div class="l">M15 真实数据渲染 PNG</div></div>
+  <div class="kpi"><div class="n">14.6KB</div><div class="l">H4 合成结构渲染 PNG</div></div>
+</div>
+<div class="card">
+  <h3>聚合逻辑（H4 权重 0.6 / M15 权重 0.4）</h3>
+  <table>
+    <tr><th>场景</th><th>方向</th><th>置信</th><th>权重缩放</th><th>判定</th></tr>
+    <tr><td>同向看多</td><td>BUY</td><td>0.95</td><td>1.00</td><td class="ok">强一致发力</td></tr>
+    <tr><td>同向看空</td><td>SELL</td><td>0.95</td><td>1.00</td><td class="ok">强一致发力</td></tr>
+    <tr><td>分歧(H4多/M15空)</td><td>BUY</td><td>0.20</td><td>0.70</td><td class="warn">降权，冲突贡献≈0.04 可忽略</td></tr>
+    <tr><td>仅 H4 有方向</td><td>BUY</td><td>0.95</td><td>0.85</td><td class="ok">单方向缩放</td></tr>
+    <tr><td>双观望</td><td>HOLD</td><td>0.00</td><td>0.50</td><td class="ok">不贡献方向分，不单边开仓</td></tr>
+  </table>
+  <h3>渲染样例（视觉模型将「看」的图表）</h3>
+  <div class="imgs">
+    <figure><img src="vision_test_m15.png" alt="M15 图表"><figcaption>M15 · 真实数据 54 根（即时结构）</figcaption></figure>
+    <figure><img src="vision_test_h4.png" alt="H4 图表"><figcaption>H4 · 合成结构 120 根（趋势/供给需求区）</figcaption></figure>
+  </div>
+</div>
+
+<h2>五、真实验证（待模型拉取完成自动补录）</h2>
+<div class="card">
+  <div class="note">
+    <b>当前状态</b>：本机原仅装 <code>qwen3:8b</code>（非视觉模型）。后台 <code>ollama pull qwen2.5vl:7b</code>（约 6GB）进行中，已突破 94%，由<b>智能守护 <code>ollama_pull_daemon.py</code></b> 监控（partial 连续 180s 零增长即 kill 重拉续传），自动推进直至装好。装好后会自动执行 <code>test_vision_pipeline.py --vision</code> 做端到端真实推理，并把结果补录到此节。
+  </div>
+  <p>真实验证将确认三件事：①视觉模型能正确从 K 线图读出 H4/M15 方向；②<code>_aggregate</code> 把双图判断合成单票；③融合进 <code>meta_agent</code> 后亚盘时段方向准确率提升、且<b>不砍交易笔数</b>。</p>
+</div>
+
+<h2>六、安全设计（铁律对齐）</h2>
+<div class="card">
+  <table>
+    <tr><th>铁律</th><th>落地保障</th></tr>
+    <tr><td>提准非拦截</td><td>视觉票仅加法加权，<code>both_hold</code> 强制 HOLD 守卫，永不单独立闸门</td></tr>
+    <tr><td>不砍交易笔数</td><td>视觉权重并入归一化，仅同向增强；非反向否决</td></tr>
+    <tr><td>零新 MT5 订单类型</td><td>视觉只在决策层产出方向权重，执行层完全不动</td></tr>
+    <tr><td>显存不抢</td><td>视觉模型 <code>num_gpu=0</code> CPU float32，与 qwen3/Chronos GPU 隔离</td></tr>
+    <tr><td>数据同源</td><td>图表取自主号 MT5 行情，与双脑一致</td></tr>
+    <tr><td>僵死防护</td><td><code>VISION_STALE_SEC=900</code> 缓存票超 15min 作废，不用过期图表指挥当下</td></tr>
+  </table>
+</div>
+
+<h2>七、重启与盯盘指引</h2>
+<div class="step">
+  <b>⚠️ 必须（最终修复重启）：双击 <code>backend\restart_task_backend.bat</code></b>（自提权管理员）。这是代码完整落地的第三轮重启，让 <b>①生产者线程 ②meta_agent 融合 ③<code>_pick_data_source</code> 取数兜底 ④<code>/api/dashboard/vision-status</code> 诊断接口</b> 全部生效。加载成功判据 = <code>/api/health</code> 的 pid 换新。
+</div>
+<div class="card">
+  <p>重启后盯盘关注：</p>
+  <ol>
+    <li>亚盘时段（京 07–15）日志应出现 <code>[MetaAgent][vision] 视觉票=BUY/SELL(w=..|conf=..|H4=../M15=..)</code>；</li>
+    <li>方向准确率应提升，且<b>交易笔数不下降</b>（若下降即违反铁律，回退删视觉加权段）；</li>
+    <li><code>decision_snapshot</code> 的 votes 字典含 <code>vision</code> 第 4 票，可做历史审计；</li>
+    <li>若视觉模型未就绪，降级为「无视觉票」，决策链行为回退到修复①②状态，不报错。</li>
+  </ol>
+</div>
+
+<h2>八、集成 Bug 修复实录（两轮根因）</h2>
+<div class="card">
+  <h3>① 取数主号「未连接」——_primary_id 初版</h3>
+  <p>重启后日志：<code>视觉票不可用: K线数据不足(H4=0 M15=0)</code>。根因：<code>_primary_id()</code> 取 selector 主号 <code>3540bf33</code>（is_market_primary=True），但该账号在 <code>mt5_service</code> 无活跃连接，<code>get_market_data</code> 返回 <code>{"error":"行情主号未连接"}</code>。修复：优先 selector 主号、须 <code>_get_conn</code> 非 None；否则退到 <code>alive_account_ids()</code> 活账号。</p>
+  <h3>② 假连接误判——_get_conn 只看管道对象存在</h3>
+  <p>二次重启后仍报 <code>取行情失败: 行情主号未连接</code>。根因：<code>_get_conn</code>（mt5_service L577）只查 <b>管道对象是否存在</b>，不验证能否通信；<code>3540bf33</code> 的 Worker 进程活着、管道对象也在 → 误判"有连接"直接返回；而 <code>get_market_data</code> 实际发命令时底层断链。单元测试只覆盖"进程死"漏了"管道断"。</p>
+  <p><b>最终修复</b>：弃用单点 <code>_get_conn</code>，新增 <code>_pick_data_source()</code>——遍历候选账号（selector 主号优先 + 全部活账号），<b>对每个真实调一次 <code>get_market_data</code>，选第一个返回 timeframes 的账号</b>。错误字典被过滤绝不当行情用。单测模拟"3540bf33 假连接返回未连接、16100984 返回真 K 线" → 正确退到 16100984 ✅。</p>
+  <div class="note warn">该主号连接<b>时好时坏</b>（16:37–16:45 曾取到 K 线调通 Ollama 400），故兜底遍历是必要设计，非过度防御。</div>
+</div>
+
+<h2>九、视觉模型下载僵死全复盘（17:00–17:10）</h2>
+<div class="card">
+  <h3>③ 下载守护崩溃——GBK 字节</h3>
+  <p>智能守护 <code>ollama_pull_daemon.py</code> 用 <code>subprocess(text=True)</code> 默认 UTF-8 解码 ollama 输出，撞上<b>中文 Windows 控制台 GBK 字节（0xcf）</b> → <code>UnicodeDecodeError</code> 把整个守护带崩。修复：<code>text=True, encoding="utf-8", errors="replace"</code>。</p>
+  <h3>④ 7b 在本机网络拉不动</h3>
+  <p><code>qwen2.5vl:7b</code> 主 blob（6.0GB）持续<b>假死在 94%（partial 字节 5969233408 半小时零增长，进程活着但落盘卡死）</b>；多次 kill+续传仍卡同一点 → 判定该 6GB 分片在本机 CDN 不可达。</p>
+  <h3>⑤ 自主决策切 qwen2.5vl:3b（用户已全权授权，不回问）</h3>
+  <p>3b 主 blob 仅 <b>3.2GB</b>，图表结构识别（HH/HL、供给需求区、流动性扫荡）足够；体量 1/2 → 单程更短、更易一次过。<code>config.VISION_MODEL</code> 改 <code>qwen2.5vl:3b</code>，<code>_model_name()</code> 兜底同步。删除了卡死的 7b partial（释放 5.6GB）。</p>
+  <h3>⑥ <code>could not locate ollama app</code> 根因（核心运维教训）</h3>
+  <p><code>ollama pull</code> 客户端<b>必须连一个已运行的 <code>ollama serve</code></b> 才能下载。此前 <code>taskkill /F /IM ollama.exe</code> 把<b>系统常驻的 serve 也杀了</b>，于是 pull 自己起不来报此错（空转）。修复：先显式 <code>ollama serve</code>（后台常驻，设 <code>OLLAMA_MODELS</code> 环境变量）起服务，再对它 <code>ollama pull 3b</code>。</p>
+  <div class="note ok">当前状态（17:10）：serve 在跑（Listening 11434、GPU 已识别、qwen3:8b 在列）；<code>pull 3b</code> 真实推进 <b>@4.8MB/s、11%、355MB/3.2GB、ETA≈10min</b>，远比 7b 假死的 147KB/s 健康。装好后将自动触发 <code>test_vision_pipeline.py --vision</code> 端到端验证，结果补录本报告的第五节。</div>
+  <div class="note warn">固化教训：①下载守护读输出必须 <code>errors='replace'</code>；②<code>ollama pull</code> 依赖 serve，自愈脚本<b>绝不能 kill 全部 ollama</b>（会杀 serve），应只 kill 卡死的 pull 客户端或重启 serve；③大模型 blob 在本机拉不动时，果断切小体量同源模型是明智的自主决策。</div>
+</div>
+
+<footer>
+  万象Ai 智能交易系统 · 方向准确率专项④ · 视觉模型第四票 · 2026-08-14<br>
+  纯 AI 决策链 · 加法增强（提准非拦截）· 多租户多账号全部跟随主号
+</footer>
+</div>
+</body>
+</html>

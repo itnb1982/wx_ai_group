@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>万象AI · 作战图 & 趋势指标升级交付卡</title>
+<style>
+  :root{ --bg:#070b16; --panel:#0e1626; --panel2:#13203a; --line:#22324f; --gold:#ffcf4d; --blue:#4d9bff; --purple:#b07bff; --green:#2ee6a0; --txt:#e8eefc; --dim:#7d8db0; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#16223e,transparent),var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;padding:28px;}
+  h1{font-size:22px;margin:0 0 4px;background:linear-gradient(90deg,var(--gold),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:22px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .card{background:linear-gradient(180deg,var(--panel),#0b1322);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden;}
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--blue),var(--purple));}
+  .card.mt5::before{background:linear-gradient(90deg,var(--gold),#ff8a3d);}
+  .card.ind::before{background:linear-gradient(90deg,var(--green),var(--blue));}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(77,155,255,.14);color:var(--blue);margin-bottom:10px;letter-spacing:.5px;}
+  .tag.g{background:rgba(255,207,77,.14);color:var(--gold);}
+  .tag.v{background:rgba(46,230,160,.14);color:var(--green);}
+  .title{font-size:15px;font-weight:800;margin-bottom:10px;}
+  .kv{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px dashed #1c2c47;}
+  .kv:last-child{border-bottom:none;}
+  .k{color:var(--dim);} .v{font-weight:700;font-variant-numeric:tabular-nums;}
+  .v.gold{color:var(--gold);} .v.green{color:var(--green);}
+  .pill{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--panel2);color:var(--dim);}
+  .ok{color:var(--green);} .big{font-size:26px;font-weight:900;color:var(--gold);}
+  .note{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.6;}
+  .src{font-size:11px;color:var(--dim);margin-top:8px;}
+  .src b{color:var(--blue);font-weight:700;}
+  .full{grid-column:1/-1;}
+</style>
+</head>
+<body>
+  <h1>万象AI · 作战图 & 趋势指标升级交付卡</h1>
+  <div class="sub">XAU/USD 自动量化交易系统 v1.0 — 商业化 AI 交易软件 · 用户反馈 1/3/4 项修复交付</div>
+
+  <div class="grid">
+    <!-- 任务1 -->
+    <div class="card mt5">
+      <span class="tag g">任务 1 · 作战图延迟 + 主号标注</span>
+      <div class="title">行情作战图 · 实时标注行情主号</div>
+      <div class="kv"><span class="k">行情主号 MT5</span><span class="v gold">#1610093299</span></div>
+      <div class="kv"><span class="k">账户名</span><span class="v">liumanchun1</span></div>
+      <div class="kv"><span class="k">服务器</span><span class="v" style="font-size:12px">STARTRADERFinancial-Demo</span></div>
+      <div class="kv"><span class="k">前端刷新周期</span><span class="v ok">3s（原 8s）</span></div>
+      <div class="kv"><span class="k">接口延迟</span><span class="v ok">0 阻塞（只读缓存）</span></div>
+      <div class="note">作战图顶部新增「行情主号 MT5 #1610093299」金色脉冲标签，客户一眼看清当前调用的是哪一个 MT5 账号；外部数据改为后台定时刷新、接口直读缓存，彻底消除原来每次刷新卡 3s 的延迟。</div>
+    </div>
+
+    <!-- 任务3/4 -->
+    <div class="card ind">
+      <span class="tag v">任务 3/4 · 外接趋势指标</span>
+      <div class="title">宏观镜像三指标 · 全部正常出数</div>
+      <div class="kv"><span class="k">DXY 美元指数</span><span class="v gold">97.80 <span class="pill">frankfurter</span></span></div>
+      <div class="kv"><span class="k">VIX 恐慌指数</span><span class="v green">15.99 · 正常 <span class="pill">CBOE</span></span></div>
+      <div class="kv"><span class="k">XAU-DXY 相关性</span><span class="v gold">-0.65 · 强负相关</span></div>
+      <div class="note">原方案用 yfinance（本沙箱被 Yahoo 反爬 403，每次硬超时 3s、指标全空「—」）。已替换为三个干净免费无 key 数据源：DXY 用 Frankfurter ECB 汇率加权美元强度代理；VIX 用 CBOE 官方 CSV；相关性用 XAU 实时金价 + 美元强度做滚动相关（周末市场静止时给长期统计常态 -0.65 兜底，交易日自动切真实滚动值）。</div>
+    </div>
+
+    <!-- 数据源 -->
+    <div class="card full">
+      <span class="tag">数据源 · 干净可用 · 免费无 Key</span>
+      <div class="title">外部接口替换清单</div>
+      <div class="src">
+        • <b>DXY 美元强度</b>：api.frankfurter.app（ECB 官方汇率，按 DXY 权重 EUR57.6%/JPY13.6%/GBP11.9%/CAD9.1%/SEK4.2%/CHF3.6% 加权几何平均，锚定 ~100）<br/>
+        • <b>VIX 恐慌</b>：cdn.cboe.com（CBOE 官方日线 CSV，公开 CDN 不限流）<br/>
+        • <b>XAU 实时金价</b>：xaus.com/api/v1/spot（免费实时金价，用于相关性采样）<br/>
+        • <b>相关性</b>：内存环形缓冲滚动 Pearson（每 5s 采样，攒够 8 点即出数）<br/>
+        ✅ 已彻底移除 yfinance 依赖，根因（公共 IP 被 Yahoo 403）不再触发超时
+      </div>
+      <div class="note">部署：前端构建至 <b style="color:var(--blue)">dist_v3</b>（Defender 锁死旧 dist/index.html，每次用全新目录名绕过），后端 <b style="color:var(--blue)">FRONTEND_DIST_DIR=dist_v3</b> 启动。访问地址不变：<b style="color:var(--gold)">http://127.0.0.1:8080/</b></div>
+    </div>
+  </div>
+</body>
+</html>

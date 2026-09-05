@@ -1,0 +1,24 @@
+﻿===v23存活(8080)===
+LISTEN PID=8416
+===empty_response计数===
+6
+===三线程启动标志===
+[32m2026-08-04 17:36:49.949[0m | [1mINFO    [0m | [36mapp.main[0m:[36mlifespan[0m:[36m113[0m - [1m  利润锁利高频守护线程已启动（15s）[0m
+[32m2026-08-04 17:36:49.951[0m | [1mINFO    [0m | [36mapp.main[0m:[36mlifespan[0m:[36m122[0m - [1m  副号实时跟单守护线程已启动（10s）[0m
+===运行异常(非HTTP)===
+===主号L3采样(近6)===
+[32m2026-08-04 18:06:07.271[0m | [34m[1mDEBUG   [0m | [36mapp.services.trade_executor[0m:[36m_manage_positions[0m:[36m678[0m - [34m[1m[L3护盾] 2877213e 浮盈=-3.01$ 阈值=10.00$ 冷却剩余=0s enable_l3=True[0m
+[32m2026-08-04 18:08:15.549[0m | [34m[1mDEBUG   [0m | [36mapp.services.trade_executor[0m:[36m_manage_positions[0m:[36m678[0m - [34m[1m[L3护盾] 2877213e 浮盈=+2.03$ 阈值=10.00$ 冷却剩余=0s enable_l3=True[0m
+[32m2026-08-04 18:08:15.571[0m | [34m[1mDEBUG   [0m | [36mapp.services.trade_executor[0m:[36m_manage_positions[0m:[36m678[0m - [34m[1m[L3护盾] 2877213e 浮盈=+2.03$ 阈值=10.00$ 冷却剩余=0s enable_l3=True[0m
+[32m2026-08-04 18:10:05.999[0m | [34m[1mDEBUG   [0m | [36mapp.services.trade_executor[0m:[36m_manage_positions[0m:[36m678[0m - [34m[1m[L3护盾] 2877213e 浮盈=+11.15$ 阈值=10.00$ 冷却剩余=0s enable_l3=True[0m
+[32m2026-08-04 18:10:06.000[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_manage_positions[0m:[36m684[0m - [1m[L3护盾] 2877213e 篮子浮盈 +11.15≥10.00$ → 全平锁利重开[0m
+[32m2026-08-04 18:14:09.393[0m | [34m[1mDEBUG   [0m | [36mapp.services.trade_executor[0m:[36m_manage_positions[0m:[36m678[0m - [34m[1m[L3护盾] 2877213e 浮盈=-0.47$ 阈值=10.00$ 冷却剩余=0s enable_l3=True[0m
+===副号跟随标记===
+[32m2026-08-04 18:10:18.601[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_mirror_leader_exits[0m:[36m864[0m - [1m[跟号镜像] 3540bf33 ticket=372298804 收到主号1个动作: ['full_close'][0m
+[32m2026-08-04 18:10:18.657[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_mirror_leader_exits[0m:[36m864[0m - [1m[跟号镜像] 3540bf33 ticket=372298804 收到主号1个动作: ['full_close'][0m
+[32m2026-08-04 18:10:18.872[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_mirror_leader_exits[0m:[36m864[0m - [1m[跟号镜像] 3540bf33 ticket=372298806 收到主号1个动作: ['full_close'][0m
+[32m2026-08-04 18:10:18.929[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_mirror_leader_exits[0m:[36m864[0m - [1m[跟号镜像] 3540bf33 ticket=372298806 收到主号1个动作: ['full_close'][0m
+[32m2026-08-04 18:10:18.930[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_mirror_leader_exits[0m:[36m864[0m - [1m[跟号镜像] 3540bf33 ticket=372299402 收到主号1个动作: ['full_close'][0m
+[32m2026-08-04 18:10:19.193[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_mirror_leader_exits[0m:[36m864[0m - [1m[跟号镜像] 3540bf33 ticket=372299402 收到主号1个动作: ['full_close'][0m
+[32m2026-08-04 18:10:19.712[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_mirror_leader_exits[0m:[36m864[0m - [1m[跟号镜像] 3540bf33 ticket=372299872 收到主号1个动作: ['full_close'][0m
+[32m2026-08-04 18:10:19.772[0m | [1mINFO    [0m | [36mapp.services.trade_executor[0m:[36m_mirror_leader_exits[0m:[36m864[0m - [1m[跟号镜像] 3540bf33 ticket=372299872 收到主号1个动作: ['full_close'][0m

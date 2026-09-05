@@ -1,0 +1,241 @@
+[载入] 92821 行
+[今日] 71638 行
+========================================================================
+[A] DeepSeek 402 / 恢复情况（按小时）
+   06时: 402=68
+   07时: 402=62
+   08时: 402=75
+   09时: 402=74
+   10时: 402=48
+   11时: 402=31
+   今日 402 合计=358  末次=2026-08-11 11:36:26
+========================================================================
+[B] 裁决方向分布（adjudicate:1018）按小时  ※置信度取 c[0]
+   06时: {'HOLD': 45, 'SELL': 1, 'BUY': 2} 共48 HOLD占 93.8% 均置信=0.268
+   07时: {'HOLD': 49} 共49 HOLD占100.0% 均置信=0.162
+   08时: {'HOLD': 45, 'BUY': 1} 共46 HOLD占 97.8% 均置信=0.275
+   09时: {'HOLD': 45, 'BUY': 1} 共46 HOLD占 97.8% 均置信=0.215
+   10时: {'HOLD': 48} 共48 HOLD占100.0% 均置信=0.116
+   11时: {'HOLD': 38, 'SELL': 4} 共42 HOLD占 90.5% 均置信=0.164
+   12时: {'SELL': 14, 'HOLD': 16} 共30 HOLD占 53.3% 均置信=0.344
+   13时: {'SELL': 17, 'HOLD': 5} 共22 HOLD占 22.7% 均置信=0.531
+========================================================================
+[C] cycle 汇总锚点 _auto_loop:626（orders / confidence / errors）
+   今日 cycle 汇总行 331
+   06时: 周期= 47 orders合计=4
+   07时: 周期= 50 orders合计=0
+   08时: 周期= 46 orders合计=4
+   09时: 周期= 46 orders合计=4
+   10时: 周期= 48 orders合计=0
+   11时: 周期= 42 orders合计=0
+   12时: 周期= 30 orders合计=0
+   13时: 周期= 22 orders合计=4
+   —— 最近 6 条 cycle 汇总原文 ——
+     2026-08-11 13:39:05.596 | INFO     | app.routers.trading:_auto_loop:626 - [自动交易] cycle#452 user=6f50aea4 decision={'action': 'SELL', 'confidence': 0.445, 'deepseek_vote': 'SELL', 'hunyuan_vote': 'SELL', 'weights': 'DS:0.50/HY:0.50', 'risk_level': 'medium', 'summary': 'DS: SELL(65%|w=0.50) | HY: SELL(68%|w=0.50) | Chronos:BUY(w=0.19)[反向制衡]
+     2026-08-11 13:41:02.138 | INFO     | app.routers.trading:_auto_loop:626 - [自动交易] cycle#453 user=6f50aea4 decision={'action': 'SELL', 'confidence': 0.814, 'deepseek_vote': 'SELL', 'hunyuan_vote': 'SELL', 'weights': 'DS:0.50/HY:0.50', 'risk_level': 'high', 'summary': 'DS: SELL(55%|w=0.50) | HY: SELL(68%|w=0.50) | Chronos:SELL(w=0.22)[共振] | 
+     2026-08-11 13:43:17.270 | INFO     | app.routers.trading:_auto_loop:626 - [自动交易] cycle#454 user=6f50aea4 decision={'action': 'SELL', 'confidence': 0.868, 'deepseek_vote': 'SELL', 'hunyuan_vote': 'SELL', 'weights': 'DS:0.50/HY:0.50', 'risk_level': 'medium', 'summary': 'DS: SELL(66%|w=0.50) | HY: SELL(68%|w=0.50) | Chronos:SELL(w=0.22)[共振] 
+     2026-08-11 13:46:45.124 | INFO     | app.routers.trading:_auto_loop:626 - [自动交易] cycle#455 user=6f50aea4 decision={'action': 'HOLD', 'confidence': 0.0, 'deepseek_vote': 'HOLD', 'hunyuan_vote': 'SELL', 'weights': 'DS:0.50/HY:0.50', 'risk_level': 'medium', 'summary': 'DS: HOLD(0%|w=0.50) | HY: SELL(62%|w=0.50) | Chronos:BUY(w=0.19) | 融合票:BU
+     2026-08-11 13:48:35.632 | INFO     | app.routers.trading:_auto_loop:626 - [自动交易] cycle#456 user=6f50aea4 decision={'action': 'SELL', 'confidence': 0.392, 'deepseek_vote': 'SELL', 'hunyuan_vote': 'SELL', 'weights': 'DS:0.50/HY:0.50', 'risk_level': 'medium', 'summary': 'DS: SELL(55%|w=0.50) | HY: SELL(62%|w=0.50) | Chronos:BUY(w=0.19)[反向制衡]
+     2026-08-11 13:51:15.198 | INFO     | app.routers.trading:_auto_loop:626 - [自动交易] cycle#457 user=6f50aea4 decision={'action': 'SELL', 'confidence': 0.449, 'deepseek_vote': 'SELL', 'hunyuan_vote': 'SELL', 'weights': 'DS:0.50/HY:0.50', 'risk_level': 'medium', 'summary': 'DS: SELL(68%|w=0.50) | HY: SELL(66%|w=0.50) | Chronos:BUY(w=0.19)[反向制衡]
+========================================================================
+[D] database is locked（按小时）
+   06时: 393
+   07时: 202
+   08时: 620
+   09时: 495
+   10时: 1
+   11时: 9
+   12时: 13
+   13时: 78
+   今日合计=1811
+========================================================================
+[E] 关键动作锚点计数（今日）
+   开仓execute_cycle:2030        : 4
+   跟单copy_order                : 16
+   SL兜底伪造:1106                 : 10
+   smart_exit评估                : 66
+   持仓管理_manage_positions       : 1667
+   人工全平                        : 0
+   镜像退出                        : 604
+   modify_sl_tp                : 0
+   扫描失败rescanned               : 0
+   cycle超时                     : 0
+========================================================================
+[F] 中文关键标记（GBK 已解码）
+   [智能止损]        : 12
+   [追踪止盈]        : 0
+   [持仓全景]        : 205
+   [跟号镜像]        : 604
+   清孤儿单          : 0
+   休市            : 48
+========================================================================
+[G] 13:00 之后全部关键事件时间线（开仓/平仓/止损/镜像/对账）
+    2026-08-11 13:16:57.007 | INFO     | app.services.trade_executor:execute_cycle:2030 - [执行器] \u2705 SELL 0.02手 @4401.83 SL=4427.99 TP=4340.79 ticket=378506117
+    2026-08-11 13:16:57.579 | INFO     | app.services.trade_executor:copy_order:2356 - [跟单] \u2705 2877213e 复制主号#378506117 SELL 1.0手 @4401.84 SL=4427.97 TP=4340.77
+    2026-08-11 13:16:57.596 | INFO     | app.services.trade_executor:copy_order:2181 - [跟号手数] b3db40fd mirror_leader：镜像主号手数 0.02 手（跳过风险反钳，受 max_lot=0.05 cap）
+    2026-08-11 13:16:58.039 | INFO     | app.services.trade_executor:copy_order:2356 - [跟单] \u2705 b3db40fd 复制主号#378506117 SELL 0.02手 @4401.66 SL=4427.79 TP=4340.59
+    2026-08-11 13:16:58.313 | INFO     | app.services.trade_executor:copy_order:2356 - [跟单] \u2705 8ecb1ff9 复制主号#378506117 SELL 1.0手 @4401.51 SL=4427.64 TP=4340.44
+    2026-08-11 13:19:09.348 | INFO     | app.services.trade_executor:_manage_positions:2731 - [智能止损] ticket=378506117 SL→4400.11 (动态利润锁定(+3.2点)→SL→4400.11)
+    2026-08-11 13:19:10.222 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:10.658 | INFO     | app.services.trade_executor:_mirror_leader_exits:3073 - [跟号镜像] ticket=378506131 SL→4400.11
+    2026-08-11 13:19:11.478 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:11.690 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:11.694 | INFO     | app.services.trade_executor:_mirror_leader_exits:3073 - [跟号镜像] ticket=378506135 SL→4400.11
+    2026-08-11 13:19:11.696 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:11.701 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:11.942 | INFO     | app.services.trade_executor:_mirror_leader_exits:3073 - [跟号镜像] ticket=378506138 SL→4400.11
+    2026-08-11 13:19:12.758 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:21.953 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:21.957 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:21.962 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:31.972 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:31.978 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:31.984 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:41.996 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:42.000 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:42.004 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:52.015 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:52.019 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:19:52.024 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:02.033 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:02.040 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:02.046 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:12.058 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:12.062 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:12.067 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:22.079 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:22.084 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:22.088 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:32.097 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:32.104 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:32.111 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:42.123 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:42.127 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:42.133 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:52.143 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:52.148 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:20:52.152 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:21:02.161 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:21:02.167 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:21:02.174 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:21:03.600 | INFO     | app.services.trade_executor:_manage_positions:2731 - [智能止损] ticket=378506117 SL→4400.1 (动态利润锁定(+3.6点)→SL→4400.1)
+    2026-08-11 13:21:04.450 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:05.268 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:06.093 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:12.201 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:12.206 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:12.210 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:22.220 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:22.224 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:22.229 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:32.239 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:32.245 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:32.251 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:42.262 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:42.268 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:42.272 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:52.286 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:52.291 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:21:52.297 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:22:02.307 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:22:02.314 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:22:02.320 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:22:12.332 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:12.336 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:12.341 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:22.352 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:22.356 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:22.362 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:32.373 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:32.379 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:32.385 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:42.396 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:42.402 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:42.406 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:52.418 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:52.422 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:22:52.427 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:02.437 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:02.444 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:02.449 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:12.461 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:12.467 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:12.485 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:22.497 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:22.501 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:22.506 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:32.516 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:32.522 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:32.530 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:42.541 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:42.545 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:42.550 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:52.562 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:52.567 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:52.571 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:23:57.404 | INFO     | app.services.trade_executor:_manage_positions:2731 - [智能止损] ticket=378506117 SL→4400.09 (动态利润锁定(+3.6点)→SL→4400.09)
+    2026-08-11 13:23:58.222 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:23:59.040 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:23:59.858 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:24:02.582 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:24:02.588 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:24:02.595 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号2个动作: ['move_sl', 'move_sl']
+    2026-08-11 13:24:12.607 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:12.612 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:12.617 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:22.626 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:22.631 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:22.635 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:32.646 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:32.652 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:32.659 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:42.671 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:42.675 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:42.679 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:52.704 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:52.709 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:24:52.715 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:02.727 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:02.733 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:02.739 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:12.753 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:12.758 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:12.762 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:22.772 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:22.776 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:22.781 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:32.793 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:32.799 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:32.805 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:42.816 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:42.822 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:42.826 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:52.837 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:52.842 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:25:52.847 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:02.918 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:02.924 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:02.931 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:12.942 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:12.946 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:12.951 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:22.960 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:22.965 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:22.969 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:32.980 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:32.985 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:32.992 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:43.003 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:43.008 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:43.012 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:53.022 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:53.026 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['move_sl']
+    2026-08-11 13:26:53.031 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['move_sl']
+    2026-08-11 13:27:14.271 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 2877213e ticket=378506131 收到主号1个动作: ['partial_close']
+    2026-08-11 13:27:14.894 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] b3db40fd ticket=378506135 收到主号1个动作: ['partial_close']
+    2026-08-11 13:27:15.627 | INFO     | app.services.trade_executor:_mirror_leader_exits:3005 - [跟号镜像] 8ecb1ff9 ticket=378506138 收到主号1个动作: ['partial_close']
+========================================================================
+[H] ERROR 级别 TOP 模块（今日）
+   deepseek_client:analyze:640                    268
+   deepseek_client:evaluate_exits:709             1
+   今日 ERROR 合计=269

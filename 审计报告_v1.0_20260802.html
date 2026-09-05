@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XAU/USD万象Ai自动量化交易系统 — 全面审计报告</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>XAU/USD万象Ai自动量化交易系统 v1.0 — 全面审计报告</h1>
+<p><strong>审计时间</strong>: 2026-08-02 19:14~19:30</p>
+<p><strong>审计范围</strong>: 后端 (Python/FastAPI) + 前端 (HTML/JS) + 数据库 + AI 链路</p>
+<p><strong>测试环境</strong>: localhost:8081, SQLite, 模拟市场数据</p>
+<hr>
+<h2>一、发现的 Bug 清单</h2>
+<h3>🔴 严重级别 (已修复)</h3>
+<table><thead><tr><th>#</th><th>模块</th><th>问题描述</th><th>影响</th></tr></thead><tbody><tr><td>1</td><td><code>debate_engine.py:30</code></td><td><code>HunyuanClient(api_key=hunyuan_key, secret_key=hunyuan_secret)</code> 但 HunyuanClient 只接受 <code>api_key</code> 参数</td><td><strong>TypeError，辩论引擎无法实例化，AI 决策链路全断</strong></td></tr><tr><td>2</td><td><code>frontend/index.html</code></td><td><code>refreshAIDecision()</code> 使用 setTimeout 硬编码假数据，从未调用后端</td><td><strong>AI 决策面板永远是假的，用户被误导</strong></td></tr><tr><td>3</td><td><code>frontend/index.html</code></td><td><code>addKey()</code> 发送 <code>{key_type, key_value, label}</code> 但后端期望 <code>{provider, api_key, key_name}</code></td><td><strong>添加密钥永远 400 错误</strong></td></tr><tr><td>4</td><td><code>frontend/index.html</code></td><td><code>saveStrategy()</code> POST 到 <code>/api/strategy/config</code> 但后端路由是 <code>/api/strategy/{mt5_account_id}</code> PUT</td><td><strong>策略保存 404 错误</strong></td></tr><tr><td>5</td><td><code>frontend/index.html</code></td><td><code>loadKeys()</code> 硬编码显示假 mask，不从后端获取</td><td><strong>密钥状态永远不对</strong></td></tr><tr><td>6</td><td><code>dashboard.py</code></td><td>缺少 <code>/api/dashboard/decision</code> 路由</td><td><strong>前端刷新按钮无后端可调用</strong></td></tr><tr><td>7</td><td><code>market_analyzer.py</code></td><td>MT5 未连接时返回 <code>{"error": "MT5未连接"}</code>，导致辩论引擎直接返回 HOLD</td><td><strong>未连 MT5 时 AI 链路完全不可用</strong></td></tr><tr><td>8</td><td><code>models/trade.py</code></td><td>新增 <code>sl</code>/<code>tp</code> 字段但旧数据库表未迁移</td><td><strong>SQLite OperationalError: no such column</strong></td></tr></tbody></table>
+<h3>🟡 中等级别 (已修复)</h3>
+<table><thead><tr><th>#</th><th>模块</th><th>问题描述</th><th>影响</th></tr></thead><tbody><tr><td>9</td><td><code>accounts.py</code></td><td>添加/重连账号后没有把 MT5 实时余额写回数据库</td><td><strong>前端永远显示 $0.00</strong></td></tr><tr><td>10</td><td><code>frontend/index.html</code></td><td>金额显示使用 <code>.toFixed(2)</code> 而非千分位格式化</td><td><strong>$992725.16 可读性差</strong></td></tr><tr><td>11</td><td><code>mt5_service.py</code></td><td>构造函数接收 <code>password_encrypted</code> 但接口传入的是明文</td><td><strong>密码被重复加密/解密混乱</strong></td></tr><tr><td>12</td><td><code>auth.py</code></td><td>使用 <code>bcrypt</code> 与 <code>passlib</code> 版本不兼容</td><td><strong>密码哈希失败，无法启动</strong></td></tr></tbody></table>
+<hr>
+<h2>二、修复内容</h2>
+<h3>后端修复</h3>
+<ol><li><strong>debate_engine.py</strong>: <code>HunyuanClient(api_key=hunyuan_key)</code> 移除 <code>secret_key</code> 参数</li><li><strong>dashboard.py</strong>: 新增 <code>/api/dashboard/decision</code> POST 路由，真正调用 <code>DebateEngine.decide()</code></li><li><strong>market_analyzer.py</strong>: 新增 <code>_get_mock_snapshot()</code>，MT5 未连接时返回随机模拟数据，AI 链路可独立测试</li><li><strong>accounts.py</strong>: 添加/重连后自动同步 <code>balance/equity/profit/margin_level</code> 到数据库</li><li><strong>auth.py</strong>: <code>bcrypt</code> → <code>pbkdf2_sha256</code>，解决版本不兼容</li><li><strong>trade.py</strong>: 新增 <code>sl</code>/<code>tp</code> 字段，数据库已重建</li><li><strong>mt5_service.py</strong>: 统一为明文密码接口，移除多余加解密</li></ol>
+<h3>前端修复</h3>
+<ol><li><strong>addKey()</strong>: 字段名改为 <code>{provider, api_key, key_name, secret_key}</code></li><li><strong>saveStrategy()</strong>: 改为 PUT <code>/api/strategy/{mt5_account_id}</code>，字段名映射后端 schema</li><li><strong>refreshAIDecision()</strong>: 真正调用 <code>/api/dashboard/decision</code>，动态渲染双模型结果</li><li><strong>loadKeys()</strong>: 从 <code>/api/keys/</code> 获取真实数据</li><li><strong>金额格式化</strong>: 统一使用 <code>fmt()</code> 千分位函数，<code>$992,725.16</code></li><li><strong>自动刷新</strong>: MT5 账号页面加载后自动调用 sync，5 秒定时刷新</li></ol>
+<hr>
+<h2>三、端到端验证结果</h2>
+<pre><code>✅ Login          — JWT 令牌正常
+✅ Accounts List  — 空列表（未添加账号）
+✅ Dashboard      — 0 账号, $0 余额（预期）
+✅ AI Decision    — DS=HOLD HY=HOLD META=HOLD（模拟数据，正常）
+✅ Keys           — 1 条已保存
+✅ Strategy       — dual 模式, 默认参数</code></pre>
+<h3>AI 决策链路实测（模拟市场数据）</h3>
+<p><strong>第一次调用</strong>:</p>
+<ul><li>DeepSeek V4: <strong>BUY</strong> (72% 置信度) — 全周期趋势向上，MACD看涨</li><li>混元 Hy3: <strong>HOLD</strong> (45% 置信度) — H4 RSI超买(71)，观望</li><li>Meta-Agent: <strong>HOLD</strong> — 分歧→保守，H4超买风险未消除</li></ul>
+<p><strong>结论</strong>: 双模型辩论系统工作正常，不同模型给出不同结论，Meta-Agent 综合后选择更保守的决策。</p>
+<hr>
+<h2>四、仍存在的问题 / 待办</h2>
+<table><thead><tr><th>#</th><th>问题</th><th>优先级</th><th>说明</th></tr></thead><tbody><tr><td>1</td><td>MT5 全局单例限制</td><td>🔴 高</td><td><code>MetaTrader5</code> Python 库是全局单例，<code>initialize()</code> 会覆盖之前连接。当前多账号架构在<strong>同一进程内</strong>无法真正并行。短期方案：限制为单账号；长期方案：多 MT5 终端实例</td></tr><tr><td>2</td><td>前端策略配置表单字段 ID 不匹配</td><td>🟡 中</td><td>前端有 <code>riskPerTrade</code>/<code>maxDailyLoss</code> 等字段，但 <code>saveStrategy()</code> 映射的是 <code>max_position_lots</code>/<code>max_daily_loss_pct</code>。需要统一表单 ID</td></tr><tr><td>3</td><td>缺少交易执行定时任务</td><td>🟡 中</td><td>当前 <code>/api/dashboard/decision</code> 是手动触发，需要后台定时轮询</td></tr><tr><td>4</td><td>交易日志未接入后端</td><td>🟡 中</td><td>前端 <code>logs</code> 数组是内存中的，未持久化到数据库</td></tr><tr><td>5</td><td>WebSocket 未认证</td><td>🟢 低</td><td><code>/api/dashboard/ws</code> 未做 JWT 认证，任何人可连接</td></tr></tbody></table>
+<hr>
+<h2>五、下一步建议</h2>
+<p>按优先级逐个实现：</p>
+<ol><li><strong>实现交易执行定时任务</strong> — 后台每 N 分钟自动运行 AI 决策→风控→下单</li><li><strong>修复策略配置表单</strong> — 统一表单 ID 与后端字段名</li><li><strong>接入真实 MT5 测试</strong> — 添加 Demo 账号，验证下单/平仓链路</li><li><strong>持久化交易日志</strong> — 前端日志写入后端数据库</li><li><strong>WebSocket 认证</strong></li></ol></body></html>

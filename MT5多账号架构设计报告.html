@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>MT5 多账号连接架构设计报告</h1>
+<blockquote>针对「XAU/USD万象Ai自动量化交易系统」MT5 多账号管理模块&lt;br&gt;基于 MetaTrader5 Python 官方 API 及多源交叉验证（MQL5 官方论坛、Stack Overflow、GitHub Py2MQL5）</blockquote>
+<hr>
+<h2>一、MT5 Python 模块的硬约束（不可突破）</h2>
+<table><thead><tr><th>约束</th><th>结论</th><th>验证来源</th></tr></thead><tbody><tr><td><strong>单例连接</strong></td><td><code>MetaTrader5</code> 包是全局单例，<code>mt5.initialize()</code> 只能连接 <strong>一个</strong> MT5 终端实例</td><td>MQL5 官方论坛 Top Reply</td></tr><tr><td><strong>同进程不能多实例</strong></td><td>即使 <code>import</code> 两次，模块级状态共享，后一次 <code>initialize()</code> 会覆盖前一次</td><td>实测社区共识</td></tr><tr><td><strong>同终端不能同时多账号</strong></td><td>一个 MT5 终端里同时只能登录一个账号，但可用 <code>mt5.login()</code> 切换</td><td>官方文档</td></tr><tr><td><strong>自动拉起陷阱</strong></td><td>不传 <code>path</code> 时，<code>mt5.initialize()</code> 会<strong>自动启动一个空 MT5</strong>（不是已打开的那个），并且登入默认档案</td><td>CSDN 避坑指南</td></tr><tr><td><strong>32 终端上限</strong></td><td>同一 Windows 用户最多 32 个 MT5 终端同时运行</td><td>MQL5 官方</td></tr></tbody></table>
+<blockquote>⚠️ <strong>核心结论</strong>：当前 <code>mt5.initialize(login=..., password=...)</code> 的写法，在不指定 <code>path</code> 时，会拉起一个<strong>没登录的空 MT5</strong>，导致你看到的 <code>错误</code> 状态。这是根因。</blockquote>
+<hr>
+<h2>二、行业已知解决方案对比</h2>
+<table><thead><tr><th>方案</th><th>原理</th><th>能否同时交易</th><th>复杂度</th><th>推荐度</th></tr></thead><tbody><tr><td><strong>方案 A：单终端 + 顺序切换</strong></td><td>连已打开的终端，用 <code>mt5.login()</code> 在账号间切换，逐一查询/执行</td><td>❌ 只能<strong>顺序</strong>操作</td><td>⭐</td><td>适合 2-3 同服账号监控</td></tr><tr><td><strong>方案 B：多终端 + 独立进程</strong></td><td>每个账号单独装一个 MT5 便携版，各自 <code>path=...</code> 初始化</td><td>✅ 可同时</td><td>⭐⭐⭐</td><td>需管理多个终端路径</td></tr><tr><td><strong>方案 C：脏 hack（复制模块）</strong></td><td>把 <code>site-packages/MetaTrader5</code> 复制成 <code>Meta2</code>/<code>Meta3</code>…每个导入一个独立实例</td><td>✅ 可同时</td><td>⭐⭐⭐</td><td>社区常用，但不稳定</td></tr><tr><td><strong>方案 D：Py2MQL5 封装</strong></td><td>开源封装（MIT），自动复制模块并走便携模式，多终端多实例</td><td>✅ 可同时</td><td>⭐⭐</td><td>推荐，但需额外依赖</td></tr><tr><td><strong>方案 E：EA 反向连后端</strong></td><td>不抓 MT5 终端，而是让 MQL5 EA 从后端 API 获取信号，<strong>在 MT5 内部执行</strong></td><td>✅ 天然多终端</td><td>⭐⭐</td><td>适合已有 EA 的场景</td></tr></tbody></table>
+<hr>
+<h2>三、基于你的业务场景的推荐架构</h2>
+<h3>你的现有资产</h3>
+<ul><li>你正在运行 <code>v2.9.17</code> MQL5 EA（是实盘引擎核心）</li><li>你已在 MT5 终端中注册了两个 STARTTRADER 模拟账号（1610093299 / 1610097175）</li><li>你希望后端能监控并执行多账号</li></ul>
+<h3>两种可行路线</h3>
+<h4>路线一：后端→MT5（当前已实现方向，需修复）</h4>
+<p>适合你想用 Python 直接控制 MT5 终端（例如你在做跟单、跨账号对冲）。</p>
+<pre><code>┌──────────────────┐     ┌──────────────────┐
+│ 后端 FastAPI     │────▶│ MT5 终端 (已打开)│
+│ 单例连接         │     │ 账号1 16100xxx   │
+│ mt5.login()切换  │     │ 账号2 16100xxx   │
+└──────────────────┘     └──────────────────┘</code></pre>
+<p><strong>修复要点</strong>：</p>
+<ol><li><code>mt5.initialize(path=终端完整路径)</code> — 必须传入 <code>path</code> 指向你<strong>已打开</strong>的那个终端</li><li>不传 <code>login/password</code> 给 <code>initialize()</code>，改用 <code>mt5.login(login, password, server)</code> 在账号间切换</li><li>后端维护一个「当前活动账号」状态，所有查询/交易操作前检查当前账号是否为预期账号，若不是先 <code>mt5.login()</code> 切换</li><li>对于 N 个账号，操作是<strong>顺序</strong>的：切到账号1查余额→执行→切到账号2查余额→执行… 不能并发</li><li>监控场景没问题；交易场景有延迟（切换耗时 ≈ 100-500ms）</li></ol>
+<h4>路线二：EA→后端（推荐，与你的 MQL5 EA 资产最佳配合）</h4>
+<pre><code>┌──────────────────┐     HTTP/REST      ┌──────────────────┐
+│ 后端 FastAPI     │◀────────────────────│ MT5 终端 #1       │
+│ AI决策 / 信号下发│                     │ EA chart: EA实例   │
+│ 统一风控         │                     │ 账号1 16100xxx   │
+│ 账号数据汇总     │◀────────────────────├──────────────────┤
+│                   │    HTTP/REST        │ MT5 终端 #2       │
+│                   │                     │ EA chart: EA实例   │
+│                   │                     │ 账号2 16100xxx   │
+└──────────────────┘                     └──────────────────┘</code></pre>
+<p><strong>优势</strong>：</p>
+<ul><li>每个账号独立一个 MT5 终端 + 一个 EA 实例，天然并行</li><li>后端完全不碰 MT5 Python API，<strong>绕过了所有多账号约束</strong></li><li>你的 MQL5 EA 已有交易逻辑，后端只提供「AI 信号 + 参数」</li><li>后端可以汇总多个账号的实时状态（每个 EA 通过 API 上报）</li></ul>
+<p><strong>后端需要</strong>：</p>
+<ul><li>提供 <code>/api/signal</code> 给 EA 调用（GET 获取当前决策）</li><li>提供 <code>/api/report</code> 让 EA 上报状态（余额、持仓、订单）</li><li>提供 <code>/api/config</code> 让 EA 拉取参数（如 LotSize、SL/TP、风控阈值）</li></ul>
+<hr>
+<h2>四、我对方案 E（EA 反向）的正式推荐</h2>
+<p>考虑到你已经是 MQL5 EA 开发者，且你的实盘引擎是 <code>v2.9.17</code> EA，<strong>路线二（EA 连后端）是更合理的架构</strong>：</p>
+<ol><li>你不需要用 Python 去做 MT5 本身就能做且做得更好的事（下单、执行、风控）</li><li>你的后端应该做「AI 大脑 + 策略管理 + 数据汇总」</li><li>你的 EA 是「执行器 + 状态上报器」</li><li>多账号 = 多终端 = 多 EA 实例，无额外开发复杂度</li></ol>
+<p><strong>落地步骤</strong>（如果采纳）：</p>
+<ol><li>后端新增 3 个 REST API：<code>/api/signal/{account_id}</code>、<code>/api/report/{account_id}</code>、<code>/api/config/{account_id}</code></li><li>MQL5 侧写一个轻量 <code>WanxiangAI_EA.mq5</code>（约 200 行），只做三件事：</li></ol>
+<ul><li>启动时向后端注册账号（上报 login、server）</li><li>每 N 秒调用 <code>/api/signal</code> 获取 AI 决策（方向/手数/SL/TP）</li><li>执行后上报结果到 <code>/api/report</code></li></ul>
+<ol><li>后端仪表盘不再直接连 MT5，而是显示所有 EA 上报的聚合数据</li></ol>
+<hr>
+<h2>五、如果你仍想路线一（后端直接连 MT5）</h2>
+<p>也可以，但需明确接受：</p>
+<ul><li>只能顺序管理，不能同时交易</li><li>需要指定 <code>path</code> 参数（你终端的 <code>terminal64.exe</code> 完整路径）</li><li>切换账号时需要 <code>mt5.login()</code> 而非 <code>initialize()</code></li><li>需要先确认你的 MT5 终端是<strong>已打开</strong>的状态（后端不负责启动终端）</li></ul>
+<p>具体代码修复方案我也可以单独写。请确认你的路线选择。</p></body></html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象AI — 仪表盘「AI 交易大脑」设计 v3（客户视角版）</h1>
+<blockquote>2026-08-02 v3 | 修订说明：v2 解决了"平庸/黑盒"问题（6 个招牌亮点）。但 v2 仍是<strong>产品说明书</strong>视角。本版按客户真实使用场景补齐 <strong>5 块刚需屏</strong>：①多账号从 1 个到 10+ 的扩展性 ②AI 工作过程必须前台可见（不是幕后）③可切换周期的行情图+全指标+趋势 ④每个账号的持仓/盈利/订单详情 ⑤星迈时区驱动的休市倒计时。&lt;br&gt;&lt;br&gt;设计红线（贯穿全版）：<strong>多赚钱、提准确率、不拦截</strong>；AI 过程展示 = 信任的源头，不是装饰。</blockquote>
+<hr>
+<h2>0. 客户屏总览（一句话）</h2>
+<blockquote>万象AI 的仪表盘不是一个"看盘工具"，而是一块<strong>让客户亲眼看见 AI 在思考、在进化、在赚钱的透明大屏</strong>。1 个账号能用，10 个账号也井然有序；行情随便切周期；每个账号赚多少、亏多少、仓拿了多久，一目了然；休市了还会主动倒计时喊你回来。</blockquote>
+<hr>
+<h2>1. 需求映射表（客户 5 点 → 设计落点）</h2>
+<table><thead><tr><th>#</th><th>客户原话</th><th>设计落点</th><th>位置</th></tr></thead><tbody><tr><td>1</td><td>客户可能只有 1 个账户，后面可能有 10+ 账户，要考虑展示扩展性</td><td><strong>弹性账户网格</strong>：账号数量与展示解耦，CSS Grid <code>auto-fill</code> + 横向滚动兜底，聚合逻辑按"账号数组"而非硬编码 4</td><td>模块 A</td></tr><tr><td>2</td><td>AI 的酷炫工作/进化/交易过程要在前台展现，让客户觉得高科技感满满</td><td><strong>AI 工作剧场</strong>：辩论擂台（实时）+ 进化时间线（实时）+ 交易执行流（实时滚动），全部 WebSocket 推送，不做幕后处理</td><td>模块 B</td></tr><tr><td>3</td><td>当前行情 📊，客户可自选 M5/M15/M30/H1/H4 切换；加区域展示当前指标参数（AI 能读取的所有参数）+ 当前趋势</td><td><strong>行情作战图</strong>：周期切换 Tab + K 线图（Canvas）+ 指标参数面板（全量）+ 趋势判读条</td><td>模块 C</td></tr><tr><td>4</td><td>每个账号显示：当前持仓（含持仓时间）、今日盈利、历史总盈利、今日订单、历史订单</td><td><strong>账号详情卡</strong>：每个账号一张卡，5 个数字 + 持仓列表 + 今日/历史订单抽屉</td><td>模块 A 内</td></tr><tr><td>5</td><td>休市状态 + 开市倒计时；星迈做市商，调取星迈时差以免算错</td><td><strong>市场时钟</strong>：星迈 GMT+2/+3(DST) 时区，优先读 MT5 服务器时间与交易时段，静态兜底；显示"交易中/休市中 + 距开/休市倒计时"</td><td>模块 D</td></tr></tbody></table>
+<blockquote>✅ 第 3 点里的"AI 能读取的所有参数"——由 <code>mt5_worker.get_market_data</code> + <code>market_data.py</code> 已落地的 16+ 指标直接喂给面板，参数面板与 AI prompt 同源，避免面板显示与实际决策两张皮。</blockquote>
+<hr>
+<h2>2. 模块 A：弹性账户网格（需求 1 + 需求 4）</h2>
+<h3>2.1 扩展性设计原则</h3>
+<p><strong>账号数量与渲染解耦</strong>——这是需求 1 的核心。过去 v2 把"4 个账号"写死成表格行，客户有 1 个或 12 个都会崩。本版改为：</p>
+<pre><code>账号数据 = 后端返回 Account[] 数组（长度 = 实际账号数，1 ~ N）
+前端渲染 = CSS Grid auto-fill（每卡固定宽度 280px）
+  ├─ 1 个账号  → 单行一张卡，居中，不空旷
+  ├─ 4 个账号  → 一行排满，与 v2 体验一致
+  ├─ 10+ 账号  → 自动换行成多行；超宽时容器横向滚动，不挤压变形
+  └─ 聚合条    → 顶部始终有"组合总览"（总余额/总权益/今日总盈利/历史总盈利），与账号数无关</code></pre>
+<p><strong>关键工程约束</strong>：所有聚合（总余额、总盈利、今日/历史分桶）都在<strong>后端按 <code>user_id</code> 聚合 <code>accounts[]</code></strong>，前端只负责画，绝不在前端写死 4。后续即使客户加到 50 个账号，改的只是后端查询上限，前端零改动。</p>
+<h3>2.2 单账号详情卡（需求 4 的完整字段）</h3>
+<p>每个账号卡 = <strong>身份区 + 4 个核心指标 + 持仓/订单抽屉</strong>：</p>
+<pre><code>┌─ 账号卡：IC实盘1号 (liumanchun1) ────────────────┐
+│ ●在线  主号🟢  交易✅                               │
+│ 余额 $992,725.16   权益 $994,210.33               │
+│                                                    │
+│  ┌─今日盈利─┐ ┌─历史总盈利─┐ ┌─今日订单─┐ ┌历史订单┐│
+│  │ +$1,240 │ │ +$58,300  │ │   12    │ │  430   ││
+│  └─────────┘ └──────────┘ └─────────┘ └───────┘  │
+│                                                    │
+│ ▸ 当前持仓（3）                 [展开]              │
+│    XAUUSD BUY 0.04  @4032.1  持仓 2h18m 浮盈+$42  │
+│    XAUUSD SELL 0.02 @4040.5  持仓 41m    浮亏 -$8 │
+│ ▸ 今日订单（12）               [展开]              │
+│ ▸ 历史订单（430）              [展开]              │
+└────────────────────────────────────────────────────┘</code></pre>
+<p><strong>需求 4 字段 → 数据契约</strong>：</p>
+<table><thead><tr><th>字段</th><th>来源</th><th>计算口径</th></tr></thead><tbody><tr><td>当前持仓</td><td><code>mt5_worker.get_positions</code> 实时</td><td>列表，每条含 <code>open_time</code>，<strong>持仓时长 = 当前服务器时间 − open_time</strong>（用星迈时区，避免本地时差导致"今日"算错）</td></tr><tr><td>今日盈利</td><td>Trade 表聚合</td><td>以<strong>服务器时间（星迈）当天 00:00</strong> 为起点，已平仓 <code>net_profit</code> 求和 + 当前浮盈</td></tr><tr><td>历史总盈利</td><td>Trade 表聚合</td><td>全部已平仓 <code>net_profit</code> 累计（含历史）</td></tr><tr><td>今日订单</td><td>Trade 表</td><td>服务器时间当天开仓的订单数（开+平分别计或合并，面板注明口径）</td></tr><tr><td>历史订单</td><td>Trade 表</td><td>全部订单数</td></tr></tbody></table>
+<blockquote>⚠️ <strong>"今日"必须以服务器时间界定，不能用本机时间</strong>。星迈 GMT+2/+3(DST)，北京 GMT+8，差 5~6 小时——用本地时间算"今日"会把凌晨的欧洲盘交易算到昨天，客户看到的数字就对不上 MT5 终端。<strong>后端统一用 MT5 服务器时间做日切</strong>（见模块 D）。</blockquote>
+<hr>
+<h2>3. 模块 B：AI 工作剧场（需求 2 — 前台化）</h2>
+<blockquote>客户原话："不能让这些过程在幕后，要在前台展现出来，让客户看到就觉得高科技感满满。"</blockquote>
+<p>这是与平庸 bot 最大的分水岭。<strong>我们把 AI 的三条生命线全部搬上大屏，实时滚动</strong>，而不是只在日志里跑：</p>
+<h3>3.1 辩论擂台（实时思考可见）🟡</h3>
+<ul><li>双模型（DeepSeek 激进派 × 混元稳健派）当场互驳，Meta-Agent 裁决。</li><li>WebSocket 逐句推送 <code>decide_verbose()</code> 转录，前端左右气泡渲染（红方/蓝方），顶部裁决条，底部"共识度"环。</li><li><strong>客户感知</strong>："原来我的 AI 不是瞎下单，它真的在吵架、在找理由。"</li></ul>
+<h3>3.2 进化时间线（实时成长可见）🔧</h3>
+<ul><li>每平一笔仓 → 复盘 AI 对不对 → 调整双模型权重。这条链路实时显示：</li></ul>
+<pre><code>  [14:02] 突破行情误判 ×2 → DeepSeek 在突破场景权重 0.50→0.42
+  [14:35] 震荡市混元占优 → 震荡权重 混元 0.65→0.72
+  [15:10] OPRO 评分 +0.3 → 基线 EWMA 上移</code></pre>
+<ul><li><strong>客户感知</strong>："我的 AI 不是雇来的，是养大的，每天都在变聪明。"</li></ul>
+<h3>3.3 交易执行流（实时动作可见）🔧</h3>
+<ul><li>每一次下单/平仓/风控拦截，作为一条"事件流"从下往上滚动：</li></ul>
+<pre><code>  ⚡ 14:36:02  开仓  XAUUSD BUY 0.04 @4033.2 (共识度87%·强信号·4账号联动)
+  🛡 14:36:05  风控   点差18pt 通过 · DD 4.2% 通过
+  ✅ 15:01:33  平仓  XAUUSD BUY +$86 (TP触发·AI方向正确)
+  ⚠ 15:02:10  分歧   共识度降至 52% → 仅 Top2 账号出击</code></pre>
+<ul><li><strong>客户感知</strong>："每一笔钱进出都有迹可循，风控不是摆设。"</li></ul>
+<p><strong>技术底座</strong>（已具备，本版只接 UI）：<code>debate_engine.decide_verbose()</code>（待扩）、<code>MetaAgent.adjudicate()</code> 已输出 <code>confidence</code>+权重、<code>Trade</code> 表已存 AI 决策、<code>mt5_service</code> 事件总线。WebSocket 推送频率：辩论/执行流实时，进化时间线每笔平仓触发。</p>
+<hr>
+<h2>4. 模块 C：行情作战图（需求 3 — 周期+指标+趋势）</h2>
+<h3>4.1 周期切换</h3>
+<p>顶部 Tab：<code>M5 · M15 · M30 · H1 · H4</code>（默认 H1）。切换即向后端 <code>/api/dashboard/market-chart?tf=H1</code> 取数，前端 Canvas 重绘 K 线。</p>
+<h3>4.2 K 线图（Canvas 自绘，零依赖）</h3>
+<ul><li>蜡烛图 + 成交量副图。</li><li>叠加 AI 用到的均线（EMA20）与布林带，让"AI 看的东西"和客户看到的对齐。</li><li>当前价横线 + 昨高/昨低 参考线。</li></ul>
+<h3>4.3 指标参数面板（AI 能读取的所有参数）✅</h3>
+<p><strong>这一块必须和 AI 实际喂给 prompt 的参数同源</strong>——面板里列的每个数，就是 AI 决策时看到的每个数。来源：<code>get_market_data</code>（各周期 OHLCV）+ <code>market_data.py</code>（DXY/VIX/相关性）。</p>
+<pre><code>┌─ 当前指标参数（AI 实时读取）─────────────────────────┐
+│ 品种 XAUUSD   实时价 4043.86   点差 18pt   服务器时间 22:14│
+│                                                    │
+│ 【金价技术面】                                        │
+│  ATR(14)  M5 8.2 | M15 9.1 | M30 10.3 | H1 11.2 | H4 12.0│
+│  ADX(14)       M15 23 | M30 27 | H1 31            │
+│  RSI(14)       M15 58 | M30 61 | H1 64            │
+│  EMA20方向  M5↑ M15↑ M30↑ H1↑ H4→  (共振:偏多)    │
+│  昨高 4055.5  昨低 4021.0   1h涨跌幅 +0.42%        │
+│                                                    │
+│ 【宏观镜像】                                          │
+│  DXY 104.35 (+0.12%)    VIX 18.5 (normal)         │
+│  XAU-DXY 相关 -0.85 (强负)  信号: dxy稳/金偏强     │
+└────────────────────────────────────────────────────┘</code></pre>
+<h3>4.4 趋势判读条</h3>
+<p>基于"五周期 EMA 方向 + ADX 强度 + 宏观镜像"合成一句话趋势：</p>
+<pre><code>趋势判读：偏多共振（H1/H4 多头 + ADX>25 趋势可信 + DXY 未走强）
+建议动作：强信号可满仓 · 弱分歧则降仓（见共识度）</code></pre>
+<blockquote>趋势判读是<strong>给客户看的简化结论</strong>，不参与决策（AI 仍自主判断），避免把展示变成硬规则。</blockquote>
+<hr>
+<h2>5. 模块 D：市场时钟 — 休市状态 + 开市倒计时（需求 5）</h2>
+<h3>5.1 星迈时区（已调研确认，官方帮助中心）</h3>
+<table><thead><tr><th>时段</th><th>服务器时区</th><th>说明</th></tr></thead><tbody><tr><td>标准时间（11月~次年3月）</td><td><strong>GMT+2</strong></td><td>冬令时</td></tr><tr><td>夏令时（3月~11月）</td><td><strong>GMT+3</strong></td><td>跟随美国 DST</td></tr></tbody></table>
+<ul><li>与 IC Markets "纽约收盘"时区一致；MetaTrader 平台显示时间即此服务器时间。</li><li>外汇惯例交易时段：周日 <strong>22:00（服务器时间，GMT+2/+3）</strong> 开盘 → 周五 <strong>22:00</strong> 收盘；每日约 <strong>00:00~01:00</strong> 有短暂日切休市（具体以券商 <code>symbol_info_session_trade</code> 为准）。</li></ul>
+<h3>5.2 倒计时计算方案（双保险，避免算错）</h3>
+<pre><code>第一手（权威）：从 MT5 运行时直接读
+  ├─ 服务器当前时间：mt5.symbol_info_tick(symbol).time（服务器时间，自动跟随 DST）
+  └─ 当日交易时段：mt5.symbol_info_session_trade(symbol, weekday)
+        → 返回该品种当天真实的 [开市, 休市] 区间（含日切、节假日，券商给的，最准）
+  ⇒ 用真实时段算"距下次开/休市"倒计时
+
+第二手（兜底）：星迈静态时区配置
+  当 MT5 未连接/读不到时段时，使用 STARTRADER_TZ = GMT+2/+3(DST) 静态推算
+  夏令时判断：美国 DST 区间（3月第二个周日 ~ 11月第一个周日）</code></pre>
+<p><strong>展示形态</strong>：</p>
+<pre><code>🔴 休市中（周末）          或        🟢 交易中
+距下周一开市 09:42:18                距今日休市 01:48:55
+（服务器时间 周六 22:14 GMT+3）      （服务器时间 周五 21:11 GMT+3）</code></pre>
+<ul><li>顶部状态条常驻，颜色 + 倒计时双重提示。</li><li><strong>所有"今日/历史"日切（模块 A）与倒计时共用同一套服务器时间源</strong>，保证全屏时间口径一致。</li></ul>
+<hr>
+<h2>6. 仪表盘页面布局（v3 总装）</h2>
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│ 顶栏：组合总览（总余额/总权益/今日总盈利/历史总盈利）· 市场时钟(开/休市+倒计时) │
+├──────────────────────────────────────────────────────────────┤
+│ 模块 C 行情作战图： [M5 M15 M30 H1 H4]  K线+量  | 指标参数面板 | 趋势判读 │
+├──────────────────────────────────────────────────────────────┤
+│ 模块 B AI 工作剧场： [辩论擂台 | 进化时间线 | 交易执行流]  （WebSocket实时） │
+├──────────────────────────────────────────────────────────────┤
+│ 模块 A 弹性账户网格（auto-fill，1~N 账号）：                      │
+│  [账号卡1] [账号卡2] [账号卡3] [账号卡4] ... (超宽横向滚动)       │
+│   每卡：今日盈利/历史盈利/今日订单/历史订单 + 持仓抽屉(持仓时长)  │
+└──────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>展示优先级</strong>：行情图（客户第一眼要看的"现在贵不贵"）→ AI 剧场（信任感）→ 账户网格（钱在哪、赚多少）。传统余额/订单从 v2 的 C 位降级为账户卡内的标准字段，不再单独占屏。</p>
+<hr>
+<h2>7. 后端数据契约（新增/扩展端点）</h2>
+<table><thead><tr><th>端点</th><th>方法</th><th>入参</th><th>返回</th></tr></thead><tbody><tr><td><code>/api/dashboard/market-chart</code></td><td>GET</td><td><code>tf</code>(M5/M15/M30/H1/H4)</td><td><code>{symbol, tf, bars[OHLCV], indicators:{atr,adx,rsi,ema20_dir,bollinger}, macro:{dxy,vix,corr}, trend}</code></td></tr><tr><td><code>/api/dashboard/market-session</code></td><td>GET</td><td>—</td><td><code>{server_time, timezone:"GMT+3(DST)", is_open, state:"trading/closed/break", countdown_label, countdown_sec, next_event}</code></td></tr><tr><td><code>/api/dashboard/accounts</code></td><td>GET</td><td>—</td><td><code>{accounts:[{id,name,is_primary,today_profit,hist_profit,today_orders,hist_orders,positions:[...]}], portfolio:{...}}</code></td></tr><tr><td><code>/api/dashboard/accounts/{id}/detail</code></td><td>GET</td><td><code>id</code></td><td>单账号完整：positions(含 holding_minutes) + today/history 订单 + 今日/历史盈利</td></tr><tr><td><code>/api/dashboard/ws</code></td><td>WS</td><td>—</td><td>实时推送：account_status / debate / evolution / exec_feed / session_tick</td></tr></tbody></table>
+<blockquote>聚合口径：今日/历史/持仓时长均用<strong>服务器时间（星迈 GMT+2/+3）</strong> 界定，由后端统一换算，前端不碰时区。</blockquote>
+<hr>
+<h2>8. 实施路线（紧贴需求，先做可演示）</h2>
+<table><thead><tr><th>顺序</th><th>内容</th><th>对应需求</th><th>依赖</th></tr></thead><tbody><tr><td>1</td><td>市场时钟 + 倒计时（星迈时区双保险）</td><td>5</td><td>MT5 已连</td></tr><tr><td>2</td><td>行情作战图（周期切换 + 指标面板 + 趋势）</td><td>3</td><td><code>get_market_data</code> ✅</td></tr><tr><td>3</td><td>弹性账户网格 + 每账号详情（持仓时长/今日/历史）</td><td>1+4</td><td>Trade 表 + Worker</td></tr><tr><td>4</td><td>AI 工作剧场三件套（辩论/进化/执行流）接 WebSocket</td><td>2</td><td><code>decide_verbose</code>(待扩)</td></tr><tr><td>5</td><td>打磨：动画/暗色高科技主题/响应式</td><td>全部</td><td>前端</td></tr></tbody></table>
+<p><strong>先做 1~3</strong>（客户刚需、后端可立即落地、无需等 AI 接口改造），4 接已有 <code>debate_engine</code>，5 收尾。</p>
+<hr>
+<h2>9. 已落地前提（地基，不再赘述）</h2>
+<ul><li>✅ 多进程架构：每个账号独立 Worker 子进程，余额/持仓独立</li><li>✅ 行情主号机制：<code>is_market_primary</code>，行情统一从主号 Worker 取</li><li>✅ 外部数据：DXY / VIX / XAU-DXY 相关性（yfinance，免费，带降级）</li><li>✅ 双模型辩论 + Meta-Agent 裁决 + Trade 表存 AI 决策</li><li>✅ <code>mt5_worker.get_market_data</code> 已支持 M5/M15/H1/H4/D1 五周期 OHLCV</li><li>✅ 星迈时区已确认：GMT+2（冬）/ GMT+3（夏，DST）</li></ul></body></html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai · 后端管理后台无死角审计 2026-08-16</title>
+<style>
+  :root{--bg:#0b0f17;--card:#121a29;--card2:#0e1522;--line:#1e2a41;--txt:#e6edf7;--sub:#8fa3c8;--dim:#5d7097;
+    --gold:#d4a94e;--cyan:#3ddad7;--red:#ff5c5c;--orange:#ff9f43;--yellow:#ffd93d;--blue:#6ea8fe;--green:#4ade80;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--txt);font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;line-height:1.65;padding:32px 20px 80px;}
+  .wrap{max-width:1080px;margin:0 auto;}
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:26px;}
+  .brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+  .brand h1{font-size:25px;} .brand h1 b{color:var(--gold);}
+  .brand .ver{color:var(--cyan);font-size:13px;border:1px solid var(--cyan);padding:2px 10px;border-radius:20px;}
+  .meta{color:var(--dim);font-size:13px;margin-top:10px;}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:22px 0 28px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px;text-align:center;}
+  .kpi .n{font-size:26px;font-weight:700;} .kpi .t{color:var(--sub);font-size:12px;margin-top:4px;}
+  .kpi.ok .n{color:var(--green);} .kpi.warn .n{color:var(--orange);} .kpi.gold .n{color:var(--gold);}
+  h2.sec{font-size:18px;margin:32px 0 14px;display:flex;align-items:center;gap:10px;}
+  h2.sec .bar{width:4px;height:18px;border-radius:2px;display:inline-block;}
+  .issue{background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:12px;padding:16px 20px;margin-bottom:14px;}
+  .issue.P1{border-left-color:var(--orange);} .issue.P2{border-left-color:var(--yellow);} .issue.OK{border-left-color:var(--green);}
+  .issue .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .badge{font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;}
+  .badge.P1{background:rgba(255,159,67,.13);color:var(--orange);border:1px solid rgba(255,159,67,.4);}
+  .badge.P2{background:rgba(255,217,61,.1);color:var(--yellow);border:1px solid rgba(255,217,61,.35);}
+  .badge.OK{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.4);}
+  .badge.FIXED{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.4);}
+  .issue h3{font-size:15px;flex:1;min-width:200px;}
+  .issue .loc{font-family:Consolas,monospace;font-size:12px;color:var(--cyan);background:rgba(61,218,215,.07);padding:1px 8px;border-radius:6px;}
+  .issue p{font-size:13.5px;color:var(--txt);}
+  .issue .fix{margin-top:8px;font-size:13px;color:var(--cyan);background:rgba(61,218,215,.05);border-left:2px solid var(--cyan);padding:6px 12px;border-radius:0 8px 8px 0;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+  th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;}
+  th{background:var(--card2);color:var(--gold);}
+  td.ok{color:var(--green);} td.warn{color:var(--orange);}
+  .foot{margin-top:36px;color:var(--dim);font-size:12px;text-align:center;border-top:1px solid var(--line);padding-top:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <h1>万象<b>Ai</b> · 后端管理后台无死角审计</h1>
+    <span class="ver">2026-08-16 00:4x · 开市前最终审计</span>
+  </div>
+  <div class="meta">目标：管理后台（健康/账号/仪表盘/降级监控）全面深挖，让用户安心等周一开市</div>
+</header>
+
+<div class="kpis">
+  <div class="kpi ok"><div class="n">0</div><div class="t">接口 5xx</div></div>
+  <div class="kpi ok"><div class="n">6/6</div><div class="t">实时 Worker 在线</div></div>
+  <div class="kpi warn"><div class="n">2</div><div class="t">发现 P1 问题</div></div>
+  <div class="kpi warn"><div class="n">2</div><div class="t">P2 发现</div></div>
+  <div class="kpi gold"><div class="n">4</div><div class="t">修复落地</div></div>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--orange)"></span>一、P1 问题（已修复）</h2>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><span class="badge FIXED">已修</span><h3>system-health 间歇误报账号离线（用户肉眼所见）</h3><span class="loc">dashboard.py:309 / mt5_worker.py:557</span></div>
+  <p><b>现象：</b>健康面板报「詹启东(#29462312) 离线或不可达」「詹启东3(#27958505) 离线或不可达」，mt5_online=4/offline=2——但实时 ping（/api/accounts/status）显示 6/6 全在线。</p>
+  <p><b>根因（日志实证）：</b>system-health 用 <code>get_server_info</code> 判定连通性，而该命令含 7 天 session 采集；REAL 账号（a1c25576/007d765d）周末间歇返回非 dict 形态 → 形态防御正确拦截成 error → 误判离线。ping 正常（<code>mt5_online 稳定 6</code> 与 health 一致）。</p>
+  <div class="fix">修复：① system-health 连通性判定改 <b>ping 口径</b>（get_all_accounts_status，与 /api/health 一致）——server_info 仅作时区功能（失败由 market_session 静态兜底）；② worker 端 get_server_info 整段防御 try，异常发结构化错误、永不脏输出。</div>
+</div>
+
+<div class="issue P1">
+  <div class="head"><span class="badge P1">P1</span><span class="badge FIXED">已修</span><h3>降级监视器 L0 文案谎报「全部组件在线」（组件实际状态未知）</h3><span class="loc">platform_health_monitor.py:315 / market_analyzer.py:91</span></div>
+  <p><b>现象：</b>degrade.level=0 且 reason=「全部组件在线」，但 components 全 up=False/down=False（组件长期未上报，周末休市无 AI 调用）——前端「组件全灰 + L0 绿灯」矛盾。</p>
+  <p><b>根因：</b>上报机制完整（debate_engine 12 处 report），但 <code>_classify_locked</code> 不处理 stale——从未/长期未上报的组件按「健康」判 L0，文案误导；且 market_data 是唯一无上报点的组件（永远 stale）。</p>
+  <div class="fix">修复：① <code>_classify_locked</code> 全部组件 stale 时 reason 改「组件状态待确认（休市/无调用）」——前端正确显示「监测中」而非谎报全绿；② market_analyzer 补 market_data 上报（真实行情 OK / 模拟失败如实上报，监视器据此判 L3 行情失联）。</div>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--yellow)"></span>二、P2 发现（已确认，非 bug）</h2>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>dashboard 某账号余额 970,178.66</h3><span class="loc">liumanchun1（login=1610093299，DEMO）</span></div>
+  <p><b>确认：</b>该账号为 DEMO 号，初始 100 万虚拟资金被交易后剩 97 万——<b>正常</b>，非 bug。其他账号 1349~2655 为真实/小 demo 资金。若前端对 demo 号展示感异常，可后续加「DEMO」标识区分。</p>
+</div>
+
+<div class="issue P2">
+  <div class="head"><span class="badge P2">P2</span><h3>health 与 system-health 判定口径不一致（历史设计）</h3><span class="loc">/api/health vs /api/dashboard/system-health</span></div>
+  <p>health 用 ping（3s 超时）、system-health 原用 server_info（10s）——同一账号两种结果。已通过 P1 修复统一为 ping 口径，双接口不再打架。</p>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--green)"></span>三、审计确认无恙项</h2>
+<div class="issue OK">
+  <div class="head"><span class="badge OK">OK</span><h3>接口探活与安全基线</h3></div>
+  <p>✅ 管理后台全部关键接口 200 无 5xx（accounts/ai-flow/system-health/risk-events/info）<br>
+  ✅ 多租户隔离正确：system-health 按 user_id 过滤、/ws 已加 JWT 鉴权、accounts/status 按 user 账号集<br>
+  ✅ 实时 Worker 6/6 在线（ping 口径）、无熔断<br>
+  ✅ 降级监视器上报机制完整（debate_engine 12 处 report，chronos/deepseek/hunyuan/local_llm 全覆盖）<br>
+  ✅ 命令锁一致（全部 _send_cmd 传 account_id 锁）、账号与 Worker 映射一致（6 UUID 全匹配）</p>
+</div>
+
+<h2 class="sec"><span class="bar" style="background:var(--gold)"></span>四、结论</h2>
+<div class="issue OK">
+  <div class="head"><span class="badge OK">结论</span><h3>周一开市安心准备完成</h3></div>
+  <p>用户肉眼所见的健康面板问题已定位并修复（P1×2）；4 处修复落地、py_compile 通过。<b>需重启生效</b>（涉及 worker/dashboard/monitor）。重启后健康面板应：① 6/6 全绿（不再误报离线）② 组件显示「监测中」而非谎报「全部组件在线」③ 真实故障（双脑欠费/行情失联）能正确触发 L1/L2/L3 与手数降级。</p>
+</div>
+
+<div class="foot">
+  万象Ai 智能交易系统 · 后端管理后台无死角审计 · 2026-08-16 00:4x · 探活+日志+代码三重验证
+</div>
+
+</div>
+</body>
+</html>

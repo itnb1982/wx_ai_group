@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai 实盘监控简报 — 2026-08-03 14:28</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1923; color: #e0e6ed; padding: 24px; }
+  .card { background: #1a2634; border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid #2a3a4a; }
+  h1 { font-size: 20px; margin-bottom: 4px; color: #fff; }
+  .subtitle { color: #7b8fa1; font-size: 13px; margin-bottom: 16px; }
+  .status-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+  .status-ok { background: #0d3320; color: #4ade80; border: 1px solid #166534; }
+  .status-warn { background: #3b2f0d; color: #facc15; border: 1px solid #735c10; }
+  .status-critical { background: #3b0d0d; color: #f87171; border: 1px solid #7f1d1d; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .account { background: #15202b; border-radius: 8px; padding: 14px; border: 1px solid #2a3a4a; }
+  .account .name { font-weight: 600; font-size: 14px; color: #93c5fd; }
+  .account .id { font-size: 11px; color: #5a7285; margin-bottom: 6px; }
+  .account .status-line { font-size: 12px; }
+  .ok-text { color: #4ade80; }
+  .warn-text { color: #facc15; }
+  .metric { text-align: center; }
+  .metric .value { font-size: 28px; font-weight: 700; color: #fff; }
+  .metric .label { font-size: 12px; color: #7b8fa1; margin-top: 2px; }
+  .issue-box { background: #2a2010; border: 1px solid #735c10; border-radius: 8px; padding: 14px; margin-top: 10px; }
+  .issue-box h3 { font-size: 14px; color: #facc15; margin-bottom: 8px; }
+  .issue-box pre { font-size: 11px; color: #fbbf24; background: #1a1510; padding: 10px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; line-height: 1.5; }
+  .root-cause { background: #1a0a1a; border: 1px solid #5a1a5a; border-radius: 8px; padding: 14px; margin-top: 10px; }
+  .root-cause h3 { font-size: 14px; color: #c084fc; margin-bottom: 8px; }
+  .root-cause p { font-size: 12px; color: #c4b5fd; line-height: 1.6; }
+  hr { border: none; border-top: 1px solid #2a3a4a; margin: 16px 0; }
+  .footer { font-size: 11px; color: #5a7285; text-align: center; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>万象Ai 实盘监控简报</h1>
+  <div class="subtitle">2026-08-03 14:28 (UTC+8) | 日志: backend_run_v16.log</div>
+
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+    <span class="status-badge status-warn">⚠ WARNING</span>
+    <span style="font-size: 13px; color: #facc15;">发现代码缺陷：3次交易执行异常（不影响已成交订单）</span>
+  </div>
+
+  <div class="grid4">
+    <div class="metric"><div class="value ok-text">✅</div><div class="label">后端</div><div class="value" style="font-size:14px;margin-top:4px;">200 OK</div></div>
+    <div class="metric"><div class="value ok-text">4/4</div><div class="label">MT5账号</div><div class="value" style="font-size:14px;margin-top:4px;">全部正常</div></div>
+    <div class="metric"><div class="value" style="color:#facc15;">53</div><div class="label">24h交易</div><div class="value" style="font-size:14px;margin-top:4px;">0 持仓</div></div>
+    <div class="metric"><div class="value ok-text">4573</div><div class="label">24h AI决策</div><div class="value" style="font-size:14px;margin-top:4px;">24.6min前</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="font-size:14px; color:#93c5fd; margin-bottom:12px;">MT5 账号状态</h3>
+  <div class="grid4">
+    <div class="account">
+      <div class="name">liumanchun1</div>
+      <div class="id">1610093299</div>
+      <div class="status-line ok-text">✅ 连接 · 交易开 · 行情主号</div>
+    </div>
+    <div class="account">
+      <div class="name">liumanchuan2</div>
+      <div class="id">1610097175</div>
+      <div class="status-line ok-text">✅ 连接 · 交易开</div>
+    </div>
+    <div class="account">
+      <div class="name">liumanchun3</div>
+      <div class="id">1610093301</div>
+      <div class="status-line ok-text">✅ 连接 · 交易开</div>
+    </div>
+    <div class="account">
+      <div class="name">liumanchun4</div>
+      <div class="id">1610098464</div>
+      <div class="status-line ok-text">✅ 连接 · 交易开</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="font-size:14px; color:#93c5fd; margin-bottom:8px;">交易概况</h3>
+  <div class="grid2" style="grid-template-columns: repeat(3,1fr); gap:12px;">
+    <div><span style="color:#7b8fa1;">总交易</span> <strong style="color:#fff;">53 笔</strong></div>
+    <div><span style="color:#7b8fa1;">持仓</span> <strong style="color:#4ade80;">0 笔</strong></div>
+    <div><span style="color:#7b8fa1;">连续亏损</span> <strong style="color:#4ade80;">0</strong></div>
+    <div><span style="color:#7b8fa1;">大额亏损</span> <strong style="color:#4ade80;">无</strong></div>
+    <div><span style="color:#7b8fa1;">卡住持仓</span> <strong style="color:#4ade80;">无</strong></div>
+    <div><span style="color:#7b8fa1;">执行异常</span> <strong style="color:#facc15;">3 次</strong></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="font-size:14px; color:#93c5fd; margin-bottom:8px;">AI 决策 + API Key</h3>
+  <div class="grid2">
+    <div>
+      <p style="font-size:12px; color:#7b8fa1;">距上次决策</p>
+      <p style="font-size:18px; font-weight:700; color:#4ade80;">24.6 分钟</p>
+      <p style="font-size:11px; color:#5a7285;">最后决策: HOLD 置信度0.38 (14:04:15)</p>
+    </div>
+    <div>
+      <p style="font-size:12px; color:#7b8fa1;">API Key 池</p>
+      <p style="font-size:14px; color:#4ade80;">DeepSeek 1/1 | 混元 1/1</p>
+      <p style="font-size:11px; color:#5a7285;">全部有效，0降级事件</p>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="border-color: #735c10;">
+  <h3 style="font-size:14px; color:#facc15; margin-bottom:8px;">⚠ 发现的问题</h3>
+
+  <div class="issue-box">
+    <h3>代码缺陷：trade_executor.py _get_decrypted_key 方法丢失</h3>
+    <pre>2026-08-03 13:59:32 | ERROR | [执行器] 执行失败: name 'provider' is not defined
+2026-08-03 13:59:56 | ERROR | [执行器] 执行失败: name 'provider' is not defined
+2026-08-03 14:00:23 | ERROR | [执行器] 执行失败: name 'provider' is not defined</pre>
+  </div>
+
+  <div class="root-cause">
+    <h3>🔍 根因分析</h3>
+    <p>
+      <strong>位置：</strong>backend/app/services/trade_executor.py<br><br>
+      <strong>问题：</strong><code>_get_decrypted_key(self, provider)</code> 方法的 <code>def</code> 定义行丢失，其代码体（查询 DB 的 APIKey + 解密逻辑）被错误地嵌入了 <code>_push_feed()</code> 方法内部（第78-86行）。<br><br>
+      <strong>触发路径：</strong>交易执行 <code>execute_cycle</code> → 开仓成功 → 调用 <code>_push_feed()</code> 写 AI 活动流 → 执行到残留代码中的 <code>APIKey.provider == provider</code> → <code>provider</code> 变量未定义 → NameError<br><br>
+      <strong>实际影响：</strong>交易订单<u>已正常成交并写入数据库</u>（Step 4下单 + Step 5 DB写入 在 _push_feed 之前已提交），但 AI 活动流写入失败，前端「交易执行流」面板可能缺失这3笔交易的实时展示。<br><br>
+      <strong>修复方案：</strong>
+    </p>
+    <ol style="font-size:12px; color:#c4b5fd; padding-left:18px; line-height:1.8;">
+      <li>从 <code>_push_feed</code> 方法中删除第78-86行的残留代码</li>
+      <li>新增独立的 <code>def _get_decrypted_key(self, provider: str) -> str:</code> 方法，将残留代码移入其中</li>
+      <li>同时检查 <code>_push_feed</code> 调用处的异常处理是否应区分"日志写入失败"和"交易执行失败"</li>
+    </ol>
+  </div>
+
+  <div style="margin-top:12px; padding:10px; background:#0d1a1a; border-radius:6px; border:1px solid #1a3a3a;">
+    <p style="font-size:12px; color:#5eead4;">
+      <strong>处理状态：</strong>记录待修复 — 属代码缺陷修复，超出监控值班员权限范围（监控只做巡检和紧急重启，不修改策略/风控/源码）。系统其余部分运行正常，无需紧急干预。
+    </p>
+  </div>
+</div>
+
+<div class="footer">
+  万象Ai 实盘监控系统 | 巡检周期: 每小时 | 下次巡检: ~15:30
+</div>
+
+</body>
+</html>

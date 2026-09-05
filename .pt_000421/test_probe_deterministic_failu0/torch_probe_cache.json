@@ -1,0 +1,9 @@
+{
+  "bb507be32832ca6e38490996be6d8f327716f75c": {
+    "ok": false,
+    "reason": "torch 探针子进程崩溃 rc=3221225477 0xC0000005 ACCESS_VIOLATION（原生终端下崩溃，才需怀疑 torch 与 Python ABI 不匹配）",
+    "torch_version": null,
+    "cuda": null,
+    "returncode": 3221225477
+  }
+}

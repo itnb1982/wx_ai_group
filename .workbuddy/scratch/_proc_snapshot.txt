@@ -1,0 +1,188 @@
+﻿PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=0 NAME=System Idle Process EXE= START=07/28/2026 11:05:55
+CMD=
+PORT8081 PID=18992 NAME=python.exe EXE=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe START=08/02/2026 22:07:29
+CMD=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8081
+PYTHON PID=18992 EXE=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe START=08/02/2026 22:07:29 CMD=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8081
+PYTHON PID=30812 EXE=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe START=08/02/2026 22:19:11 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=18992, pipe_handle=1744)" "--multiprocessing-fork"
+PYTHON PID=22360 EXE=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe START=08/02/2026 22:19:13 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=18992, pipe_handle=1936)" "--multiprocessing-fork"
+PYTHON PID=16828 EXE=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe START=08/02/2026 22:19:15 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=18992, pipe_handle=1400)" "--multiprocessing-fork"
+PYTHON PID=20196 EXE=C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe START=08/02/2026 22:19:17 CMD="C:\Users\15588\.workbuddy\binaries\python\versions\3.13.12\python.exe" "-B" "-c" "from multiprocessing.spawn import spawn_main; spawn_main(parent_pid=18992, pipe_handle=1992)" "--multiprocessing-fork"
+MT5_COUNT=6
+MT5 PID=21836 PATH=D:\mt5\terminal64.exe START=07/28/2026 11:07:28
+MT5 PID=27984 PATH=F:\mt5\terminal64.exe START=08/02/2026 20:36:47
+MT5 PID=13288 PATH=C:\Program Files\STARTRADER Financial MetaTrader 5\terminal64.exe START=08/02/2026 21:34:35
+MT5 PID=4244 PATH=C:\Program Files\STARTRADER Financial MetaTrader 5 - 副本\terminal64.exe START=08/02/2026 21:40:16
+MT5 PID=9376 PATH=D:\mt5\terminal64.exe START=08/02/2026 21:41:14
+MT5 PID=31420 PATH=F:\mt5\terminal64.exe START=08/02/2026 21:41:28

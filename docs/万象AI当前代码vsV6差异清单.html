@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象AI 当前代码 vs V6 架构设计 — 差异清单（待用户确认）</h1>
+<blockquote>调研范围：<code>F:\WanxiangAI\backend\app</code>（55 个 .py，核心 13,516 行）。本次只做测绘，未改任何代码。</blockquote>
+<h2>总览</h2>
+<table><thead><tr><th>状态</th><th>数量</th><th>含义</th></tr></thead><tbody><tr><td>✅ 完全具备</td><td>6 项</td><td>Chronos、MetaQuality、ReversalSentinel、DebateEngine、SmartExit、AIExit</td></tr><tr><td>🟡 部分具备</td><td>9 项</td><td>AccountManager、MarketDataService、MetaAgent、RiskEngine、本金/手数权威链、账号隔离、主号跟号、AI 溯源、并发</td></tr><tr><td>❌ 完全缺失</td><td>2 项</td><td><strong>ExecutionController（第④层执行控制层）</strong>、<strong>SignalBus（事件总线）</strong></td></tr></tbody></table>
+<p><strong>一句话</strong>：V6 的第④层（执行控制层）根本不存在，所有逻辑堆在 <code>trade_executor.py</code>（2231 行巨文件）+ 9 个全局 dict 上；权威链概念有雏形但断裂在 3 个文件；另外发现 3 个真实运行期 Bug。</p>
+<hr>
+<h2>一、❌ 完全缺失：执行控制层（V6 第④层）</h2>
+<p><strong>V6 规划</strong>：<code>app/core/execution_controller.py</code>，账号级状态机（对账→决策→风控→下单→持仓管理→平仓）。</p>
+<p><strong>现状</strong>：</p>
+<ul><li>文件不存在，<code>app/core/</code> 只有 <code>debate_engine / deepseek_client / hunyuan_client / market_analyzer / meta_agent / reversal_sentinel</code>。</li><li>全部承载在 <code>app/services/trade_executor.py</code> 的 <code>class TradeExecutor</code>（单类 1950 行，30 个方法）。</li><li>核心函数 <code>execute_cycle()</code>（<code>:853-1192</code>，<strong>单函数 340 行</strong>）把「AI 决策 → 门控 → 账户查询 → SL/TP → 手数 → 风控钳手 → RiskEngine → 冷却 → 下单 → 落库」11 个阶段全串在一起，无法单独测试、无法复用、无状态持久化。</li></ul>
+<hr>
+<h2>二、❌ 完全缺失：SignalBus（V6 事件总线）</h2>
+<p><strong>V6 规划</strong>：<code>app/core/signal_bus.py</code>，统一事件总线 + 统一幂等/TTL + 锁。</p>
+<p><strong>现状</strong>：不存在，用 <strong>9 个模块级裸 dict + 6 把锁</strong> 顶替。</p>
+<table><thead><tr><th>变量</th><th>位置</th><th>TTL</th><th>幂等</th><th>锁</th><th>问题</th></tr></thead><tbody><tr><td><code>_REVERSAL_STATE</code></td><td>trade_executor.py:18</td><td>180s</td><td>无</td><td><strong>无锁</strong></td><td>并发写入无保护</td></tr><tr><td><code>_L3_LAST_LOCK</code></td><td>trade_executor.py:58</td><td>120s</td><td>无</td><td><strong>无锁</strong></td><td>—</td></tr><tr><td><code>_LAST_OPEN_TS</code></td><td>trade_executor.py:62</td><td>永不清理</td><td>无</td><td>有</td><td><strong>内存泄漏</strong></td></tr><tr><td><code>_LEADER_EXIT_BUS</code></td><td>trade_executor.py:70</td><td>消费180s/清理300s</td><td>有</td><td>有</td><td><strong>TTL 自相矛盾</strong></td></tr><tr><td><code>_MIRRORED</code></td><td>trade_executor.py:81</td><td>600s</td><td>有</td><td>有</td><td>—</td></tr><tr><td><code>_MIRROR_FAIL</code></td><td>trade_executor.py:84</td><td>永不清理</td><td>无</td><td>有</td><td><strong>内存泄漏</strong></td></tr><tr><td><code>_RECON_LAST</code></td><td>trade_executor.py:87</td><td>60s节流</td><td>无</td><td>有</td><td>—</td></tr><tr><td><code>_LAST_COPIED_SIGNAL</code></td><td>trade_executor.py:92</td><td>300s</td><td>有</td><td>有</td><td>—</td></tr><tr><td><code>_LAST_CLOSE_TS</code></td><td>trade_executor.py:96</td><td>90s</td><td>无</td><td>有</td><td>—</td></tr><tr><td><code>_LATEST_LEADER_SIGNAL</code></td><td><strong>routers/trading.py:56</strong></td><td>120s</td><td>无</td><td><strong>无锁</strong></td><td><strong>跨文件</strong>总线</td></tr></tbody></table>
+<p><strong>问题汇总</strong>：无统一幂等/TTL（5 套不同 TTL）；2 个 dict 永不清理（泄漏）；3 个 dict 无锁却并发写入；主号信号在 <code>trading.py</code>、出场动作在 <code>trade_executor.py</code>，无单一入口；进程内存态重启即丢。</p>
+<hr>
+<h2>三、🔴 本金权威链：断裂在 3 个文件 + <code>input_capital</code> 不存在</h2>
+<p><strong>V6 规划</strong>：<code>effective_capital = input_capital(用户输入) &gt; base_capital(manual) &gt; balance(live)</code>，单一权威函数。</p>
+<p><strong>现状</strong>：</p>
+<ul><li><code>input_capital</code> 全项目 <strong>零命中</strong>（grep 确认）→ V6 三级权威链目前只有后两级。</li><li>三处取本金逻辑，<strong>表面一致、实际分叉</strong>：</li></ul>
+<table><thead><tr><th>文件</th><th>行号</th><th>逻辑</th></tr></thead><tbody><tr><td><code>intelligent_sizing.py</code></td><td>115-120</td><td><code>manual+base&gt;0 → base 否则 balance</code></td></tr><tr><td><code>risk_engine.py</code></td><td>68-74</td><td>同上（注释写"与 sizing 完全一致"）</td></tr><tr><td><code>trade_executor.py</code></td><td>531-563 <code>_cap_to_risk_limit</code></td><td><strong>只用真实 balance</strong>，不看 capital_source/base_capital</td></tr></tbody></table>
+<ul><li><code>trade_executor.py:548</code> 只按真实余额算风控手数上限，而 <code>intelligent_sizing</code> 可能按 <code>base_capital</code> 算 → 真实余额 &lt; base_capital 时手数被拒（代码注释自己承认矛盾）。</li><li><strong>没有单一 <code>effective_capital()</code> 函数</strong>：<code>intelligent_sizing.py:115</code> 与 <code>risk_engine.py:68</code> 是两份复制粘贴代码，任一处改动即失配。</li></ul>
+<hr>
+<h2>四、🔴 手数权威链：硬边界被"auto 缩放"自动突破 + AI 无上调通道</h2>
+<p><strong>V6 规划</strong>：<code>user_min_lot</code>/<code>user_max_lot</code> 单笔硬边界不可突破；<code>max_position_lots</code> 同方向总持仓硬边界；AI 在硬边界内可上调下调。</p>
+<p><strong>现状</strong>：</p>
+<ul><li>字段命名不符：<code>min_lot_per_trade</code> / <code>max_lot_per_trade</code> / <code>max_position_lots</code>（无 <code>user_</code> 前缀）。</li><li><strong>硬边界被静默突破</strong>：<code>intelligent_sizing.py:129-135</code>，默认 <code>sizing_scale_mode="auto"</code> 时：</li></ul>
+<pre><code>  _scale = effective_balance / 1000
+  max_lot     = max_lot * min(_scale, 50.0)   # ← 用户上限被放大最多 50 倍
+  max_position_lots = max_position_lots * min(_scale, 50.0)</code></pre>
+<p>  $10000 账号的 <code>max_lot_per_trade=1.0</code> 会被自动放大成 <strong>10.0 手</strong> —— 直接违反 V6 "硬边界不可突破"。且 <code>_pos_cap=4.0</code>（<code>:132</code>）定义后<strong>从未使用</strong>（死变量）。</p>
+<ul><li><strong>AI 无直接上调手数通道</strong>：<code>target_risk_pct</code> 代码路径上只会被赋 <code>1.0</code>（reduce 砍半）；<code>position_intent="add"</code> 只是"跳过同向衰减"，不是直接抬手数。真正在放大边界的是机械的 <code>auto</code> 缩放，与 AI 无关。</li><li><code>trade_executor.py:555</code> 再做单向下钳（<code>position_size &gt; risk_implied → 返回 risk_implied</code>），只降不升。</li></ul>
+<hr>
+<h2>五、🟡 主号/跟号：取消跟随能恢复 ✅，但本金/手数"不继承"与 V6 相反</h2>
+<p><strong>V6 规划</strong>：设主号后，跟号跟随主号本金口径、单笔手数范围、总持仓上限、日 DD 逻辑；取消跟随恢复自身参数。</p>
+<p><strong>现状</strong>：</p>
+<ul><li>主号识别复用 <code>MT5Account.is_market_primary</code>，无独立 leader/follower 字段；跟随开关 <code>strategy.follow_leader</code>（默认 True）。</li><li><strong>是复制订单+复制出场动作</strong>，耦合到 MT5 ticket 与 comment 正则 <code>L(\d+)</code>（注释自己承认 comment 会被券商截断、不可靠）。</li><li>跟号：手数跑自己、6 层风控跑自己、AI 不跑、出场/L3/浮亏熔断纯镜像主号（<code>trade_executor.py:1454-1458</code> 直接 return）。</li><li>参数继承（<code>routers/trading.py:104-140</code>，用 <code>copy.copy</code> 内存副本，不写回 DB）：</li><li>✅ 继承：日 DD、回撤、总持仓上限、各类平仓参数。</li><li>❌ <strong>不继承（与 V6 相反）</strong>：<code>base_capital</code>/<code>capital_source</code>（本金口径）、<code>min_lot_per_trade</code>/<code>max_lot_per_trade</code>（单笔手数范围）。</li><li>取消跟随 → 自动恢复自身参数 ✅（因从未写回 DB，符合 V6）。</li></ul>
+<hr>
+<h2>六、🔴 AI 决策溯源：Chronos/Q/分位数只在文本里，前端读不到结构</h2>
+<p><strong>V6 规划</strong>：前端固定展示 DS/HY/Chronos 三票 + 质量分 Q + P10/P50/P90。</p>
+<p><strong>现状</strong>：</p>
+<ul><li>Chronos <strong>确实参与裁决</strong>（<code>meta_agent.py:455-484</code> 加权第三票），但 <code>DebateDecision</code> 无 Chronos 结构化字段。</li><li>Q 分、Chronos 票、P10/P50/P90 <strong>只以文本塞进 <code>reasoning_summary</code></strong>（Q 数值：<code>meta_agent.py:767</code>；P10 有字段但 P50/P90 没有，而 <code>meta_quality.py:160-162</code> 明明算出了三个值）。</li><li>前端（<code>routers/dashboard.py:728-736</code>）：DS/HY 两票是结构化的；Chronos 票、Q 数值、P50/P90 <strong>全部只能从 <code>reasoning</code> 长文本里字符串解析</strong>。</li></ul>
+<hr>
+<h2>七、🟡 风控散落：RiskEngine 6 层独立，但另有 10 处风控在 trade_executor</h2>
+<p><strong>V6 规划</strong>：RiskEngine 6 层物理风控，最终否决权，风控与 AI 决策门控分离。</p>
+<p><strong>现状</strong>：</p>
+<ul><li><code>risk_engine.py</code>（345 行）6 层齐全 ✅（点差/持仓笔数+手数/同向并发/日亏损/回撤/单笔风险/交易时段），统一入口 <code>check_trade_allowed</code>。</li><li><strong>但另有 10 处风控散在 <code>trade_executor.py</code></strong>：<code>regime_open_mode</code> 体制门、<code>short_guard_mode</code> 空头约束、置信惩罚、亏损冷却、风控钳手、max_positions 二次检查、open_interval 冷却、churn 抑制、L3 篮子锁利、第⑤道浮亏熔断。</li><li><strong>L2/L5 被重复实现</strong>：<code>_cap_to_risk_limit</code>（trade_executor:531）与 <code>_check_per_trade_risk</code>（risk_engine:298）算同一件事但基准不同；<code>max_positions</code> 在两处各查一次。</li></ul>
+<hr>
+<h2>八、🟡 并发模型：每用户一线程串行 + 180s 超时墙</h2>
+<p><strong>现状</strong>（<code>routers/trading.py</code>）：</p>
+<ul><li><code>_auto_loop</code>（单线程，每 60s 一轮）→ <code>ThreadPoolExecutor(max_workers=用户数)</code>（用户级并发）→ <code>_run_cycle_with_timeout(uid, 180)</code>（<strong>180s 超时墙</strong>）。</li><li>用户内部：主号<strong>串行先跑</strong>，跟号在主线程<strong>串行镜像</strong>，只有 <code>follow_leader=False</code> 的独立账号并发。</li><li>超时只是"放弃等待"，工作线程是 daemon 不被杀，<strong>可能造成下一轮重复下单</strong>。</li><li>3 个循环线程（60s/10s/2s）会各自 <code>new TradeExecutor()</code>，<strong>同一账号同时有 3 个执行器实例</strong>，仅靠全局 dict TTL 互斥。</li><li><strong>V6 要求"每账号独立状态机" → 现状是每用户一条串行主链，主号是全链路阻塞点。</strong></li></ul>
+<hr>
+<h2>九、⚠️ 调研中发现的 3 个真实 Bug（与架构无关，但现在就影响运行）</h2>
+<table><thead><tr><th>Bug</th><th>位置</th><th>影响</th></tr></thead><tbody><tr><td><strong>Bug 1</strong> <code>_is_mirrored</code>/<code>_mark_mirrored</code> 定义 3 参数，调用只传 2 个 → TypeError</td><td>trade_executor.py:107/115 定义，:1969/1988 调用</td><td>主号 L3 篮子全平时，跟号孤儿单清理兜底路径<strong>必定抛异常失效</strong></td></tr><tr><td><strong>Bug 2</strong> <code>chronos_agree</code> 是死代码</td><td>trade_executor.py:777 调用，meta_agent.py 未写入 <code>DebateDecision</code></td><td>三模型共振豁免分支永不生效，所有非强趋势一律 +0.03 惩罚</td></tr><tr><td><strong>Bug 3</strong> <code>_pos_cap</code> 定义未使用</td><td>intelligent_sizing.py:132</td><td>总持仓上限与单笔共用 50 倍封顶，非设计意图的 4 倍</td></tr></tbody></table>
+<hr>
+<h2>十、优先级建议（按风险 × 工作量）</h2>
+<table><thead><tr><th>优先级</th><th>事项</th><th>依据</th></tr></thead><tbody><tr><td><strong>P0</strong></td><td>修 Bug 1（<code>_is_mirrored</code> TypeError）</td><td>跟号 L3 全清兜底完全失效</td></tr><tr><td><strong>P0</strong></td><td>修 Bug 2（<code>chronos_agree</code> 死代码，补 <code>DebateDecision</code> 字段）</td><td>一行即可修复</td></tr><tr><td><strong>P0</strong></td><td>抽 <code>effective_capital()</code> 单一权威函数</td><td>消除 sizing/risk/trade_executor 三套口径</td></tr><tr><td><strong>P1</strong></td><td>明确 <code>sizing_scale_mode=auto</code> 是否允许突破用户 <code>max_lot_per_trade</code></td><td>当前静默放大 50 倍，与硬边界原则冲突</td></tr><tr><td><strong>P1</strong></td><td>收编 9 个 dict 为 SignalBus</td><td>最小改动解耦</td></tr><tr><td><strong>P1</strong></td><td><code>DebateDecision</code> 补 <code>chronos_vote/chronos_weight/q_score/p50/p90</code></td><td>打通 V6 溯源</td></tr><tr><td><strong>P2</strong></td><td>拆 <code>execute_cycle</code> 为 ExecutionController 状态机</td><td>工作量最大，建议 P0/P1 稳定后做</td></tr></tbody></table>
+<hr>
+<h2>十一、请用户确认的方向</h2>
+<ol><li><strong>是否先修 3 个真实 Bug（P0）</strong>？它们现在就在影响运行（尤其 Bug 1 让跟号篮子全平兜底失效）。</li><li><strong><code>sizing_scale_mode=auto</code> 的 50 倍放大要不要保留</strong>？V6 原则"硬边界不可突破"与之冲突，需要你拍板。</li><li><strong>落地的切入口</strong>：是按 V6 路线图从 Phase 1（ExecutionController + 权威链）开始，还是先 P0 止血再重构？</li><li>主号/跟号"本金口径 + 单笔手数范围不继承"这条，<strong>确认要改成跟随主号</strong>（与 V6 一致）吗？</li></ol></body></html>

@@ -1,0 +1,56 @@
+# ===== 万象Ai 智能交易系统 .gitignore =====
+# 数据（生产库/测试库/日志——不提交，含客户资金敏感数据）
+backend/data/
+data/
+logs/
+*.log
+backend/.pytest_tmp/
+backend/.pytest_tmp_run*
+
+# 运行时（ollama 模型等，体积 GB 级）
+runtime/
+
+# 模型权重（GB 级，不入库）
+models/
+
+# 依赖与构建产物
+node_modules/
+frontend/dist/
+dist_v16/
+release/
+installer/
+*.egg-info/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.venv_ts/
+venv/
+backend/models/moirai_venv_py312/
+
+# 临时/备份
+temp/
+tmp/
+backups/
+*.bak
+*.tmp
+.sass-cache/
+
+# 日志文件
+*.log
+*supervisor*.log*
+
+# 环境与密钥
+.env
+*.env.local
+credentials.json
+首次登录凭据.txt
+*_pi_login.json
+backend/_pi_login.json
+
+# Windows 特殊文件
+*/nul
+*/con
+*/prn
+*/aux

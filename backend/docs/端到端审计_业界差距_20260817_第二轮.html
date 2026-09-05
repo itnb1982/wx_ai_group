@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>端到端深挖审计 + 业界差距对照（2026-08-17 第二轮）</h1>
+<blockquote>本轮背景：用户实盘发现"智能平仓不智能"（三单 +10 回吐到 0 无 AI 干预）→ 落地<strong>篮子级 AI 持仓管理</strong>（position_action 协议 + 篮子回吐保护）→ 全链路复核 + 业界对照。&lt;br&gt;子代理额度用尽（429），审计由主链路亲自完成（静态代码核查 + 运行时核查 + 业界双源调研）。</blockquote>
+<hr>
+<h2>一、本轮实施：篮子级 AI 持仓管理（用户铁律落地）</h2>
+<h3>已实施（编译 + 单测全过，待重启生效）</h3>
+<table><thead><tr><th>层</th><th>内容</th><th>文件</th></tr></thead><tbody><tr><td>L0 协议扩展</td><td>DS/HY prompt 加 <code>position_action</code>（hold/trim/close_all）+ 持仓处置指令（"有持仓时管理持仓与找机会同等重要"）</td><td>deepseek_client / hunyuan_client</td></tr><tr><td>L1 融合+防抖</td><td><code>_fuse_basket_action</code>（同向加权/分歧降权/非法回退）+ <code>_confirm_basket_action</code>（连续 2 轮确认）→ decision.basket_action 字段</td><td>meta_agent</td></tr><tr><td>L2 执行</td><td><code>_manage_positions</code> 消费 close_all（全平）/trim（每笔减半，≤0.02 手不减），120s 冷却，publish_leader_exit 广播跟号</td><td>trade_executor</td></tr><tr><td>L3 回吐保护</td><td>篮子浮盈峰值跟踪，峰值≥$6 即启用，回吐 ≥ max(峰值×50%, $8) → 全平锁利（<strong>floor 用峰值判定</strong>——+10 回吐到 +5 跌破 floor 仍保护）</td><td>trade_executor</td></tr><tr><td>配置</td><td>BASKET_* 8 参数</td><td>config</td></tr><tr><td>测试</td><td>tests/test_basket_ai_mgmt.py 全过（融合 5/防抖 3/回吐 4）</td><td>tests</td></tr></tbody></table>
+<h3>自查发现并修复的 2 个真 bug（审计价值）</h3>
+<ol><li><strong>辩论反驳轮无 position_action</strong>：meta_agent 融合用 <code>deepseek_rebuttal</code>，但反驳轮 prompt 只有 decision/confidence/rebuttal_points——position_action 永远为空 → 融合恒 hold。<strong>已修</strong>：rebuttal 无则回退首轮 analysis。</li><li><strong>"平了又开"风险</strong>：execute_cycle 先开仓后 _manage_positions——AI 确认 close_all 的轮次，先开新仓再被全平。<strong>已修</strong>：开仓 gate 链最前加守卫——AI 已确认平仓处置的轮次跳过开新仓，先执行持仓处置。</li></ol>
+<h2>二、运行时核查（审计时点 11:57）</h2>
+<pre><code>后端:  pid=79916  uptime 0.9h  mt5=6/6  trading=3/3  degraded=False  offline=[]
+今日战绩: 17 笔已平  净盈亏 +53.33（demo）  在仓 0 笔
+        2877213e: 3 笔 +10.31 | 主号: 7 笔 +21.96 | b3db40fd: 7 笔 +21.06</code></pre>
+<h2>三、遗留问题现状（前两轮审计记录，本轮确认）</h2>
+<table><thead><tr><th>#</th><th>级别</th><th>问题</th><th>现状</th></tr></thead><tbody><tr><td>1</td><td>P0</td><td>orderflow_cvd 主进程裸调 mt5.initialize（凿穿多进程隔离）</td><td>numpy 兼容已修（VoidDType），<strong>架构问题仍在</strong>——未修</td></tr><tr><td>2</td><td>P1</td><td>决策链行情主号 failover 无调用点（主号死→永久 HOLD 至重启）</td><td>未修（改动面大）</td></tr><tr><td>3</td><td>P1</td><td>日亏熔断本地 naive vs worker 服务器墙钟差 5-6h</td><td>未修</td></tr><tr><td>4</td><td>P1</td><td>VisionExit 视觉看护不可用（0 取票静默失败）</td><td><strong>已加失败日志</strong>（重启后可见真实原因）；根因疑为 Worker 反复断连</td></tr><tr><td>5</td><td>P1</td><td>Worker 反复断连（b3db40fd 两次、主号一次）→ _meta 凭证丢失</td><td><strong>已修</strong>：_reconnect 凭证回退 DB（重启生效）</td></tr><tr><td>6</td><td>P1</td><td>_PARTIAL_DONE 单槽 vs 4 级分批冲突（浮盈锁 50% 先触发 → TP1/2/3 死）</td><td>设计权衡，未改（文档已诚实化）</td></tr><tr><td>7</td><td>P2</td><td>commission/swap 明细恒 0</td><td>未修</td></tr></tbody></table>
+<h2>四、业界差距对照（2026 前沿，≥3 独立源交叉验证）</h2>
+<h3>业界前沿图谱</h3>
+<table><thead><tr><th>系统/方法</th><th>机构/来源</th><th>核心方法</th><th>强项</th></tr></thead><tbody><tr><td>TradingAgents（80k★）</td><td>UCLA/MIT→Tauric</td><td>多智能体模拟交易公司（分析师/牛熊辩论/风控/PM）</td><td>结构辩论 + 风险团队（我们辩论环同源）</td></tr><tr><td>FinRL（15k★）</td><td>AI4Finance</td><td>深度强化学习 + Alpaca 实盘</td><td>策略优化、在线学习</td></tr><tr><td>FLAG-Trader / FinRL-DeepSeek（ACL 2025）</td><td>学术</td><td>LLM 信号 + RL 训练</td><td>混合显著优于单一方法</td></tr><tr><td>P1GPT</td><td>学术</td><td>多模态多智能体（技术/基本面/新闻+LLM 仲裁）</td><td><strong>risk-aware exit + adaptive re-entry</strong>，回测 CR 16-32%、Sharpe 2.3-3.4</td></tr><tr><td>QuantInsti DeepSeek 风控策略</td><td>QuantInsti 2026</td><td><strong>LLM 当风控经理决定仓位，不预测方向</strong> + 月度 walk-forward + 硬护栏</td><td><strong>与用户哲学完全一致</strong>：方向预测不可靠，风险管理才是 LLM 用武之地</td></tr><tr><td>StockBench</td><td>清华</td><td>LLM 交易代理基准</td><td>严肃检验"LLM 能否真赚钱"</td></tr></tbody></table>
+<h3>五维差距清单</h3>
+<table><thead><tr><th>维度</th><th>业界前沿做法</th><th>万象Ai 现状</th><th>差距</th></tr></thead><tbody><tr><td><strong>持仓管理</strong></td><td>P1GPT risk-aware exit；QuantInsti LLM 风控经理（仓位由 LLM 定+硬护栏）；TradingAgents Risk Team</td><td><strong>本轮刚落地</strong>：position_action 篮子处置 + 回吐保护 + 防抖确认</td><td><strong>0→1 完成</strong>，仍需：RL 调权、月度再优化、组合级对冲</td></tr><tr><td><strong>验证</strong></td><td>QuantInsti 月度 walk-forward + OOS（2023-2026 样本外）；shadow A/B</td><td>辩论环 shadow 刚埋点（A/B 基线采集启动）；<strong>无系统 walk-forward 回测框架</strong></td><td><strong>最大短板</strong></td></tr><tr><td><strong>决策</strong></td><td>LLM+RL 混合（FLAG-Trader）；agent 权重自适应（P1GPT 未来工作）</td><td>静态加权门控 + meta_agent（DS/HY 权重固定）</td><td>中</td></tr><tr><td><strong>执行</strong></td><td>事件级硬停（Fed/CPI/NFP）、slippage TCA、VWAP/TWAP 拆单</td><td>错峰抖动+幂等保正确性；<strong>无执行质量度量</strong></td><td>中</td></tr><tr><td><strong>数据/校准</strong></td><td>多模态（财报电话/预测市场/新闻级联）；<strong>信号校准不可妥协</strong>（90% 置信可能只有 55% 准）</td><td>新闻部分注入、视觉 7b 新接入、calibrated_confidence 已有</td><td>中</td></tr></tbody></table>
+<h3>业界共识（须正视）</h3>
+<ul><li><strong>回测 ≠ 实盘</strong>：TradingAgents 回测年化 30.5%，30 天实盘仅 7% 且回撤 22%——实盘验证是唯一裁判（我们的前向验收铁律正确）</li><li><strong>方向预测不可靠</strong>（Chan 2024 / QuantInsti）："预测明天涨跌"没有模型有稳定 edge；<strong>风险管理/仓位/退出才是 LLM 的可靠用途</strong>——用户"开完仓核心就是维护持仓"的判断与业界 2026 结论不谋而合</li><li><strong>LLM 静默退化</strong>：市场 regime 变化时信号质量无声下降——须监控（我们有 degraded 监控）</li></ul>
+<h2>五、最值得借鉴的 3 个升级方向</h2>
+<ol><li><strong>补验证层（最优先）</strong>：walk-forward 回测框架 + OOS 验证——辩论环 shadow 已在积累，扩展为全链路（篮子处置也进 shadow A/B：记录"若启用篮子 AI 会少亏多少"）</li><li><strong>持仓管理深化（用户方向，业界已证）</strong>：从"LLM 出处置建议+规则执行"升级到 <strong>QuantInsti 式"LLM 风控经理"</strong>——LLM 直接定"当前仓位该多满"（50-100%），硬护栏（波动率/回撤止损）兜底；远期加 RL 调权</li><li><strong>执行质量工程化</strong>：slippage TCA 归因 + 事件级硬停（FOMC/NFP/CPI 前后禁开新仓）</li></ol>
+<hr>
+<p>*审计方式：静态代码核查（Grep/Read）+ 运行时核查（health/DB/日志）+ 业界双源调研（WebSearch，独立源交叉验证）。本轮实施 1 项（篮子方案）+ 自查修复 2 bug；遗留 7 项待办已记录。*</p></body></html>

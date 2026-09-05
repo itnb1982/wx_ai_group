@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai XAUUSD 持续验证报告</h1>
+<p><strong>轮次</strong>：第 15 轮｜<strong>采集时间</strong>：2026-08-11 08:25–08:31（GMT+8）</p>
+<p><strong>结论</strong>：<strong>触发 P0 ×2 · P1 最高 ×1</strong>（详见文末告警）</p>
+<p><strong>性质</strong>：只读观测，未修改任何交易代码 / 配置，未下任何单</p>
+<hr>
+<h2>一、实时行情快照</h2>
+<table><thead><tr><th>项目</th><th>数值</th><th>与上轮(07:25)对比</th></tr></thead><tbody><tr><td>bid / ask</td><td>4414.02 / 4414.23</td><td>+19.11（一小时急涨）</td></tr><tr><td>点差</td><td>21 pt</td><td>25 → 21，收窄</td></tr><tr><td>ATR(H1)</td><td><strong>15.54</strong></td><td>5.12 → 15.54，<strong>放大 3.0 倍</strong></td></tr><tr><td>ADX</td><td>27.1</td><td>56.0 → 27.1，<strong>强趋势读数崩落</strong></td></tr><tr><td>RSI</td><td><strong>76.0</strong></td><td>69.6 → 76.0，超买加深</td></tr><tr><td>EMA20</td><td>4365.85 ↑</td><td>现价高于 EMA20 <strong>48.17 = 3.10×ATR</strong></td></tr><tr><td>布林上轨</td><td>4411.88</td><td><strong>现价 4414.02 已在上轨之外</strong></td></tr><tr><td>MACD 柱</td><td>+5.22</td><td>−0.18 → +5.22，由负转强正</td></tr><tr><td>SMC / 体制</td><td>bullish / 强势上涨趋势</td><td>一致</td></tr><tr><td>延伸 Z</td><td>1.30 ~ 1.58（开仓时 1.574）</td><td>1.32 → 1.57</td></tr><tr><td>DXY / VIX</td><td>97.15 / 14.90（低恐慌）</td><td>持平</td></tr></tbody></table>
+<p><strong>读法</strong>：ATR 放大 3 倍、MACD 由负转正、价格突破布林上轨，是<strong>真实动能爆发</strong>而非假突破；但 RSI 76 + 距 EMA20 3.10×ATR + 延伸 Z 1.57，同时落在「统计罕见延伸区」。ADX 从 56 掉到 27 是 ATR 分母放大所致的<strong>读数失真</strong>，不代表趋势转弱——本轮不应据此判空。</p>
+<h3>后端与执行</h3>
+<table><thead><tr><th>指标</th><th>值</th></tr></thead><tbody><tr><td>PID / uptime</td><td>4000 / <strong>6.65 h（R11–R15 零重启）</strong></td></tr><tr><td>mt5_connected</td><td><strong>4 / 4</strong> ✅</td></tr><tr><td>trade_stale</td><td>false ✅</td></tr><tr><td>last_cycle_sec</td><td>41.7（决策周期已拉长到 ~85 s，上轮 ~70 s）</td></tr><tr><td>降级档</td><td><strong>L1 单云降级</strong>，lot×0.7，allow_new_entry=true，已持续 5.13 h</td></tr><tr><td>滑点</td><td>16 单，均 0.4 pt / 峰值 1.9 pt ✅ 优秀</td></tr><tr><td>本小时 ERROR</td><td>仅 <code>deepseek_client:analyze:640</code> 一类（每周期 1 次），其余模块<strong>零 ERROR</strong> ✅</td></tr></tbody></table>
+<hr>
+<h2>二、持仓（四账号 · 强刷 cache_age 1.19 s）</h2>
+<p><strong>08:16:34–35 一次性开出 4 笔 BUY，全部在赚钱。</strong></p>
+<table><thead><tr><th>账号</th><th>ticket</th><th>手数</th><th>开仓价</th><th>现价</th><th><strong>MT5 实际 SL</strong></th><th><strong>DB 记录 SL</strong></th><th>浮盈</th></tr></thead><tbody><tr><td>1610093301</td><td>378186797</td><td>0.53</td><td>4407.99</td><td>4414.27</td><td>4408.64</td><td><strong>4384.69</strong></td><td><strong>+332.84</strong></td></tr><tr><td>1610093299</td><td>378186765</td><td>0.53</td><td>4407.83</td><td>4414.27</td><td>4408.64</td><td><strong>4384.40</strong></td><td><strong>+341.32</strong></td></tr><tr><td>1610097175</td><td>378186782</td><td>0.02</td><td>4407.93</td><td>4414.27</td><td>4408.64</td><td><strong>4384.59</strong></td><td>+12.68</td></tr><tr><td>1610098464(主)</td><td>378186757</td><td>0.02</td><td>4407.64</td><td>4414.27</td><td><strong>4409.77</strong></td><td><strong>4384.40</strong></td><td>+13.26</td></tr></tbody></table>
+<ul><li>合计 <strong>1.10 手净多</strong>，浮盈 <strong>+700.10</strong>，组合权益 1,941,922.88</li><li>持仓 0 浮亏单，<strong>无一笔触及硬损阈值</strong></li><li>三源一致（接口强刷 / DB close_time IS NULL / MT5），<strong>无孤儿单</strong></li><li>TP 统一 4457.99 = Chronos P90 天花板（「让利润奔跑」）✅ 设计正确</li></ul>
+<h3>动态利润锁定：主号正常，跟号停摆</h3>
+<p>主号 #378186757 SL 阶梯完整：</p>
+<pre><code>08:22:09  早期保本(+1.9点峰值)   SL 4384.40 → 4408.64
+08:25:01  动态利润锁定(+4.5点)   SL       → 4409.21
+08:26:29  动态利润锁定(+5.9点)   SL       → 4409.23
+08:29:27  动态利润锁定(+6.9点)   SL       → 4409.77</code></pre>
+<p><strong>跟号 3 个账号 SL 全部卡死在 4408.64（只应用了第 1 级），落后主号 3 级。</strong></p>
+<table><thead><tr><th>口径</th><th>金额</th></tr></thead><tbody><tr><td>当前浮盈</td><td>+700.10</td></tr><tr><td>按现有 SL 出场保底</td><td><strong>+83.06</strong></td></tr><tr><td><strong>锁定率</strong></td><td><strong>11.9%（回吐敞口 88.1%）</strong></td></tr><tr><td>跟号若同步主号锁利比例应保底</td><td>+215</td></tr><tr><td><strong>跟号锁利停摆造成的未锁定金额</strong></td><td><strong>≈ 136 美元</strong></td></tr></tbody></table>
+<h3>AI 出场监控：正常 ✅</h3>
+<ul><li><code>[持仓全景]</code> 本轮窗口 <strong>36 次</strong>，四账号全覆盖，间隔约 90 s</li><li><code>[辩论引擎] 已注入主号当前持仓到决策上下文</code> 每周期执行，浮盈序列 −1.42 → −3.08 → +1.46 → +4.0 → +8.48 → +12.7 → +13.78 连续可追</li><li><strong>R11/R12 的「持仓零 AI 评估」P0 本轮再次确认解除</strong>（且是有持仓状态下的真实验证）</li></ul>
+<hr>
+<h2>三、历史订单合理性</h2>
+<h3>今日（08-11）已平 24 笔</h3>
+<table><thead><tr><th>口径</th><th>金额</th><th>可用性</th></tr></thead><tbody><tr><td>DB 全量</td><td><strong>−20,503.23</strong></td><td>❌ 严重失真</td></tr><tr><td>DB 剔除 16 笔伪造后（8 笔）</td><td>−153.49</td><td>参考</td></tr><tr><td><strong>MT5 真实 today_profit</strong></td><td><strong>−1,561.24</strong></td><td>✅ <strong>以此为准</strong></td></tr></tbody></table>
+<p><strong>16 / 24 笔（66.7%）平仓价严格等于止损价（close ≡ sl），全部标记 <code>mt5_closed_external</code>。</strong></p>
+<h3>出场归因（剔除伪造后 8 笔）</h3>
+<table><thead><tr><th>出场原因</th><th>笔数</th><th>净盈亏</th><th>评价</th></tr></thead><tbody><tr><td>主副对账-清孤儿单</td><td>3</td><td><strong>+1,687.20</strong></td><td>今日最佳出口，但期望≈0、方差极大</td></tr><tr><td>浮盈回吐锁利</td><td>1</td><td>+15.67</td><td>峰值 10.34 → 落袋 6.42，<strong>回吐 37.9%</strong></td></tr><tr><td>sl</td><td>1</td><td>−34.90</td><td>正常</td></tr><tr><td>risk_cut</td><td>2</td><td>−62.46</td><td><strong>胜率 0%（连续 15 轮）</strong></td></tr><tr><td>follower_mirror</td><td>1</td><td><strong>−1,759.00</strong></td><td>今日最大真实亏损</td></tr></tbody></table>
+<hr>
+<h2>四、各模型健康值</h2>
+<table><thead><tr><th>模型</th><th>成功 / 失败</th><th>关键指标</th><th>健康值</th><th>判定</th></tr></thead><tbody><tr><td><strong>Chronos-2</strong></td><td>1033 / 0</td><td>device=<strong>GPU (CUDA)</strong>，torch 2.6.0+cu124，延迟 74.2 ms，30 s 前刚出多变量(DXY/US10Y/VIX)预测</td><td><strong>100</strong></td><td>✅ 满分，全系统最稳</td></tr><tr><td><strong>Qwen3:8b</strong></td><td>30 / 9 = 76.9%</td><td>p50 8,134 ms ✅ / <strong>p95 41,398 ms</strong> ❌ / <strong>末次 40,376 ms</strong></td><td><strong>62（规则）/ 77（实证）</strong></td><td>⚠️ 成功率合格，尾延迟失控</td></tr><tr><td><strong>DeepSeek</strong></td><td>40 / <strong>203</strong></td><td>HTTP <strong>402 Insufficient Balance</strong>，fail_streak <strong>203</strong></td><td><strong>0</strong></td><td>🚨 欠费停摆</td></tr><tr><td><strong>混元 Hy3</strong></td><td>243 / 0</td><td>ok_streak 243，无错误</td><td><strong>100</strong></td><td>✅ 满分</td></tr></tbody></table>
+<p><code>quad_ready = false</code>（3/4）｜模型层综合 <strong>65.5 / 100</strong></p>
+<blockquote><strong>Qwen 读数修正</strong>：p95 41.4 s 中含 06:04:48 的历史峰值残留；但<strong>末次调用 40,376 ms 是本轮新增的真实超时级延迟</strong>，不可当作残留忽略。10 分钟内仅 1 次调用（last_activity_ago 610 s），算力大量闲置。</blockquote>
+<hr>
+<h2>五、本地模型如何提高盈利确定性</h2>
+<p>本轮数据给出了三条<strong>可直接量化收益</strong>的路径，按 ROI 排序：</p>
+<p><strong>① Chronos 分位数做「成交价合法性校验」——本轮可 100% 拦下 16 笔伪造（ROI 最高）</strong></p>
+<p>Chronos 每周期输出 P10/P50/P90。任何写库的 close_price 若落在 [P10−k·ATR, P90+k·ATR] 之外即拒绝入库、转人工标记。今日 16 笔伪造的 close_price 全部是「开仓价 ± 固定 24 点」，与 Chronos 分位带毫无关系，会被 100% 拦截。这是第 ⑤⑥ 条的前置条件。</p>
+<p><strong>② 把 Chronos 的预测带宽接进锁利步长——本轮可多锁 ≈136 美元</strong></p>
+<p>当前锁利用固定点数触发（trigger=1.2/1.3），与 ATR 完全脱钩：ATR 从 5.12 跳到 15.54（3 倍）时，触发步长纹丝不动 → 锁定率只有 11.9%。改成 <code>SL = peak − max(0.5×ATR, P50−P10)</code>，高波动时自动放宽、低波动时自动收紧。这条同时解决「浮盈回吐锁利」历轮 37.9%~64.6% 的回吐率。</p>
+<p><strong>③ 让 Chronos 在「分裂决策」中拥有救援票——本轮可救回 1 笔被硬否决的信号</strong></p>
+<p>08:02:33 混元 SELL(52%) + Chronos SELL 方向一致，仍被 <code>分裂决策(一方向一观望)置信51%&lt;55%</code> 判定为分歧并把置信度<strong>归零</strong>。原因是 DeepSeek 死票被当成「投了 HOLD」，使<strong>每一个周期都被结构性判定为分裂决策</strong>。正确做法是把失联模型标记为「缺席」而非「投 HOLD」，并允许 Chronos 在两活模型同向时提供 +0.10 加成。</p>
+<p><strong>④ Qwen 从入场校对平移到出场端</strong></p>
+<p>Qwen p50 仅 8.1 s，10 分钟才被调用 1 次，算力闲置。入场端已有混元+Chronos，Qwen 的边际价值低；而出场端（本轮 36 次持仓全景）完全没有 LLM 参与，只有机械阶梯。把 Qwen 挪去做「持仓健康度复核」（是否延伸过度、是否该加速锁利），既用上闲置算力，又避开它 40 s 尾延迟对入场时效的伤害。</p>
+<p><strong>⑤ 打通 mfe / mae 才能让本地模型真正「进化」</strong></p>
+<p>今日 24 笔中仅 2 笔有非零 mfe/mae（填充率 8.3%）。没有最大有利/不利偏移，任何强化学习或因果复盘都无从训练——这是本地进化层的硬前提，须等 ① 落地后一并修复。</p>
+<hr>
+<h2>六、不合理之处清单</h2>
+<table><thead><tr><th>#</th><th>级别</th><th>问题</th><th>证据</th><th>状态</th></tr></thead><tbody><tr><td>1</td><td><strong>P0</strong></td><td><strong>DB <code>trades.sl</code> 不随移动止损回写，兜底推算按开仓初始 SL 伪造最大亏损</strong></td><td>见下方根因铁证</td><td>🆕 <strong>本轮定位根因</strong></td></tr><tr><td>2</td><td><strong>P0</strong></td><td><strong><code>database is locked</code> 08 时 31 分钟内 408 次</strong>（折合 ~790/小时），突破上轮 400/小时判据</td><td>08:22 起 43/39/37/46/34/45 次/分，与镜像重放时段完全重合</td><td>升级</td></tr><tr><td>3</td><td><strong>P1 最高</strong></td><td><strong>跟号镜像 move_sl 幂等失效 + 无限重放</strong>：155 次重放仅应用 1 次，跟号锁利落后主号 3 级</td><td>3 账号各 51–52 次；实际应用仅 <code>SL→4408.64</code> 各 1 次</td><td>🆕 本轮新增</td></tr><tr><td>4</td><td><strong>P1 最高</strong></td><td>Qwen 末次调用 <strong>40,376 ms</strong>，触发上轮判据⑤</td><td>last_latency_ms=40376.1</td><td>触发</td></tr><tr><td>5</td><td>P1</td><td>DeepSeek 402 欠费连续第 5 轮，fail_streak 153 → <strong>203</strong></td><td>cloud.deepseek.last_error</td><td>恶化</td></tr><tr><td>6</td><td>P1</td><td>「分裂决策」硬归零：混元+Chronos 同向 SELL 仍被判分歧、置信度置 0</td><td>08:02:33 裁决原文</td><td>🆕 机制查明</td></tr><tr><td>7</td><td>P1</td><td>仪表盘账户缓存 <strong>cache_age 3667 s（61 分钟）</strong>，返回 total_positions=0，而实际持仓 4 笔</td><td>缓存 vs 强刷对照</td><td>🆕 本轮新增</td></tr><tr><td>8</td><td>P1</td><td>辩论引擎只注入主号 0.02 手持仓，<strong>跟号 1.06 手（96% 敞口）不在 AI 决策视野内</strong></td><td><code>已注入主号3540bf33当前持仓 1 笔</code></td><td>🆕 本轮新增</td></tr><tr><td>9</td><td>P1</td><td>锁定率仅 <strong>11.9%</strong>，回吐敞口 88.1%；固定点数触发与 ATR(15.54) 脱钩</td><td>见第二节</td><td><strong>连续第 11 轮未落地</strong></td></tr><tr><td>10</td><td>P1</td><td>risk_cut 胜率 <strong>0%</strong>（今日 2 笔 −62.46）</td><td>出场归因</td><td>连续 15 轮</td></tr><tr><td>11</td><td>P1</td><td>mfe/mae 填充率 <strong>8.3%</strong>；chronos_vote/q_score 仅末笔有值</td><td>DB 抽样</td><td>倒退未修</td></tr><tr><td>12</td><td>P2</td><td>反转平仓门槛四账号不统一（3 个 70%，b3db40fd 为 75%）</td><td>08:16:34 四行日志</td><td>🆕 本轮新增</td></tr><tr><td>13</td><td>P2</td><td>架构矛盾：风控 allow_new_entry=true 与裁决 98% HOLD 并存</td><td>degrade + cycle 分布</td><td>连续第 4 轮</td></tr></tbody></table>
+<hr>
+<h2>七、根因铁证：SL 伪造的完整因果链（本轮最大成果）</h2>
+<p>前 4 轮只观测到「伪造现象」并做统计推断，本轮<strong>定位到代码级根因并可分毫复现</strong>。</p>
+<p><strong>因果链</strong></p>
+<pre><code>smart_exit 决定移动止损
+   ↓
+trade_executor.py:2728  mt5_service.modify_sl_tp(...)   ← 只改 MT5，无任何 DB 回写
+   ↓
+DB trades.sl 永远停留在开仓初始值（本轮 4 笔 = 4384.40~4384.69）
+   ↓
+持仓在 MT5 端消失、deal 又拉不到
+   ↓
+trade_executor.py:1058  _sl_val = getattr(t, "sl")      ← 读到陈旧初始 SL
+trade_executor.py:1070  _est = (_sl_val - _op) * _vol * 100
+   ↓
+写库：close_price = 初始SL，profit = 满额亏损（且可能符号翻转）</code></pre>
+<p><strong>铁证一 · 分毫复算</strong>（今日 07:09 那批）</p>
+<p><code>378135813</code>：open 4396.08，DB sl 4372.08，vol 0.5</p>
+<p>→ (4372.08 − 4396.08) × 0.5 × 100 = <strong>−1200.00</strong> = DB 记录值，<strong>误差 0.00</strong></p>
+<p><code>378135812</code>（0.02 手）同法得 <strong>−48.00</strong> = DB 记录值，<strong>误差 0.00</strong></p>
+<p>公式与数据库完全咬合，机制确认无疑。</p>
+<p><strong>铁证二 · 当前 4 笔正暴露在同一风险下（可提前预测）</strong></p>
+<p>若此刻这 4 笔在 MT5 端消失并走兜底：</p>
+<table><thead><tr><th>ticket</th><th>兜底将写入</th><th>真实应为（按 MT5 实际 SL）</th></tr></thead><tbody><tr><td>378186797</td><td>−1,234.90</td><td>+34.45</td></tr><tr><td>378186765</td><td>−1,241.79</td><td>+42.93</td></tr><tr><td>378186782</td><td>−46.68</td><td>+1.42</td></tr><tr><td>378186757</td><td>−46.48</td><td>+4.26</td></tr><tr><td><strong>合计</strong></td><td><strong>−2,569.85</strong></td><td><strong>+83.06</strong></td></tr></tbody></table>
+<p><strong>偏差 2,652.91 美元，且符号翻转。</strong></p>
+<p><strong>为什么符号翻转比多记亏损更危险</strong>：辩论引擎每周期执行 <code>已注入最近 15 笔真实成交…合计盈亏 −682.33$ 到决策上下文</code>。一旦这些「BUY 巨亏」样本进入 AI 归因视野，模型会学到<strong>「BUY 必亏」的完全错误因果</strong>——这正是用户记忆中「禁止用历史胜率统计做前置过滤（BUY 惩罚教训）」所警告的同一类污染，只不过这次污染源是数据层 bug 而非人为规则。</p>
+<p><strong>最小修复面</strong>（仅供决策参考，本轮未改动任何代码）：在 <code>trade_executor.py:2730</code> 与 <code>:3071</code> 的 <code>modify_sl_tp</code> 成功分支后，把新 SL 同步写回 <code>trades.sl</code>。这一处改动同时消解问题 1，并大幅降低问题 2 的写库压力来源。</p>
+<hr>
+<h2>🚨 P0 告警</h2>
+<blockquote>### 【P0-1】DB 止损字段不回写 → 兜底对账系统性伪造亏损（根因已定位）&lt;br&gt;今日 <strong>16/24 笔（66.7%）</strong> 平仓记录为伪造，DB 虚增亏损 <strong>18,942 美元</strong>（DB −20,503.23 vs MT5 真实 −1,561.24）。&lt;br&gt;<strong>当前 4 笔在场持仓正暴露在同一缺陷下，潜在错误敞口 −2,569.85 美元且符号翻转。</strong>&lt;br&gt;根因：<code>trade_executor.py:2728/3071</code> 移动止损只写 MT5 不写 DB；<code>:1058</code> 兜底推算读到开仓初始 SL。已分毫复算验证。</blockquote>
+<blockquote>### 【P0-2】database is locked 31 分钟内 408 次，突破上轮 400/小时判据&lt;br&gt;08 时分钟级分布 29/12/36/38/43/39/37/46/34/45……折合约 <strong>790 次/小时</strong>。&lt;br&gt;时间轴与跟号镜像 155 次 move_sl 重放<strong>完全重合</strong>，高度疑似同一因果链：重放风暴 → 锁竞争 → 写库失败。</blockquote>
+<blockquote>### 【P1 最高】跟号锁利停摆：大号扛 96% 敞口，保护反而最弱&lt;br&gt;主号（0.02 手）SL 已四级推进至 4409.77；三个跟号（含两个 0.53 手大号）全部卡在 4408.64。&lt;br&gt;风险与保护倒挂，本笔已少锁约 <strong>136 美元</strong>。</blockquote>
+<hr>
+<h2>八、下轮判据</h2>
+<ol><li>若这 4 笔以 <code>mt5_closed_external</code> + close≡sl(4384.x) 落库 → <strong>P0-1 实锤兑现，升最高优先级</strong></li><li>若已修复 SL 回写 → 验证新平仓单 close_price 是否落在 Chronos P10/P90 带内</li><li><code>database is locked</code> 完整小时 &gt; 600 次 → 与镜像重放做相关性回归，确认因果</li><li>跟号镜像重放 &gt; 200 次/小时 或 跟号 SL 继续落后主号 ≥2 级 → 升 P0</li><li>DeepSeek 仍 402 → 记录累计降级时长（当前 5.13 h）</li><li>Qwen 再现 &gt; 30 s 单次延迟 或 成功率跌破 70% → 升 P0</li><li>账户接口 cache_age &gt; 1800 s 再现 → 升 P1（前端将显示错误的空仓状态）</li><li>RSI &gt; 75 且延伸 Z &gt; 1.5 区间内新开逆势单 → 复核 Regime 哨兵</li></ol>
+<hr>
+<p>*本轮采集：3 个 API 接口 + SQLite trades 表 2,907 行 + 72,746 行当日日志（GBK 解码）。全程只读，未修改任何交易代码、配置，未下任何单。*</p></body></html>

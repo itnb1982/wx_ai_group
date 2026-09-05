@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>视觉模型升级方案（2026-08-16）</h1>
+<blockquote>用户批准「开搞」。本文档锁定所有参数（开搞后不再回头确认），落地后跑回归 + 前向验证。</blockquote>
+<hr>
+<h2>1. 目标</h2>
+<p>把 GPU1（RTX 3060 Ti 8GB）从 qwen2.5vl:3b（4.1GB 利用率 51%）升级到 qwen2.5vl:7b（约 5.4GB 权重 + KV + 图 tokens 约 6.5~7GB），让 H4/M15/M5 三周期结构识别在<strong>开仓</strong>和<strong>平仓看护</strong>两处都更准更智能。</p>
+<p>铁律仍守：① 视觉仅加法增强，绝不做 GO/NO-GO 闸门（拦截=砍信号=利润腰斩）；② 与决策链同源 OHLC；③ 模型调用次数<strong>不随账号数 N 线性增长</strong>（信号跟随主号、跟单复制主号——见 §5）；④ 验收只看<strong>净利↑、笔数不腰斩、PF&gt;1</strong>。</p>
+<hr>
+<h2>2. 选型决策链（≥3 源交叉验证 + 本机实测）</h2>
+<table><thead><tr><th>候选</th><th>来源 1：Ollama 官方</th><th>来源 2：willitrunai RTX 3060 Ti 8GB 实测</th><th>来源 3：csdn RTX 4060 8GB 实测</th><th>结论</th></tr></thead><tbody><tr><td>qwen3-vl:8b</td><td>6.1GB，256K ctx</td><td>未测</td><td>未测</td><td>❌ <strong>本机已实测判死刑</strong>（config.py L185-191 记录：1/3 轮次 thinking 预算陷阱 + 空 content + 实例崩溃，稳定性&gt;代际能力铁律）</td></tr><tr><td><strong>qwen2.5vl:7b</strong></td><td>Q4_K_M 默认</td><td><strong>Tight fit 7.1GB / 89% VRAM，77.5 tok/s</strong></td><td><strong>5.2GB 显存 / 1.8s 延迟</strong></td><td>✅ <strong>选定</strong></td></tr><tr><td>qwen2.5vl:3b</td><td>已装</td><td>当前 4.1GB</td><td>—</td><td>❌ 能力受限（图表推理弱），被 7b 替代</td></tr></tbody></table>
+<p>决策：<strong>qwen2.5vl:7b</strong>——同源非-thinking 系（与本机已稳定跑 39h 的 3b 一致），稳定性继承 + 能力升一代；独享 gpu1 8GB 紧张但可控（图片最长边 784、num_ctx 4096、视觉 token 在 4096 内）。</p>
+<hr>
+<h2>3. 落地四项动作</h2>
+<h3>3.1 模型替换</h3>
+<table><thead><tr><th>文件</th><th>改动</th></tr></thead><tbody><tr><td><code>app/config.py</code></td><td><code>VISION_MODEL = "qwen2.5vl:3b"</code> → <code>"qwen2.5vl:7b"</code>；注释块更新（含本次升级理由）</td></tr><tr><td><code>app/services/vision_service.py</code></td><td><code>_model_name()</code> 兜底默认 <code>"qwen2.5vl:3b"</code> → <code>"qwen2.5vl:7b"</code></td></tr><tr><td><code>app/services/vision_exit.py</code></td><td>兜底 <code>_vision_model_name = lambda: "qwen2.5vl:3b"</code> → <code>7b</code></td></tr><tr><td><code>backend/start_ollama_vision.ps1</code></td><td><code>ollama pull qwen3-vl:4b</code> → <code>qwen2.5vl:7b</code>；注释 gpu1 行更新</td></tr></tbody></table>
+<h3>3.2 权重/门控松绑（让大模型能翻盘）</h3>
+<table><thead><tr><th>参数</th><th>旧值</th><th>新值</th><th>理由</th></tr></thead><tbody><tr><td><code>VISION_VOTE_WEIGHT</code></td><td>0.20</td><td><strong>0.30</strong></td><td>7b 能力升档后提高融合分量（仍低于双脑主导权重）</td></tr><tr><td><code>VISION_GATE_MID</code></td><td>0.70</td><td><strong>0.80</strong></td><td>部分一致时不再过度压制</td></tr><tr><td><code>VISION_GATE_MIN</code></td><td>0.35</td><td><strong>0.55</strong></td><td>与共识冲突时保留一半分量（旧 0.35=砍到 1/3 浪费高质量独立判断）</td></tr><tr><td><code>VISION_GATE_CHOP_MULT</code></td><td>0.85</td><td>0.85</td><td>不变（震荡体制额外折扣仍谨慎）</td></tr><tr><td><code>VISION_GATE_ENABLED</code></td><td>True</td><td>True</td><td>不变（总开关）</td></tr><tr><td><code>meta_agent.py</code> 兜底默认</td><td>0.70/0.35</td><td>0.80/0.55</td><td>双源同步，注释说明 config 为权威源</td></tr></tbody></table>
+<p>注：仍守"提准非拦截"——视觉 HOLD 不贡献，方向冲突只是降权不是反向，硬 SL/TP 与 L3 篮子仍为最终兜底。</p>
+<h3>3.3 图表渲染升级（让 7b 看得更多）</h3>
+<p><strong>设计原则</strong>：只画<strong>客观价格结构</strong>（任何图表软件都画得出的），绝不注入主观 SMC 结论（OB/FVG/流动性位留给模型自己判断）——守住既有"不替模型下结论"原则。</p>
+<table><thead><tr><th>改动</th><th>旧</th><th>新</th></tr></thead><tbody><tr><td><code>_MAX_EDGE</code>（最长边）</td><td>672</td><td><strong>784</strong>（28 倍数；Qwen2.5-VL 动态分辨率原生支持；3 图视觉 token 仍在 4096 ctx 内）</td></tr><tr><td>摆动高低点标注</td><td>无</td><td>新增 <code>_find_swings(bars, window=3)</code> fractal 算法 + <code>_swing_seq()</code> HH/HL/LH/LL 序列；图上画最近 12 个 swing 三角（H=橙/L=紫）+ 最近关键位虚线 + 右上角"上行结构/下行结构/震荡分歧"文字</td></tr><tr><td>中文字体</td><td><code>_font</code> 仅 try <code>arial.ttf</code>→Pillow default（中文豆腐块）</td><td>新增 msyh.ttc / simhei.ttf / simsun.ttc 优先加载；"P0入/P0SL/下行结构"等中文标签 7b 能读</td></tr><tr><td><code>render_chart</code> 新参数</td><td>—</td><td><code>show_swings: bool = True</code>（默认开启，向后兼容——调用方不传即默认）</td></tr><tr><td>异常安全</td><td>全图 try/except</td><td>新增结构标注段独立 try/except（标注失败不影响主图）</td></tr></tbody></table>
+<p><strong>验证</strong>：</p>
+<ul><li>冒烟：80 根仿真 K 线 → 16 个摆动点 → "LH+LL 下行结构" → 49KB PNG，中文清晰</li><li>回归：8/8 用例通过（<code>tests/test_vision_chart_swing.py</code>：单调上行只产 H、单调下行只产 L、过短返回空、HH+HL 上行、LH+LL 下行、PNG bytes、无数据 graceful）</li></ul>
+<h3>3.4 vision_exit 去重铁律注释更正（无需改代码逻辑）</h3>
+<p><strong>关键发现</strong>：代码现状其实已经符合铁律——<code>trade_executor._manage_positions</code> L3104-3106：</p>
+<pre><code>if (not is_leader) and follow_leader:
+    self._mirror_leader_exits(positions, ai_decision)
+    return   # 跟单提前 return，根本到不了 _ensure_vision_exit()</code></pre>
+<p>跟单账号在镜像分支已 return，<strong>只有主号/独立号才启动 VisionExitService</strong>。</p>
+<p>所以"去重"真实落点是<strong>修正三处过时 docstring</strong>，把架构事实写清楚，防止后人重犯"按账号数算调用"的错：</p>
+<table><thead><tr><th>文件</th><th>改动</th></tr></thead><tbody><tr><td><code>app/config.py</code> L213</td><td>"每个 worker 进程(=一个账号)各自跑一个 VisionExitService" → "★铁律更正：跟单不启动本服务，只有主号/独立号推理，6/100 账号永远 ~1 次看护推理"</td></tr><tr><td><code>app/services/vision_exit.py</code> 模块注释</td><td>"每 worker 进程 = 一个账号" → "★★铁律：跟单不启动本服务"</td></tr><tr><td><code>app/services/trade_executor.py</code> <code>_ensure_vision_exit</code> docstring</td><td>"每个账号(进程) 只设一次" → "仅在主号/独立号路径执行（跟单镜像分支已 return）"</td></tr></tbody></table>
+<hr>
+<h2>4. 参数全锁清单</h2>
+<table><thead><tr><th>类别</th><th>参数</th><th>值</th><th>备注</th></tr></thead><tbody><tr><td>模型</td><td><code>VISION_MODEL</code></td><td><code>qwen2.5vl:7b</code></td><td>Ollama 默认量化（Q4_K_M ≈ 5.4GB 权重）</td></tr><tr><td>模型</td><td><code>VISION_NUM_GPU</code></td><td>999</td><td>全量卸载到 gpu1</td></tr><tr><td>权重</td><td><code>VISION_VOTE_WEIGHT</code></td><td>0.30</td><td>升 50%，但仍低于双脑</td></tr><tr><td>门控</td><td><code>VISION_GATE_ENABLED</code></td><td>True</td><td></td></tr><tr><td>门控</td><td><code>VISION_GATE_MID</code></td><td>0.80</td><td></td></tr><tr><td>门控</td><td><code>VISION_GATE_MIN</code></td><td>0.55</td><td>旧 0.35 砍到 1/3，新值 0.55 让大模型能发声</td></tr><tr><td>门控</td><td><code>VISION_GATE_CHOP_MULT</code></td><td>0.85</td><td>震荡体制谨慎折扣</td></tr><tr><td>视觉内部</td><td><code>VISION_H4_WEIGHT</code></td><td>0.60</td><td>不变</td></tr><tr><td>视觉内部</td><td><code>VISION_M15_WEIGHT</code></td><td>0.40</td><td>不变</td></tr><tr><td>视觉内部</td><td><code>VISION_M5_WEIGHT</code></td><td>0.20</td><td>不变</td></tr><tr><td>渲染</td><td><code>_MAX_EDGE</code></td><td>784</td><td>28 倍数，三图总视觉 token 安全</td></tr><tr><td>渲染</td><td><code>show_swings</code></td><td>True（默认）</td><td>可被调用方关闭</td></tr><tr><td>渲染</td><td>swing 窗口</td><td>3</td><td>fractal 半径</td></tr><tr><td>渲染</td><td>字体链</td><td>msyh.ttc → msyhbd.ttc → simhei → simsun → arial → default</td><td></td></tr><tr><td>刷新</td><td><code>VISION_REFRESH_SEC</code></td><td>90.0</td><td>7b 推理 8~15s，90s 留足冷却</td></tr><tr><td>刷新</td><td><code>VISION_EXIT_REFRESH_SEC</code></td><td>30.0</td><td>主号单实例推理 8~15s，30s 周期可行</td></tr><tr><td>僵死</td><td><code>VISION_STALE_SEC</code></td><td>900</td><td>不变</td></tr></tbody></table>
+<hr>
+<h2>5. 模型调用次数铁律（用户 2026-08-16 纠正·已写入 MEMORY.md）</h2>
+<p><strong>信号跟随主号、跟单复制主号——视觉/AI 模型调用次数不随账号数 N 线性增长。</strong></p>
+<ul><li>跟单账号（follow_leader=True）在 <code>_manage_positions</code> 内走 <code>_mirror_leader_exits</code> 镜像主号出场即 return，<strong>根本不启动 VisionExitService</strong>。</li><li>主号的视觉看护票经 <code>publish_leader_exit</code> 广播给跟单，跟单直接消费。</li><li>所以无论 6 账号还是 100 账号，<strong>永远只有 ~1 次看护推理</strong>。</li><li>全局 vision_service（开仓结构识别）也是 1 个全局实例 + 1 次推理/刷新，与 N 无关。</li></ul>
+<p>评估任何模型升级/吞吐时，<strong>调用次数由主号信号决定，与 N 无关</strong>。</p>
+<hr>
+<h2>6. 验证计划</h2>
+<h3>6.1 静态验证（已完成）</h3>
+<ul><li>✅ <code>py_compile</code> 全部改动文件：config / meta_agent / vision_service / vision_exit / vision_chart / trade_executor 全部 OK</li><li>✅ 渲染器冒烟：80 根仿真 K 线，swing 算法正确，结构序列正确，中文清晰，PNG bytes 正确</li><li>✅ 回归测试 8/8 通过（<code>tests/test_vision_chart_swing.py</code>）</li></ul>
+<h3>6.2 模型加载验证（待模型拉完）</h3>
+<ul><li>等待 <code>qwen2.5vl:7b</code> 拉取完成（task id <code>zFpVjr</code>，约 5~10 分钟）</li><li>拉完后启动视觉实例：<code>pwsh start_ollama_vision.ps1</code></li><li>验证 <code>/api/tags</code> 返回 7b</li><li>首次推理探针：<code>curl http://127.0.0.1:11435/api/chat</code> 用最小 prompt + 单图，确认无 OOM（willitrunai 实测 3060 Ti 8GB tight fit 7.1GB）</li><li>若 OOM：回退路径见 §7</li></ul>
+<h3>6.3 后端重启（需用户双击 <code>restart_task_backend.bat</code>）</h3>
+<p>后端代码已改（config + meta_agent + vision_* + trade_executor + ps1 + 测试）。需要<strong>用户双击 <code>backend\restart_task_backend.bat</code></strong> 重新加载——按本机工程纪律，沙箱内无法重启（SYSTEM 孤儿占端口/互斥体）。</p>
+<p>重启后验证：</p>
+<ul><li><code>/api/health</code> pid 换新、uptime_sec 回落</li><li><code>/api/local-model/status</code> 显示 vision 新权重生效</li><li>视觉实例 <code>/api/tags</code> 返回 <code>qwen2.5vl:7b</code></li><li>决策日志：<code>[MetaAgent][vision] 视觉票=BUY(w=0.30|conf=80%|H4=...)</code> 或类似新权重输出</li></ul>
+<h3>6.4 前向验证（周一开市后）</h3>
+<p>按用户铁律，验收只看<strong>真实成交数据</strong>：</p>
+<ul><li>净利 ↑（不能比升级前下降）</li><li>笔数不腰斩（≥ 升级前 80%）</li><li>PF &gt; 1（盈亏比保持正）</li><li>观察 1~2 个交易日（XAUUSD 周一 06:00 亚盘开市 → 周二 06:00 收市，~24h 窗口）</li></ul>
+<hr>
+<h2>7. 风险与回退</h2>
+<table><thead><tr><th>风险</th><th>触发条件</th><th>回退动作</th></tr></thead><tbody><tr><td>7b 在 8GB 卡 OOM</td><td>启动时 CUDA OOM 或推理时 KV 溢出</td><td>改 <code>VISION_MODEL = "qwen2.5vl:7b-q4_K_M"</code>（更小量化）或回退到 <code>"qwen2.5vl:3b"</code>；_MAX_EDGE 从 784 → 672</td></tr><tr><td>7b 推理超时僵死</td><td>单图 &gt;30s</td><td><code>VISION_REFRESH_SEC</code> 90 → 120，<code>VISION_EXIT_REFRESH_SEC</code> 30 → 60</td></tr><tr><td>7b 输出 JSON 格式退化</td><td><code>_extract_json</code> 频繁走 Markdown 兜底</td><td>把 <code>_model_name</code> 改回 3b 或在 prompt 加更显式格式约束</td></tr><tr><td>视觉票权重过高导致翻转震荡</td><td>walk-forward 验证净利下降</td><td><code>VISION_VOTE_WEIGHT</code> 0.30 → 0.25；门控 MIN 0.55 → 0.50</td></tr><tr><td>GPU1 高温</td><td>nvidia-smi gpu1 &gt; 88°C</td><td><code>num_ctx</code> 4096 → 2048 或 <code>_MAX_EDGE</code> 784 → 672</td></tr></tbody></table>
+<p><strong>最坏回退链</strong>：7b 不可用 → 3b（现有稳定版）→ 一切恢复现状。</p>
+<hr>
+<h2>8. 验收铁律（用户铁律·不破例）</h2>
+<p>按用户既定的"多交易多赚钱"宗旨，验收只看：</p>
+<ol><li><strong>净利 ↑</strong>（最重要）</li><li><strong>笔数不腰斩</strong>（≥ 80% 基线）</li><li><strong>PF &gt; 1</strong>（盈亏比正）</li></ol>
+<p>任何"模型更聪明/理论上更好"的虚指标都<strong>不算验收</strong>。验证窗口：周一 06:00 开市起 24~48 小时真实成交。</p></body></html>

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "global": {
+    "level": "HALT_ALL",
+    "reason": "库挂了也要能停",
+    "at": "2026-08-09T00:03:44",
+    "by": "t"
+  },
+  "accounts": {},
+  "flatten_requests": []
+}

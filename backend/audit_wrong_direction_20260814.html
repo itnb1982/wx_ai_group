@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>8/14 三笔亏损单审计报告：AI 为什么开反方向？</h1>
+<blockquote>审计目标：从 MT5 历史行情还原三单开仓时的真实价格位置，对照 AI 决策快照，判断「方向错误」是数据喂错、执行追单、还是模型判断失误。</blockquote>
+<hr>
+<h2>一、三单基本情况</h2>
+<table><thead><tr><th>#</th><th>Ticket</th><th>方向</th><th>开仓价</th><th>截图时间(MT5)</th><th>平仓价</th><th>盈亏</th><th>AI 最终决策</th></tr></thead><tbody><tr><td>1</td><td>383232749/768</td><td>BUY</td><td>4359.38</td><td>03:15</td><td>4349.40</td><td>-29.94</td><td>DeepSeek BUY 55% / 混元 BUY 58% / Chronos BUY</td></tr><tr><td>2</td><td>383538133/235</td><td>SELL</td><td>4314.96</td><td>06:35</td><td>4327.54</td><td>-12.58</td><td>DeepSeek SELL 68% / 混元 SELL 62% / Chronos SELL</td></tr><tr><td>3</td><td>383644306</td><td>SELL</td><td>4322.11</td><td>09:14</td><td>4332.62</td><td>-10.51</td><td>DeepSeek SELL 62% / 混元 HOLD / Chronos SELL</td></tr></tbody></table>
+<p>三单全部亏损，且都是<strong>方向性错误</strong>：</p>
+<ul><li>#1 在阶段性高点（4360 附近）开 BUY，随后跌至 4310；</li><li>#2 在阶段性低点（4315 附近）开 SELL，随后反弹至 4335+；</li><li>#3 在反弹途中（4322）继续 SELL，随后继续上涨。</li></ul>
+<hr>
+<h2>二、MT5 行情还原</h2>
+<p>下图从行情主号 MT5 终端提取 2026-08-14 00:00–12:00 UTC 的 XAUUSD M15 数据，并标注三单开仓位置：</p>
+<p>!<a href="audit_20260814_chart.svg">XAUUSD 2026-08-14 亚盘行情与三单开仓位置</a></p>
+<p>关键观察：</p>
+<table><thead><tr><th>单号</th><th>开仓时的真实行情位置</th><th>开仓后走势</th><th>定性</th></tr></thead><tbody><tr><td>#1 BUY @4359</td><td>位于 4360–4364 高位区，此前刚从 4364 回落</td><td>继续下跌至 4310</td><td><strong>山顶追多</strong></td></tr><tr><td>#2 SELL @4315</td><td>位于 4310–4320 低位区，经历一波急跌后</td><td>反弹至 4335+</td><td><strong>山底追空</strong></td></tr><tr><td>#3 SELL @4322</td><td>位于反弹中段 4320–4330</td><td>继续上涨至 4336+</td><td><strong>逆势空反弹</strong></td></tr></tbody></table>
+<hr>
+<h2>三、AI 当时的「想法」</h2>
+<h3>#1 BUY 单（4359.38）</h3>
+<p>DeepSeek reasoning：</p>
+<blockquote>区间震荡下价格回踩M5需求区及M15 FVG，低点抬升+买盘主动，短期反弹概率偏大。Chronos看空但方向中性，此处支撑明确，故优先做多。</blockquote>
+<p><strong>问题</strong>：AI 把「高位回落」识别为「回踩支撑」，未识别出这是趋势末端/流动性扫荡。实际价格从 4360 一路跌到 4310。</p>
+<h3>#2 SELL 单（4314.96）</h3>
+<p>DeepSeek reasoning：</p>
+<blockquote>短周期M15/M5/H1全面看空，CVD卖压确认，但价格贴近关键低点4310且RSI超卖，不宜追空。待反弹至M15供给区4322-4329做空，止损4343，目标4300。Chronos温和看空支撑方向。</blockquote>
+<p><strong>问题（关键）</strong>：</p>
+<ul><li>AI <strong>自己说</strong>「不宜追空，等待反弹至 4322–4329 再空」；</li><li>系统实际在 4315 市价追空，比 AI 自己的目标价差了 7–14 美元；</li><li>原因：<code>ENTRY_ZONE_DEFER_ENABLED=True</code>，但 <code>meta_agent.py</code> 的「从 reasoning 解析目标价」逻辑在 11:40 才落地，<strong>第二单 11:02 开单时该机制尚未生效</strong>。</li></ul>
+<h3>#3 SELL 单（4322.11）</h3>
+<p>DeepSeek reasoning：</p>
+<blockquote>M5/M15为连续空头结构，CVD卖压主动，H4大阴线跌破近期FVG，短周期动量向下。当前价格处于M1需求区附近，不宜直接追空，等待反弹至M15 bearish FVG（4373.95-4381.17）供给区做空……</blockquote>
+<p><strong>问题</strong>：</p>
+<ul><li>AI 再次表达「不宜追空，等反弹到 4373–4381」；</li><li>实际在 4322 就开空，远早于 AI 目标区；</li><li>第三单 13:12 已在新代码运行，但 AI reasoning 里没有给出「可接受的反弹区」结构化价位（只有极远的 4373–4381），<code>_parse_entry_from_reasoning</code> 对 4322 这种「当前价附近」无法提取有效目标，所以 ENTRY_ZONE_DEFER 未触发。</li></ul>
+<hr>
+<h2>四、根因分析</h2>
+<h3>1. 不是「喂错指数」</h3>
+<p>代码层面已逐项核对：</p>
+<ul><li><code>MarketAnalyzer.SYMBOL = "XAUUSD"</code>（硬编码）；</li><li>Worker <code>get_market_data</code> 只取 <code>XAUUSD</code> OHLCV；</li><li><code>ts_reference_models.load_live_rates</code> 候选列表也以 <code>XAUUSD</code> 为首选；</li><li>决策快照里的价格与 MT5 终端价格完全匹配。</li></ul>
+<p><strong>结论：喂给 AI 的品种确实是 XAUUSD，不存在把其他指数/品种当黄金喂的情况。</strong></p>
+<h3>2. 数据时间戳有 bug（不影响实时决策，但严重干扰审计）</h3>
+<ul><li><code>trades.open_time</code> 字段存的是<strong>北京时间（UTC+8）</strong>，而 MT5 服务器时间是 <strong>UTC+3</strong>；</li><li>Worker 里 <code>datetime.fromtimestamp(int(r["time"])).isoformat()</code> 也用系统本地时区（UTC+8）打标签；</li><li>后果：数据库时间与真实 MT5 时间对不上，复盘时容易误判；但价格序列本身正确，不影响 AI 实时判断。</li></ul>
+<h3>3. 核心根因：AI 方向判断在亚盘震荡/假突破环境下失效</h3>
+<p>三单共同特征：</p>
+<ul><li>都发生在亚盘低流动性时段（MT5 服务器 03:00–09:00）；</li><li>价格处于区间震荡（4310–4364），假突破/急涨急跌频繁；</li><li>AI 把高位回落看成「回踩支撑做多」，把低位反弹看成「下跌延续做空」；</li><li>Chronos 时序模型有时反向（#1 Chronos 看空但 AI 仍开 BUY），但未被有效制衡。</li></ul>
+<p>这是<strong>模型方向识别能力</strong>问题，不是数据问题。</p>
+<h3>4. 执行层追单放大了亏损</h3>
+<ul><li>#2、#3 的 AI reasoning 都明确写了「等反弹再空」；</li><li>但 ENTRY_ZONE_DEFER 机制在 #2 时还未落地，#3 时 AI 没给出结构化目标价；</li><li>结果：系统用市价在更差价位开仓，把本可避免的亏损实现了。</li></ul>
+<hr>
+<h2>五、修复建议</h2>
+<table><thead><tr><th>优先级</th><th>问题</th><th>修复动作</th></tr></thead><tbody><tr><td>P0</td><td>执行层追单</td><td>已部署的 ENTRY_ZONE_DEFER 在重启后生效；需继续观察 AI reasoning 是否稳定输出目标价。</td></tr><tr><td>P0</td><td>时间戳混乱</td><td>统一全链路 UTC：Worker 用 <code>datetime.fromtimestamp(ts, tz=timezone.utc)</code>；数据库写入前转 UTC。</td></tr><tr><td>P1</td><td>方向判断失效</td><td>引入「视觉模型看 H4/M15 图表结构」作为第四票（加法，非拦截），增强对假突破/趋势末端的识别。</td></tr><tr><td>P1</td><td>Chronos 反向被压制</td><td>当 Chronos 方向与云端双脑冲突且 confidence 高时，Meta 加权应更谨慎，或触发本地校对员二级确认。</td></tr><tr><td>P2</td><td>亚盘时段质量</td><td>当前 <code>session_info</code> 把 03:00–07:00 标为「凌晨清淡 quality=poor」，但并未据此降低仓位或拦截；可考虑在此时段降低手数系数。</td></tr></tbody></table>
+<hr>
+<h2>六、结论</h2>
+<p><strong>这三单不是「喂错指数」或「数据喂错」导致的。</strong> 喂给 AI 的价格、指标、时间框架都来自 XAUUSD，且与 MT5 终端一致。</p>
+<p>真正的病因是：</p>
+<ol><li><strong>AI 方向判断在亚盘震荡行情下系统性失效</strong>（模型能力问题）；</li><li><strong>执行层没有忠实执行 AI 的价位指引</strong>（ENTRY_ZONE_DEFER 落地时机/解析缺失）。</li></ol>
+<p>已经重启加载的新代码（Position Manager + 跟号同步修复 + ENTRY_ZONE_DEFER）会改善「追单」和「错了死扛」问题，但<strong>不会自动解决「AI 方向判断错误」本身</strong>。下一步必须针对方向准确率做专项提升（视觉模型/多模态增强或回测迭代），否则类似的错方向单仍会继续出现。</p></body></html>

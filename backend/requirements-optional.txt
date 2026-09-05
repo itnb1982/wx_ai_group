@@ -1,0 +1,32 @@
+# 万象Ai 智能交易系统 —— 可选增强依赖（本地数值智能）
+# ============================================================
+# 这些依赖【不装也能正常交易】。不装时系统自动降级为 SMC/Regime 决策，
+# 不会报错、不会影响下单，只是少了本地时序预测这一层增强。
+#
+# 安装方式（在项目根目录、已激活 .venv 的前提下）：
+#     pip install -r backend/requirements-optional.txt
+#
+# ⚠️ 硬件门槛：Chronos-2 需要显存。CPU 亦可跑但延迟较高。
+#    推荐 NVIDIA 显卡 ≥ 6GB 可用显存。
+#
+# ⚠️ 极其重要 —— torch 与 Python 版本必须严格匹配：
+#    torch 的 _C.cpXXX-win_amd64.pyd 是按具体 Python 小版本编译的二进制。
+#    如果你把 .venv 建好之后又升级了底层 Python（哪怕只是 3.13.12 -> 3.13.14），
+#    import torch 会触发【原生 access violation / 0xC0000005】，
+#    这个崩溃是 Python 层 try/except 抓不住的，会让整个进程瞬间消失。
+#    本系统已用「子进程探针隔离」防住了这个坑（见 chronos_service.py），
+#    崩溃只会导致自动降级、不会拖垮服务。但若要真正启用 Chronos，
+#    请在升级 Python 后重建 .venv 并重新安装 torch。
+# ============================================================
+
+# PyTorch（CPU 版；需要 GPU 加速请改用官方 CUDA 索引安装）
+# GPU 版安装示例：
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+torch>=2.4.0
+
+# Amazon Chronos-2 时序预测（提供 Chronos2Pipeline）
+chronos-forecasting>=1.5.0
+
+# transformers / accelerate 为 chronos 运行所需
+transformers>=4.44.0
+accelerate>=0.34.0

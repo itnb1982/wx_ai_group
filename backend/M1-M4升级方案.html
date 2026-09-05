@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剥头皮篮子离场与卡槽让路 · 延伸设计方案</title><style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+       max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; line-height: 1.75;
+       color: #1f2329; background: #ffffff; }
+h1 { font-size: 28px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-top: 8px; }
+h2 { font-size: 22px; margin-top: 40px; border-left: 5px solid #2563eb; padding-left: 12px; color: #1d4ed8; }
+h3 { font-size: 18px; margin-top: 28px; color: #374151; }
+h4 { font-size: 16px; margin-top: 20px; color: #6b7280; }
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0; padding-left: 26px; }
+li { margin: 6px 0; }
+code { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
+       padding: 1px 6px; font-family: "Consolas", "Courier New", monospace; font-size: 13px; color: #b91c1c; }
+pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px 18px;
+      overflow-x: auto; font-family: "Consolas", "Courier New", monospace; font-size: 13px; line-height: 1.6; }
+pre code { background: none; border: none; color: inherit; padding: 0; }
+blockquote { border-left: 4px solid #f59e0b; background: #fffbeb; margin: 16px 0;
+             padding: 12px 16px; color: #78350f; border-radius: 0 6px 6px 0; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
+th, td { border: 1px solid #d1d5db; padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: #eff6ff; color: #1e40af; font-weight: 600; }
+tr:nth-child(even) td { background: #f9fafb; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+strong { color: #b91c1c; }
+a { color: #2563eb; }
+</style></head>
+<body><h1>万象Ai XAUUSD 纯AI量化系统 — M1~M4 升级方案</h1>
+<blockquote>制定日期：2026-08-04 ｜ 调研依据：本系统代码深度通读（Explore 子代理）+ 海外论文/实践 ≥3 源交叉验证&lt;br&gt;适用范围：主号（is_market_primary / _is_leader=True）｜ 跟号零 AI 镜像，天然不受影响</blockquote>
+<hr>
+<h2>一、现状硬伤（代码调研结论）</h2>
+<p>基于 Explore 子代理对 <code>trade_executor.py</code> / <code>ai_exit.py</code> / <code>meta_agent.py</code> / <code>debate_engine.py</code> / <code>risk_engine.py</code> / <code>trading.py</code> 的深度通读：</p>
+<table><thead><tr><th>#</th><th>硬伤</th><th>位置</th><th>影响</th></tr></thead><tbody><tr><td>1</td><td><strong>MetaAgent 权重/记忆零持久化</strong></td><td>meta_agent.py:171-173, 367-495</td><td><code>deepseek_perf</code>/<code>hunyuan_perf</code>/<code>decision_history</code> 全在内存，进程重启即失忆。"进化"只是单进程 EMA</td></tr><tr><td>2</td><td><strong>AI 出场回退率过高</strong></td><td>ai_exit.py:23-32 全局锁 <code>_EXIT_MIN_INTERVAL=20s</code> + <code>_cache_ttl=150s</code>；trade_executor.py:729-740 回退分支</td><td>主号多数周期因 busy/间隔未到而 cache miss → 整批回退 smart_exit 机械规则，AI 几乎不生效</td></tr><tr><td>3</td><td><strong>MFE/捕捉率数据未闭环</strong></td><td>ai_exit.py:33-45 <code>_EXIT_MFE</code> 仅入 payload</td><td>M2 lesson 无数据基座</td></tr><tr><td>4</td><td><strong>无 OPRO 演化循环</strong></td><td>仅 EMA 权重，dashboard.py:1163 名不副实</td><td>M4 从零起步</td></tr><tr><td>5</td><td><strong>FinMem 不存在</strong></td><td>ai_memory.py 仅为展示用环形缓冲</td><td>M3 从零起步</td></tr><tr><td>6</td><td><strong>信号塔为进程内全局变量</strong></td><td>trade_executor.py:23 <code>_LEADER_EXIT_BUS</code></td><td>多 worker 进程部署时不共享 → 跟号镜像断裂（部署形态待确认）</td></tr><tr><td>7</td><td><strong><code>self.strategy</code> 旧对象缓存陷阱</strong></td><td>trade_executor.py:187-198</td><td>新参数须走 <code>_fresh_strat</code>，否则静默 None</td></tr></tbody></table>
+<p><strong>多账号底座已健康</strong>（前序已落地）：主号领导制 + 跟号零 AI 镜像 + 实时跟随(≤10s) + 风控跟随(follow_leader) + 进化隔离(<code>_record_close</code> 仅主号喂 <code>meta_agent.feedback</code>)。→ M1~M4 只作用于主号，<strong>增删副号不影响 AI 进化</strong>的硬要求已满足。</p>
+<hr>
+<h2>二、设计哲学铁律（贯穿 M1~M4）</h2>
+<ol><li><strong>纯 AI 驱动</strong>：一切决策由 AI 模型，拒绝写死规则/方向门/多层过滤。</li><li><strong>增删副号不影响 AI 进化</strong>：演化/记忆/lesson 只作用于主号（<code>_is_leader=True</code>）。</li><li><strong>金融产品零延时</strong>：副号实时跟随（已有），M1~M4 不得引入副号侧 AI 推理。</li><li><strong>验证红线</strong>：PF&gt;1、不爆仓（单账号回撤≤15%）、交易笔数不腰斩、净利润不降；任一不满足即回退。</li></ol>
+<hr>
+<h2>三、M1 — AI 出场 Agent（替换 smart_exit 规则）</h2>
+<h3>3.1 为何现有机制错</h3>
+<ul><li>smart_exit 是机械规则（move_atr≥TP 倍数 或 AI 反向阈值才动），无结构化离场意图；主号全平极少触发，利润捕捉靠分批阈值。</li><li>框架已搭（<code>ai_exit.evaluate</code> 返回 <code>{action, close_pct, new_sl, reason}</code>），但被<strong>全局限速 + 缓存 TTL</strong> 逼回规则引擎，AI 几乎不生效。</li></ul>
+<h3>3.2 海外最佳实践（≥3 源交叉验证）</h3>
+<ul><li><strong>ATLAS (arXiv:2510.15949, 2025-10)</strong>：Adaptive-OPRO + 多 Agent 协调；指出 GPT-o3 保守错失趋势、o4-mini 频繁止损早止盈；<strong>Reflection 机制引入噪声，强模型会过度分析瘫痪</strong>。→ M1 出场 Agent 须"有界"，禁止无限自省。</li><li><strong>moondev RiskAgent (deepwiki, 2025)</strong>：AI 确认平仓前置（USE_AI_CONFIRMATION），组合价值监控间隔 5min，破限先 AI 分析再行动。→ 平仓侧接 AI 确认，保留硬护栏。</li><li><strong>Tickeron Corridor Bots (2025-12)</strong>：固定走廊 TP/SL 自动化出场，情绪免疫、纪律一致。→ 印证"结构化离场意图"价值，但我们要 AI 动态而非固定。</li><li><strong>Active Trader (2025-12)</strong>：1% 每笔风险 + 6% 月回撤刹车 + 最多 3 并发持仓。→ 平仓侧风控护栏参考。</li></ul>
+<h3>3.3 XAUUSD 2026 出场特性</h3>
+<ul><li>黄金波动大（ATR 常态 $8-15/0.1 手），假突破频繁；出场须区分"健康回踩"与"趋势末端接飞刀"（沿用信号塔准确率方法论：价格距 MA 的 Z-score + RSI 极端 + 布林带破外轨）。</li><li>分批止盈优于一次性：黄金趋势延续性强，过早全平损失趋势利润。</li><li>反转出场需防抖（已有 L2 连续确认）。</li></ul>
+<h3>3.4 机制设计</h3>
+<ul><li><strong>AI 出场 Agent</strong> 接管主号每持仓的离场决策，输出结构化动作：<code>hold</code> / <code>partial_close(close_pct)</code> / <code>full_close</code> / <code>reverse_signal</code>(→L2 防抖) / <code>move_sl(new_sl)</code>，附带 <code>reason</code>（人话，喂 M2 lesson + 前端可视化）。</li><li><strong>硬护栏保留</strong>：L2 反转防抖（reversal_confirm_cycles）、L3 篮子护盾（basket_tp）、风控 Layer1-6 在平仓前校验（平仓侧护栏）。</li><li><strong>提升 AI 覆盖率</strong>：放宽 ai_exit 限速为<strong>每账号独立锁</strong>（非全局），TTL 延长至 300s，后台并发评估；未命中缓存时降级为"保守默认"（移动 SL 保本位）而非 smart_exit 全规则。</li><li><strong>平仓侧风控护栏</strong>：full_close/reverse 前调 <code>risk_engine</code> 校验变体，禁止在回撤熔断时反手加仓。</li></ul>
+<h3>3.5 参数（全锁）</h3>
+<table><thead><tr><th>参数</th><th>值</th><th>说明</th></tr></thead><tbody><tr><td>每账号评估间隔</td><td>15s</td><td>原 20s 全局 → 15s/账号独立锁</td></tr><tr><td>缓存 TTL</td><td>300s</td><td>原 150s</td></tr><tr><td>后台评估超时</td><td>50s</td><td>看门狗</td></tr><tr><td>平仓置信门控</td><td>≥0.55</td><td>低于则 hold</td></tr><tr><td>分批上限</td><td>4 批</td><td>单持仓最多分 4 次平</td></tr><tr><td>单批比例</td><td>25%~40%</td><td>close_pct 区间</td></tr><tr><td>移动 SL 规则</td><td>盈利≥1×ATR 移保本位</td><td>早期保本</td></tr><tr><td>L2 反转确认</td><td>2 轮 / 180s 窗口</td><td>沿用现状</td></tr><tr><td>L3 篮子阈值</td><td>跟随主号 basket_tp（本金等比）</td><td>沿用现状</td></tr></tbody></table>
+<h3>3.6 接入点 / 多账号 / 验证</h3>
+<ul><li><strong>接入</strong>：<code>trade_executor.py:729-740</code>（回退分支改保守默认）、<code>ai_exit.py:23-32</code>（每账号锁）、<code>trade_executor.py:777-809</code>（平仓侧风控）。</li><li><strong>多账号</strong>：仅主号 <code>_is_leader=True</code> 跑 AI 出场；跟号零 AI 镜像。</li><li><strong>验证</strong>：回测主号 PF&gt;1、平仓笔数↑（利润兑现能力↑）、净利润↑、跟号跟随无回归。</li></ul>
+<hr>
+<h2>四、M2 — Reflexion 捕捉率 lesson 管道</h2>
+<h3>4.1 为何现有错</h3>
+<p><code>_EXIT_MFE</code> 收集 MFE 仅入 payload，无 <code>capture_rate=实盈/MFE</code> 计算、无 lesson 存储 → 系统从错误中学习的能力为零。</p>
+<h3>4.2 海外最佳实践</h3>
+<ul><li><strong>Reflexion (arXiv:2303.11366, NeurIPS 2023)</strong>：Actor/Evaluator/Self-Reflection 三模块；verbal reinforcement learning；<strong>清晰评估器（binary feedback）才能 work</strong>（WebShop 模糊反馈失败）；记忆上限 1-3 条（长程需总结/索引，论文未解）。</li><li><strong>金融契合度</strong>：平仓盈亏 = 清晰二元/标量评估器，完美契合 Reflexion。</li><li><strong>ATLAS 警告</strong>：Reflection 引入噪声，强模型过度分析瘫痪 → 反射须"有界"（限制反思长度 + 频率 + 只针对亏损/误判单）。</li></ul>
+<h3>4.3 机制设计</h3>
+<ul><li><strong>Evaluator</strong>：每笔主号平仓算 <code>capture_rate = 实盈 / MFE</code>（MFE=该持仓历史最大浮盈）。capture_rate&lt;0.3 或 亏损 = 失败信号。</li><li><strong>Self-Reflection</strong>：对失败单，LLM 生成结构化 lesson：<code>{错误类型, 根因, 改进动作, 适用场景}</code>，存入 M3 episodic/semantic 记忆。</li><li><strong>有界反射</strong>：仅对亏损单 + 捕捉率异常单触发；每 N 笔平仓最多 1 次反思；lesson ≤200 字。</li></ul>
+<h3>4.4 参数（全锁）</h3>
+<table><thead><tr><th>参数</th><th>值</th></tr></thead><tbody><tr><td>capture_rate 计算口径</td><td>实盈 / MFE（MFE=持仓期间最大浮盈）</td></tr><tr><td>失败阈值</td><td>capture_rate &lt; 0.3 或 profit &lt; 0</td></tr><tr><td>反思触发</td><td>仅失败单；每 20 笔平仓 ≤ 1 次反思调用</td></tr><tr><td>lesson 有效期</td><td>30 天滚动</td></tr><tr><td>lesson 检索 top-K</td><td>3 条注入 AI 出场上下文</td></tr><tr><td>反射模型</td><td>DeepSeek（复用，信号量内）</td></tr></tbody></table>
+<h3>4.5 接入点 / 验证</h3>
+<ul><li><strong>接入</strong>：<code>trade_executor.py:933-954</code>（feedback 处算 capture_rate + 产 lesson）、<code>ai_exit.py:239-253</code>（消费 <code>_EXIT_MFE</code>）。</li><li><strong>验证</strong>：lesson 召回率、主号平仓 capture_rate 提升（回测对比）、不引入过度分析导致延迟。</li></ul>
+<hr>
+<h2>五、M3 — FinMem 分层记忆</h2>
+<h3>5.1 为何现有错</h3>
+<p>MetaAgent 权重零持久化（重启失忆）；<code>ai_memory.py</code> 仅环形缓冲，无分层。</p>
+<h3>5.2 海外最佳实践</h3>
+<ul><li><strong>FinMem (arXiv:2311.13743 → IEEE TBD 2025, 被引 228)</strong>：Profiling/Memory/Decision 三模块；Memory 分 working/episodic/semantic 三层，对齐人类交易员认知；可调认知跨度（cognitive span）。</li></ul>
+<h3>5.3 机制设计</h3>
+<ul><li><strong>三层记忆</strong>：</li><li><strong>Working</strong>：当前周期上下文（持仓/行情/辩论摘要），容量 50 条，滚动。</li><li><strong>Episodic</strong>：历史平仓事件 + lesson（来自 M2），容量 500 条，按 capture_rate/盈亏索引。</li><li><strong>Semantic</strong>：提炼的"市场体制→最佳出场模式"规则（由 M2 lesson 聚类 + M4 演化产出），容量 100 条，长期。</li><li><strong>持久化</strong>：MetaAgent <code>load/save_state</code> 落 DB（<code>deepseek_perf</code>/<code>hunyuan_perf</code>/<code>decision_history</code>）；三层记忆落 SQLite/文件，重启恢复。</li><li><strong>认知跨度</strong>：可调，默认保留近 7 天。</li></ul>
+<h3>5.4 参数（全锁）</h3>
+<table><thead><tr><th>层</th><th>容量</th><th>衰减</th><th>持久化</th></tr></thead><tbody><tr><td>Working</td><td>50 条</td><td>24h 滚动</td><td>内存</td></tr><tr><td>Episodic</td><td>500 条</td><td>30 天</td><td>SQLite</td></tr><tr><td>Semantic</td><td>100 条</td><td>90 天</td><td>SQLite</td></tr></tbody></table>
+<h3>5.5 接入点 / 多账号 / 验证</h3>
+<ul><li><strong>接入</strong>：新建 <code>backend/app/services/ai_memory.py</code>（替换原环形缓冲）；<code>meta_agent.py:171-173</code> 增 <code>load/save_state</code>。</li><li><strong>多账号</strong>：仅主号写记忆；跟号读主号镜像动作（不写）。</li><li><strong>验证</strong>：重启后权重/记忆恢复、M2 lesson 召回、决策一致性提升。</li></ul>
+<hr>
+<h2>六、M4 — OPRO 演化循环</h2>
+<h3>6.1 为何现有错</h3>
+<p>仅 EMA 权重，无"反思→改写 meta-prompt→再评估"循环。</p>
+<h3>6.2 海外最佳实践</h3>
+<ul><li><strong>OPRO (arXiv:2309.03409, Google DeepMind)</strong>：LLM as optimizer；meta-prompt 含历史解+分数，LLM 生成新解，评估后加入下一轮；GSM8K +8% / BBH +50%。</li><li><strong>ATLAS Adaptive-OPRO</strong>：动态 prompt 优化 + 多 Agent 协调，更大模型优化响应强。</li><li><strong>fitness 必须可量化</strong>：我们用"近期回测 PF + 捕捉率 + 不爆仓"。</li></ul>
+<h3>6.3 机制设计</h3>
+<ul><li><strong>演化目标（fitness）</strong>：主号近 7 天 PF&gt;1.0 且 最大回撤≤15% 且 捕捉率≥0.5 → <code>fitness = PF × 捕捉率 / (1+回撤)</code>。</li><li><strong>演化对象</strong>：AI 出场 meta-prompt（<code>deepseek_client.EXIT_DECISION_SYSTEM_PROMPT</code>）+ 辩论裁决权重策略。</li><li><strong>循环</strong>：每 24h（或累积 N 笔平仓）触发；汇总 feedback 指标 → LLM 生成新 meta-prompt（top-8 候选）→ 回测评估 fitness → 接受最优（若 fitness&gt;当前+ε）→ 写回常量/配置。</li><li><strong>回滚</strong>：新 prompt 导致 PF&lt;1 或回撤&gt;阈值 → 自动回滚上一版。</li></ul>
+<h3>6.4 参数（全锁）</h3>
+<table><thead><tr><th>参数</th><th>值</th></tr></thead><tbody><tr><td>演化周期</td><td>24h 或 累积 50 笔平仓</td></tr><tr><td>候选解数</td><td>8</td></tr><tr><td>接受阈值 ε</td><td>+0.02 fitness</td></tr><tr><td>回滚条件</td><td>PF&lt;1.0 或 回撤&gt;15%</td></tr><tr><td>演化模型</td><td>DeepSeek（信号量内，低频）</td></tr><tr><td>prompt 版本保留</td><td>最近 10 版</td></tr></tbody></table>
+<h3>6.5 接入点 / 验证</h3>
+<ul><li><strong>接入</strong>：新增 <code>_evolution_loop</code> 守护线程（<code>trading.py:255</code> 附近）；改写 <code>deepseek_client.EXIT_DECISION_SYSTEM_PROMPT</code>（:25-50）。</li><li><strong>验证</strong>：演化后 PF↑、捕捉率↑、回撤受控；回滚机制可靠。</li></ul>
+<hr>
+<h2>七、落地顺序与里程碑</h2>
+<table><thead><tr><th>阶段</th><th>模块</th><th>工期</th><th>依赖</th><th>说明</th></tr></thead><tbody><tr><td>1</td><td><strong>M3a MetaAgent 持久化</strong></td><td>1-2 天</td><td>无</td><td>基石，save/load_state 落 DB，无风险先补</td></tr><tr><td>2</td><td><strong>M1 AI 出场 Agent</strong></td><td>2-3 天</td><td>M3a</td><td>放宽限速+提升覆盖+平仓侧风控，直接影响主号盈利</td></tr><tr><td>3</td><td><strong>M3b 完整 FinMem 三层</strong></td><td>2-3 天</td><td>M3a</td><td>三层记忆 + 持久化</td></tr><tr><td>4</td><td><strong>M2 Reflexion lesson</strong></td><td>2 天</td><td>M3b + M1</td><td>消费 MFE，产 lesson 入记忆</td></tr><tr><td>5</td><td><strong>M4 OPRO 演化</strong></td><td>2-3 天</td><td>M3b + M2 + M1</td><td>汇总指标→演化 meta-prompt→回滚</td></tr></tbody></table>
+<p>总周期约 10-13 天，每模块独立可测、独立回滚。</p>
+<hr>
+<h2>八、风险与回退</h2>
+<ol><li><strong>信号塔跨进程</strong>：若部署多 worker，需改 Redis/DB 共享总线（M1 前确认部署形态）。</li><li><strong>AI 出场延迟</strong>：后台评估 50s 超时 + 信号量，不得阻塞主周期。</li><li><strong>过度反思（ATLAS 警告）</strong>：M2 严格有界，监控"反思调用频率"防瘫痪。</li><li><strong>演化失控</strong>：M4 强制回滚 + 保留 10 版历史。</li><li><strong>每模块回测达标</strong>（PF&gt;1 / 不爆仓 / 交易数不腰斩 / 净利不降）才合并，否则回退。</li></ol>
+<hr>
+<h2>九、海外调研来源清单（交叉验证）</h2>
+<table><thead><tr><th>模块</th><th>来源</th><th>类型</th></tr></thead><tbody><tr><td>M1</td><td>ATLAS arXiv:2510.15949 (2025-10)</td><td>论文</td></tr><tr><td>M1</td><td>moondev RiskAgent (deepwiki, 2025)</td><td>实践</td></tr><tr><td>M1</td><td>Tickeron Corridor Bots (2025-12)</td><td>产品实践</td></tr><tr><td>M1</td><td>Active Trader (2025-12)</td><td>开源系统</td></tr><tr><td>M2</td><td>Reflexion arXiv:2303.11366 (NeurIPS 2023)</td><td>论文</td></tr><tr><td>M2</td><td>ATLAS arXiv:2510.15949</td><td>论文（噪声警告）</td></tr><tr><td>M3</td><td>FinMem arXiv:2311.13743 → IEEE TBD 2025 (被引228)</td><td>论文</td></tr><tr><td>M4</td><td>OPRO arXiv:2309.03409 (Google DeepMind)</td><td>论文</td></tr><tr><td>M4</td><td>ATLAS Adaptive-OPRO (2025-10)</td><td>论文</td></tr></tbody></table></body></html>

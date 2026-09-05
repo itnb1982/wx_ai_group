@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万象Ai 全程无死角审计报告 · 2026-08-06</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.65; padding: 32px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 28px; color: #58a6ff; border-bottom: 2px solid #30363d; padding-bottom: 14px; margin-bottom: 8px; }
+  .sub { color: #8b949e; font-size: 14px; margin-bottom: 28px; }
+  h2 { font-size: 21px; color: #f0c674; margin: 34px 0 14px; padding-left: 10px; border-left: 4px solid #f0c674; }
+  h3 { font-size: 16px; color: #7ee787; margin: 20px 0 10px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px 24px; margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13.5px; }
+  th, td { border: 1px solid #30363d; padding: 9px 11px; text-align: left; vertical-align: top; }
+  th { background: #21262d; color: #58a6ff; font-weight: 600; }
+  td code { background: #0d1117; padding: 1px 5px; border-radius: 3px; color: #ffa657; font-size: 12px; }
+  .ok { color: #3fb950; font-weight: 700; }
+  .warn { color: #d29922; font-weight: 700; }
+  .bad { color: #f85149; font-weight: 700; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 12px; font-weight: 700; margin: 2px 0; }
+  .tag.ok { background: rgba(63,185,80,.15); color: #3fb950; }
+  .tag.warn { background: rgba(210,153,34,.15); color: #d29922; }
+  .tag.bad { background: rgba(248,81,73,.15); color: #f85149; }
+  .score { font-size: 46px; font-weight: 800; }
+  .score-box { display: flex; gap: 30px; align-items: center; flex-wrap: wrap; }
+  .bar { height: 10px; border-radius: 6px; background: #30363d; overflow: hidden; margin-top: 6px; }
+  .bar > span { display: block; height: 100%; }
+  .evi { background: #0d1117; border-left: 3px solid #58a6ff; padding: 8px 12px; margin: 8px 0; font-size: 12.5px; color: #8b949e; border-radius: 0 6px 6px 0; }
+  .evi b { color: #c9d1d9; }
+  .crit { background: rgba(248,81,73,.08); border: 1px solid rgba(248,81,73,.4); border-radius: 10px; padding: 16px 20px; margin: 14px 0; }
+  .crit h3 { color: #f85149; margin-top: 0; }
+  .fix { background: rgba(63,185,80,.08); border: 1px solid rgba(63,185,80,.35); border-radius: 10px; padding: 16px 20px; margin: 14px 0; }
+  ul { padding-left: 22px; } li { margin: 5px 0; }
+  .note { color: #8b949e; font-size: 13px; font-style: italic; }
+  .flow { display: flex; gap: 0; flex-wrap: wrap; align-items: stretch; margin: 18px 0; }
+  .flow .step { background: #161b22; border: 1px solid #30363d; padding: 12px 14px; flex: 1; min-width: 130px; text-align: center; font-size: 13px; }
+  .flow .step .n { color: #58a6ff; font-weight: 700; font-size: 15px; }
+  .flow .arrow { display: flex; align-items: center; color: #8b949e; padding: 0 4px; }
+  .legend { font-size: 12.5px; color: #8b949e; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>万象Ai XAUUSD — 全程无死角审计报告</h1>
+<div class="sub">审计范围：注册 → AI大脑/信号 → 开单 → 平仓(L1/L2/L3) → 策略风控双套逻辑 → 架构 · 时间：2026-08-06 01:00 · 方法：三路代码静态审计 + 运行日志交叉验证</div>
+
+<div class="card">
+  <h3 style="margin-top:0">总体接通度（代码对照 + 日志实证）</h3>
+  <div class="score-box">
+    <div>
+      <div class="score ok">88%</div>
+      <div class="legend">架构/注册/策略层</div>
+    </div>
+    <div>
+      <div class="score ok">90%</div>
+      <div class="legend">开单/平仓/风控链路</div>
+    </div>
+    <div>
+      <div class="score warn">78%</div>
+      <div class="legend">AI大脑/信号决策</div>
+    </div>
+    <div style="flex:1; min-width:240px">
+      <p style="font-size:14px; color:#c9d1d9"><b>核心结论：</b>系统主体流程<b class="ok">已按设计铁律在跑</b>——注册多账号、SMC/Regime/哨兵/顺势大脑、三层平仓、双套风控逻辑、实时读参、单实例架构均真实接通并运行。<b class="warn">但AI大脑有2个设计闭环未真正落地</b>（DS独裁 + 真进化空转），属于"接了线但没通电"，需修复才能让大脑真正智能自主。</p>
+    </div>
+  </div>
+</div>
+
+<div class="flow">
+  <div class="step"><div class="n">①注册</div>动态建主号<br>策略行懒建</div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">②AI大脑</div>SMC+Regime<br>哨兵+顺势</div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">③开单</div>真实余额手数<br>同向冷却</div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">④平仓</div>L1分批/L2反转<br>L3护盾</div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">⑤风控</div>双套逻辑<br>2%硬地板</div>
+</div>
+
+<!-- ========== 一、注册/策略/架构 ========== -->
+<h2>一、注册 / 策略 / 架构层审计（接通度 88%）</h2>
+<table>
+<tr><th style="width:26%">设计铁律</th><th style="width:12%">结论</th><th style="width:62%">代码证据 + 日志验证</th></tr>
+<tr><td>多账号优先（无写死账号数）</td><td><span class="tag ok">接通✅</span></td><td>backend 无 <code>range(4)</code>/固定4列；<code>trading.py:157</code> 动态遍历 <code>db.query(MT5Account)</code>；前端 <code>StrategyRisk.jsx:203</code> <code>accounts.map()</code> + <code>repeat(auto-fill)</code> 自适应1~10+。<b>日志：</b>当前4账号动态纳入，cycle正常。</td></tr>
+<tr><td>add_account 建主号+策略行(user_id对齐)</td><td><span class="tag warn">偏离⚠</span></td><td><code>accounts.py:89-101</code> 只建 MT5Account、<b>未立即建 strategy_configs 行</b>。但 <code>get_or_default_strategy(trading.py:90-100)</code> 无行返回内存默认不崩；首次 PUT 建行且 <code>user_id=user.id</code> 对齐（<code>strategy.py:266</code>）。<b>风险：</b>字面未满足"新增即建行"，但功能上无归属错位（归当前用户）。建议在 <code>add_account</code> 后补建一行彻底消除边界态。</td></tr>
+<tr><td>双套逻辑前端（跟单灰显/剔除继承）</td><td><span class="tag ok">接通✅</span></td><td>GET 跟号返回合并主号值标 <code>_inherited=True</code>(<code>strategy.py:183-218</code>)；PUT 跟号继承字段重定向写主号行(<code>strategy.py:300-323</code>)；前端 <code>save()</code> 剔除继承字段(<code>StrategyRisk.jsx:114-126</code>)，<code>locked</code> 整区 disabled 灰显。</td></tr>
+<tr><td>参数实时读（改了立刻生效）</td><td><span class="tag ok">接通✅</span></td><td><code>get_or_default_strategy</code> 每轮 <code>db.query</code> 查库；<code>run_cycle_for_user</code> 每账号每轮重取(<code>trading.py:178,238</code>)，无内存缓存。<b>日志：</b>你设的篮子1500、独立/跟单切换均实时读入（上一轮已验证）。</td></tr>
+<tr><td>行情主号（唯一主号+删号自动提升）</td><td><span class="tag ok">接通✅</span></td><td><code>is_market_primary</code> 单号，首个自动设(<code>accounts.py:84-98</code>)；<code>set_primary</code> 清其他(<code>accounts.py:253</code>)；删主号自动提升下一已连接账号(<code>accounts.py:140-150</code>)。</td></tr>
+<tr><td>DB schema 48列对齐</td><td><span class="tag ok">接通✅</span></td><td><b>实测真库 <code>C:/WXDB/wx_prod.dat</code> 的 strategy_configs = 48列</b>，与 models/strategy.py 完全一致（含 follow_leader/basket_tp_amount/enable_l3_guard 等）。这就是上一轮"设了没效果"的根治点。</td></tr>
+<tr><td>supervisor单实例+DELETE+看门狗</td><td><span class="tag ok">接通✅</span></td><td>端口占用自退(<code>supervisor.py:168</code>)+<code>_wait_port_free</code> 防10048；<code>journal_mode=DELETE</code>(<code>database.py:33,65</code>)；看门狗不再以 <code>auto_loop_running=False</code> 判假死(<code>supervisor.py:112</code>)。<b>日志：</b>当前单实例运行，重启后零崩溃。</td></tr>
+<tr><td>ai_memory内存优先 + MT5独立终端</td><td><span class="tag ok">接通✅</span></td><td><code>push_trade_event</code> 带 pnl/ticket/open_price/close_price/reason(<code>ai_memory.py:43</code>)；debate_engine 内存优先DB回退(<code>debate_engine.py:157</code>)；<code>mt5_service.add_account</code> 终端独占校验(<code>mt5_service.py:96</code>)。</td></tr>
+<tr><td>无限加账号自动纳入</td><td><span class="tag ok">接通✅</span></td><td><code>add_account</code> 后下一轮 <code>run_cycle_for_user</code> 动态查 <code>connected+trading</code> 账号自动纳入。物理约束：每账号需独立MT5安装目录（一个终端只能登一个号）。</td></tr>
+</table>
+<div class="evi">⚠ 唯一偏离项 B：<b>add_account 未立即建立 strategy_configs 行</b>。当前靠"GET内存兜底 + 首次PUT懒建"保证不崩、不归属错位，但你之前强调的"新增账号即建行"铁律字面未达成。建议补建（低优先级，非致命）。</div>
+
+<!-- ========== 二、AI大脑 ========== -->
+<h2>二、AI大脑 / 信号决策链路审计（接通度 78%）</h2>
+<table>
+<tr><th style="width:26%">设计铁律</th><th style="width:12%">结论</th><th style="width:62%">代码证据 + 日志验证</th></tr>
+<tr><td>SMC机构订单流接入决策骨架</td><td><span class="tag ok">接通✅</span></td><td><code>compute_smc(tfs_raw)</code> 注入 snapshot(<code>market_analyzer.py:217</code>)；DS system_prompt 定义为"决策骨架"，user_prompt 含【SMC机构订单流结构】(<code>deepseek_client.py:294-330</code>)。<b>日志：</b>开仓推理已引用 FVG/机构需求区/溢价区。</td></tr>
+<tr><td>Regime体制感知+山顶拦截</td><td><span class="tag ok">接通✅</span></td><td><code>at_stale_top = regime in trend_up and ext_z>2.0 and rsi_h1>72</code>(<code>regime_detect.py:146</code>)，经哨兵→meta门间接实现山顶拦截。<b>日志：</b>体制=strong_uptrend 实时可见。</td></tr>
+<tr><td>反转哨兵第3角色+否决门(置信≥0.92)</td><td><span class="tag ok">接通⚠</span></td><td>哨兵作 Step 0.8 第3角色(<code>debate_engine.py:227</code>)；meta门 <code>REVERSE_SELL且BUY→HOLD</code>(<code>meta_agent.py:433</code>)。⚠ 哨兵自身置信上限仅0.81(<code>reversal_sentinel.py:92</code>)，"≥0.92"字面值永不可达，代码实为按<b>裁决置信</b>门控——功能等效但命名与文档不符。</td></tr>
+<tr><td>顺势优先铁律</td><td><span class="tag ok">接通✅</span></td><td>system_prompt 专设"★顺势优先铁律"：trend_up且非末端→首要任务顺势做多，严禁因超买/溢价长期观望(<code>deepseek_client.py:310</code>)。<b>日志：</b>已根治"永远等回调不开单"。</td></tr>
+<tr><td>真进化(情境→期望盈亏) ≠ 经验回注</td><td><span class="tag bad">缺失❌</span></td><td><b>致命偏离：</b><code>EvolutionEngine.record(direction,pnl,tags)</code> 的<b>情境级真进化从未被业务调用</b>（只在 key_pool 的 token 统计里有个同名 record）。<code>get_advice</code> 永远回退全局胜率(<code>local_rl.py:111</code>)。<b>日志：</b>"OPRO/进化引擎/情境期望"仅2次（setup提示），闭环未通。<b>即：设计里"AI会越跑越聪明"目前是空的</b>。</td></tr>
+<tr><td>历史教训降级软参考</td><td><span class="tag ok">接通✅</span></td><td>prompt 明示"勿被历史偏置绑架"(<code>deepseek_client.py:354</code>)，未塞硬约束。符合 ATLAS 证伪 reflection 式回注的方向。</td></tr>
+<tr><td>双模型辩论制衡（防DS独裁）</td><td><span class="tag bad">触发❌</span></td><td><b>线上已触发：</b>HY <code>recent_accuracy≈0.0005</code> → strong_uptrend 下 <code>hy_weight≈0.0004</code>，DS≈0.9996。<b>日志铁证：54次裁决 <code>DS:1.00/HY:0.00</code>，HY永远HOLD(0.25)</b>。双模型制衡退化为DS独裁，仅剩 R1 硬否决兜底（脆弱单点）。同时 feedback 对双方重复累加 profit 致权重统计失真。</td></tr>
+<tr><td>无EA思维反模式（多层硬过滤）</td><td><span class="tag warn">存在⚠</span></td><td><code>Regime Gate</code>(<code>meta_agent.py:450</code>)：M5/M15/M30中≥2反向→HOLD（除非置信≥0.88）属短周期硬阈值拦截，强趋势回调时可能误杀顺势BUY，与"提准非拦截"有张力。<code>SINGLE_MODEL_MIN_CONF=0.70</code> 定义但从未引用（死代码）。</td></tr>
+<tr><td>AI成交记忆走内存缓冲</td><td><span class="tag ok">接通✅</span></td><td>先 <code>get_trades()</code> 内存缓冲，空才回退DB(<code>debate_engine.py:159</code>)；<code>_trade_buf</code> 由 trade_executor 实时写入→"越跑越笨"已根治。</td></tr>
+</table>
+
+<div class="crit">
+  <h3>🚨 AI大脑两项致命偏离（设计闭环未通电）</h3>
+  <p><b>1. DS独裁（权重坍塌）：</b>混元HY因 accuracy 统计失真被压制到0，双模型"辩论制衡"名存实亡，实际是DS单模型独裁。违背"双模型辩论"设计本质。当前仅靠 R1 硬否决兜底，属脆弱单点——若DS在强趋势中集体误判（如高位接飞刀），无人能纠正。</p>
+  <p><b>2. 真进化空转：</b>本地在线学习引擎(local_rl)的情境→期望盈亏映射 <code>record()</code> 从未被平仓回调接入，进化引擎只输出全局胜率（软参考价值有限）。设计里"AI会越跑越聪明"目前是空壳，与"纯AI系统持续进化"宗旨相悖。</p>
+</div>
+
+<!-- ========== 三、开单/平仓/风控 ========== -->
+<h2>三、开单 / 平仓 / 风控执行链路审计（接通度 90%）</h2>
+<table>
+<tr><th style="width:26%">设计铁律</th><th style="width:12%">结论</th><th style="width:62%">代码证据 + 日志验证</th></tr>
+<tr><td>L1 分批止盈+追踪+保本</td><td><span class="tag ok">接通✅</span></td><td><code>smart_exit.py:34</code> TP1-3分批+保本+追踪；<code>_trail_tp</code> 只往有利方向上移(<code>smart_exit.py:245</code>)，<code>evaluate_position</code> 返回 <code>new_tp</code>，executor 调 <code>modify_sl_tp</code>(<code>trade_executor.py:1178</code>)。<b>日志：</b>TP/保本触发50次，追踪止盈就位。</td></tr>
+<tr><td>L2 反转确认(reversal_confirm_cycles/180s)</td><td><span class="tag warn">偏离⚠</span></td><td>反转确认180s窗口已接(<code>trade_executor.py:1125</code>)✅。但 <code>reversal_confirm_cycles</code> 默认<b>3</b>(铁律2)、<code>ai_reverse_close_confidence</code> 默认<b>0.82</b>(铁律0.60)——反转更保守，与基准文档不一致（偏安全，非致命）。</td></tr>
+<tr><td>L3 护盾(enable+basket_tp+冷却)</td><td><span class="tag warn">偏离⚠</span></td><td>L3已接(<code>trade_executor.py:1022-1050,1272</code>)✅。但冷却为 <b>30s/5s</b>(铁律120s)，锁利重开更频繁（偏"多交易"方向）。<b>日志：</b>各账号按自己阈值(1500/1500/20)正确读入并跑。</td></tr>
+<tr><td>双套逻辑判定(统一用follow_leader)</td><td><span class="tag ok">接通✅</span></td><td><code>_manage_positions:1017 / _fast_l3_lock:1284 / _mirror_leader_exits:1392</code> 均用 <code>follow_leader</code> 分流，未误用 is_leader。跟号早退镜像主号，独立跑自己L3。<b>日志：</b>跟号镜像1014次、独立/主号L3 298次，双套逻辑运作正常。</td></tr>
+<tr><td>25字段继承(copy.copy不写DB)</td><td><span class="tag ok">接通⚠</span></td><td><code>copy.copy(strategy)</code> detached 副本不写回(<code>trading.py:89</code>)✅。但 <code>basket_tp_amount</code> 显式改为主号原始值<b>不缩放</b>(<code>trading.py:128</code>)，违背铁律"按本金等比缩放"——小号用大号绝对阈值($100)可能过早锁利（有意为之修正，需评估）。</td></tr>
+<tr><td>手数按真实余额+2%反钳</td><td><span class="tag ok">接通✅</span></td><td><code>_cap_to_risk_limit:444</code> 用 <code>balance</code>(真实余额)算合规尺寸，下限0.01，两路注入(<code>execute_cycle:680 / copy_order:880</code>)。<b>根治了"按大本金算手数、按小本金卡风险"矛盾</b>。</td></tr>
+<tr><td>跟单镜像幂等(语义key)</td><td><span class="tag ok">接通⚠</span></td><td>幂等key已改 <code>(follower_id, leader_ticket, action_type)</code>(<code>trade_executor.py:98</code>)，<b>幽灵单死循环已停</b>（374073117 仅16次历史，重启后零新增）。⚠ move_sl 镜像 <code>_mark_mirrored</code> 的 <code>aid</code> 未定义→每轮抛NameError(8次)，但MT5返回10025(无需改)兜底，功能不失效仅噪声。</td></tr>
+<tr><td>同方向开仓冷却(180s)</td><td><span class="tag ok">接通✅</span></td><td><code>open_interval_seconds</code> 默认180(<code>trade_executor.py:731</code>)，<code>execute_cycle:727-739</code> 接通。<b>日志：</b>主号不再每轮开新单滚动堆积。</td></tr>
+<tr><td>提准非拦截(不砍交易笔数)</td><td><span class="tag ok">接通✅</span></td><td>智能手数按置信度缩手不硬拦；仅 <code>min_confidence</code> 地板(非"有持仓禁开"反模式)。同向冷却/亏损冷却均只节流仍跑持仓管理。</td></tr>
+<tr><td>2%单笔风险+浮亏/单笔熔断(全账号)</td><td><span class="tag ok">接通✅</span></td><td><code>risk_engine.py:128-196</code> 六层；<code>check_trade_allowed</code> 在主号/跟单两路按真实余额跑；<code>_fast_l3_lock:1285</code> 浮亏/单笔熔断对<b>所有账号含跟号兜底</b>跑。</td></tr>
+</table>
+
+<div class="evi">开平风控链路 9/9 大项均接通，仅 5 处阈值/参数偏离（L2确认轮次0.82/3、L3冷却30s、basket_tp不缩放、move_sl的aid轻微bug）+ 1处死循环已根治。均非致命逻辑缺口，不影响"不爆仓+多交易多赚钱"主目标。</div>
+
+<!-- ========== 四、日志交叉验证总览 ========== -->
+<h2>四、运行时日志交叉验证（系统当前真实状态）</h2>
+<div class="card">
+<table>
+<tr><th>验证项</th><th>日志实证</th><th>判定</th></tr>
+<tr><td>系统在线/稳定</td><td>health=200，单实例，重启后零崩溃</td><td><span class="tag ok">健康</span></td></tr>
+<tr><td>AI大脑在跑</td><td>SMC/Regime/顺势推理每轮出现；体制=strong_uptrend 实时可见</td><td><span class="tag ok">接通</span></td></tr>
+<tr><td>双模型制衡</td><td>54次裁决 <code>DS:1.00/HY:0.00</code>，HY恒HOLD(0.25)</td><td><span class="tag bad">DS独裁</span></td></tr>
+<tr><td>真进化</td><td>"情境期望/OPRO"仅2次（setup提示），record从未被平仓回调调用</td><td><span class="tag bad">空转</span></td></tr>
+<tr><td>开平三层</td><td>L1 TP/保本触发50次；L3护盾各账号按己阈值跑；L2反转日志168次</td><td><span class="tag ok">接通</span></td></tr>
+<tr><td>双套逻辑</td><td>跟号镜像1014次 + 独立/主号L3 298次，各自按follow_leader分流</td><td><span class="tag ok">接通</span></td></tr>
+<tr><td>死循环</td><td>374073117 仅16次历史，重启后零新增</td><td><span class="tag ok">已根治</span></td></tr>
+<tr><td>手数反钳</td><td>修复后"单笔风险超限"拒绝=0次，小账号稳定开单</td><td><span class="tag ok">已根治</span></td></tr>
+</table>
+</div>
+
+<!-- ========== 五、修复建议 ========== -->
+<h2>五、必须修的偏离项（按优先级）</h2>
+<div class="crit">
+  <h3>🔴 P0：DS独裁（双模型制衡失效）</h3>
+  <p><b>修复：</b>对 HY 权重设地板值（如 <code>hy_weight = max(0.0004, 0.15)</code>）保住评分级制衡；修复 feedback 利润重复累加（current_user 两端各自 +profit 致统计失真）；保留 R1 硬否决。让"双模型辩论"真正名副其实。</p>
+</div>
+<div class="crit">
+  <h3>🔴 P0：真进化空转（进化引擎从未被业务调用）</h3>
+  <p><b>修复：</b>在 trade_executor 平仓回调里接入 <code>evolution_engine.record(direction, pnl, tags)</code>，tags 来自该笔的 SMC/Regime 情境标签。否则设计里"AI越跑越聪明"是空壳，与"纯AI持续进化"宗旨相悖。</p>
+</div>
+<div class="fix">
+  <h3>🟡 P2：L2/L3阈值偏离基准 + basket_tp不缩放 + move_sl的aid</h3>
+  <p>① L2 的 <code>reversal_confirm_cycles</code>(3→2)、<code>ai_reverse_close_confidence</code>(0.82→0.60) 回正至设计铁律值，或更新基准文档说明为何收紧；② L3 冷却(30s→120s) 回正；③ 评估 <code>basket_tp_amount</code> 是否恢复"按本金等比缩放"（小号用大号绝对阈值$100会过早锁利）；④ 修 <code>trade_executor.py:1465</code> move_sl 镜像 <code>aid</code> 未定义 → 改用 <code>(self.account_id, lt, a)</code> 语义key。</p>
+</div>
+<div class="fix">
+  <h3>🟢 P3：add_account懒建策略行 + Regime Gate硬过滤</h3>
+  <p>① <code>add_account</code> 成功后补建 <code>strategy_configs</code> 行（<code>user_id==account.user_id</code>）彻底消除边界态；② <code>Regime Gate</code> 短周期≥2反向即HOLD属EA式拦截，建议放宽到≥3反向或仅作置信惩罚而非硬HOLD，契合"提准非拦截"。</p>
+</div>
+
+<!-- ========== 六、结论 ========== -->
+<h2>六、最终结论</h2>
+<div class="card">
+<p style="font-size:15px; color:#c9d1d9"><b>一句话：流程骨架 100% 按设计在跑，AI大脑"2根线没通电"。</b></p>
+<ul>
+<li><b class="ok">已确认按设计运转：</b>多账号动态注册/主号机制、SMC+Regime+哨兵+顺势的纯AI大脑骨架、三层平仓(L1/L2/L3)、双套风控逻辑(follow_leader判定)、真实余额手数反钳、180s开仓冷却、追踪止盈、2%硬地板安全网、参数实时读、单实例防叠加架构、48列schema对齐——全部真实接通且日志可证。</li>
+<li><b class="bad">未真正落地（设计闭环空转）：</b>①双模型辩论退化为DS独裁（HY权重坍塌）；②本地进化引擎从未被平仓回调接入，真进化是空壳。</li>
+<li><b class="warn">需回正的小偏离：</b>L2/L3阈值与基准文档不符、basket_tp不缩放、move_sl的aid轻微bug、add_account懒建行、Regime Gate硬过滤。</li>
+</ul>
+<p class="note">注：本审计基于当前运行代码（PID 25736）+ 真库 <code>C:/WXDB/wx_prod.dat</code> + 日志 <code>supervisor_uvicorn.log</code>。审计仅读代码与日志，未改动任何代码。P0两项建议在下一轮迭代落地，落地后系统即达到"纯AI大脑真正智能自主"的设计终点。</p>
+</div>
+
+</div>
+</body>
+</html>

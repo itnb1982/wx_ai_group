@@ -1,0 +1,28 @@
+﻿trades列: ['id', 'user_id', 'mt5_account_id', 'mt5_ticket', 'symbol', 'action', 'volume', 'open_price', 'close_price', 'sl', 'tp', 'profit', 'commission', 'swap', 'net_profit', 'result', 'deepseek_decision', 'deepseek_confidence', 'deepseek_reasoning', 'hunyuan_decision', 'hunyuan_confidence', 'hunyuan_reasoning', 'debate_summary', 'meta_agent_decision', 'meta_agent_confidence', 'risk_check_passed', 'mfe', 'mae', 'exit_reason', 'open_time', 'close_time', 'created_at']
+
+=== 今日平仓总笔数: 528 ===
+  账号 ?: 笔数=528 净利=$-72.54 胜率=47%
+
+=== 今日合计: 笔数=528 净利=$-72.54 胜率=47% ===
+
+=== 最近20笔平仓明细 ===
+  2026-08-04 18:10:19 ? 利=$2.04 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:19 ? 利=$1.01 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:19 ? 利=$0.52 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:18 ? 利=$0.5 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:18 ? 利=$1.3 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:18 ? 利=$1.6600000000000001 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:17 ? 利=$2.9 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:17 ? 利=$0.94 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:16 ? 利=$-0.48 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:16 ? 利=$2.03 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:16 ? 利=$1.0 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:16 ? 利=$0.43 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:15 ? 利=$0.4 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:15 ? 利=$1.23 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:14 ? 利=$1.63 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:14 ? 利=$2.79 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:13 ? 利=$0.96 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:13 ? 利=$-0.47 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:13 ? 利=$2.04 | closed_by_ai|跟号镜像主号全平
+  2026-08-04 18:10:13 ? 利=$1.02 | closed_by_ai|跟号镜像主号全平
